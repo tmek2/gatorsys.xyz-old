@@ -1,0 +1,167 @@
+/* The footer.
+
+   Unlayered, like the rest of the restyle: Tailwind v3's preflight is unlayered
+   and beats every layered rule.
+
+   Imported by the component itself, so removing some other stylesheet cannot
+   leave it unstyled. */
+
+/* Identity on the left, destinations on the right. */
+.g-footer {
+  position: relative;
+  padding-inline: var(--g-gutter);
+  padding-block: clamp(44px, 6vh, 72px) clamp(36px, 5vh, 56px);
+  border-top: 1px solid var(--g-line);
+}
+
+.g-foot-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 32px clamp(32px, 8vw, 120px);
+  width: 100%;
+  max-width: var(--g-shell);
+  margin-inline: auto;
+}
+
+/* ------------------------------------------------------------- the left */
+
+.g-foot-id {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* The mark and the two social buttons on one line. */
+.g-foot-lockup {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.g-foot-brand {
+  gap: 8px;
+}
+
+.g-foot-copy {
+  margin: 0;
+  max-width: 32ch;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--g-ink-faint);
+}
+
+.g-foot-social {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* A bordered square each, which is what stops two lone glyphs reading as a
+   stray piece of punctuation at the end of a line. */
+/* The mark alone, with a tile only under the pointer: no icon in a box. */
+.g-foot-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--g-ink-dim);
+  transition:
+    color var(--g-fast) var(--g-ease-state),
+    border-color var(--g-fast) var(--g-ease-state),
+    background-color var(--g-fast) var(--g-ease-state);
+}
+.g-foot-icon:hover {
+  border-color: var(--g-accent-line);
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+}
+
+/* ------------------------------------------------------------ the right */
+
+.g-foot-cols {
+  display: flex;
+  gap: clamp(40px, 7vw, 96px);
+}
+
+.g-foot-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* A heading, not a link. It is the answer to "which half of the footer am I
+   looking at", and a heading that can be clicked makes you test that. */
+.g-foot-head {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--g-ink);
+}
+
+.g-foot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.g-foot-link {
+  font-size: 14px;
+  color: var(--g-ink-dim);
+  text-decoration: none;
+  transition: color var(--g-fast) var(--g-ease-state);
+}
+.g-foot-link:hover {
+  color: var(--g-accent-ink);
+}
+
+/* --------------------------------------------------------------- narrow */
+
+/* Under the fold the two halves stop sitting side by side, and the columns
+   take the full width so the labels are not two hyphenated stacks. */
+@media (max-width: 700px) {
+  .g-foot-top {
+    flex-direction: column;
+    gap: 30px;
+  }
+  .g-foot-cols {
+    width: 100%;
+    gap: 24px;
+  }
+  .g-foot-col {
+    flex: 1 1 0;
+  }
+  .g-foot-copy {
+    max-width: none;
+  }
+}
+
+/* Every one of these is a link, and a 14px line of text is not a target. */
+@media (pointer: coarse) and (max-width: 900px) {
+  .g-foot-list {
+    gap: 0;
+  }
+  .g-foot-link {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+  }
+  .g-foot-icon {
+    position: relative;
+    width: 36px;
+    height: 36px;
+  }
+  .g-foot-icon::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+  }
+}

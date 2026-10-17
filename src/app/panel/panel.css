@@ -1,0 +1,458 @@
+/* ── /panel: a server's infractions and one case ──
+
+   The landing's ground and header, a reading-width column, and the dashboard's
+   parts: a one-rim search field, rows that light on hover, cards with labels
+   above what they label. */
+.gs-panel {
+  min-height: 100svh;
+}
+.gs-panel-shell {
+  width: min(100%, 1080px);
+  margin: 0 auto;
+  padding: 104px 16px 64px;
+  animation: gs-panel-in 460ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes gs-panel-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+}
+.gs-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-bottom: 20px;
+}
+.gs-panel-title {
+  margin: 0;
+  color: var(--g-ink);
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.gs-panel-sub {
+  margin: 0;
+  color: var(--g-ink-dim);
+  font-size: 15px;
+}
+.gs-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 14px -8px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  color: var(--g-ink-dim);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+.gs-back:hover {
+  background: var(--g-fill);
+  color: var(--g-ink);
+}
+
+.gs-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  margin-bottom: 14px;
+  padding: 0 14px;
+  border: 1px solid var(--g-line);
+  border-radius: 14px;
+  background: var(--g-fill);
+  color: var(--g-ink-dim);
+  transition: border-color 140ms ease;
+}
+.gs-search:focus-within {
+  border-color: color-mix(in srgb, var(--g-ink) 22%, transparent);
+  color: var(--g-ink);
+}
+.gs-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: var(--g-ink);
+  font: inherit;
+  font-size: 15px;
+}
+.gs-search input::placeholder {
+  color: var(--g-ink-dim);
+}
+.gs-search-count {
+  flex: none;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gs-case-list {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--g-line);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--g-ground) 88%, var(--g-ink) 2%);
+}
+.gs-case-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1.2fr) minmax(0, 1fr) 120px minmax(0, 2fr) 104px;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 0 16px;
+  color: var(--g-ink);
+  font-size: 14px;
+  text-decoration: none;
+  transition: background-color 120ms ease;
+}
+.gs-case-row + .gs-case-row {
+  border-top: 1px solid var(--g-line);
+}
+.gs-case-head {
+  min-height: 40px;
+  color: var(--g-ink-dim);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+a.gs-case-row:hover {
+  background: var(--g-fill);
+}
+a.gs-case-row:focus-visible {
+  outline: 2px solid var(--g-accent);
+  outline-offset: -2px;
+}
+.gs-case-id {
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-size: 0.92em;
+}
+.gs-case-row .gs-case-id {
+  color: var(--g-ink-dim);
+}
+.gs-case-action {
+  justify-self: start;
+  padding: 3px 9px;
+  border-radius: 8px;
+  background: var(--g-fill);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.gs-case-row[data-status="active"] .gs-case-action {
+  background: color-mix(in srgb, var(--tone-bad, #f87171) 14%, transparent);
+  color: color-mix(in srgb, var(--tone-bad, #f87171) 80%, var(--g-ink));
+}
+.gs-case-reason {
+  overflow: hidden;
+  color: var(--g-ink-dim);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gs-case-date {
+  color: var(--g-ink-dim);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.gs-who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.gs-who-pic {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--g-fill);
+  color: var(--g-ink-dim);
+  font-size: 11px;
+  font-weight: 700;
+}
+.gs-who-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gs-who[data-quiet="true"] .gs-who-name {
+  color: var(--g-ink-dim);
+}
+.gs-empty {
+  margin: 0;
+  padding: 36px 16px;
+  border: 1px dashed var(--g-line);
+  border-radius: 16px;
+  color: var(--g-ink-dim);
+  text-align: center;
+}
+@media (max-width: 820px) {
+  .gs-case-head {
+    display: none;
+  }
+  .gs-case-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "who action"
+      "reason date";
+    gap: 6px 12px;
+    padding: 12px 14px;
+  }
+  .gs-case-row > .gs-case-id,
+  .gs-case-row > .gs-who[data-quiet="true"] {
+    display: none;
+  }
+  .gs-case-row > .gs-who {
+    grid-area: who;
+  }
+  .gs-case-row > .gs-case-action {
+    grid-area: action;
+    justify-self: end;
+  }
+  .gs-case-row > .gs-case-reason {
+    grid-area: reason;
+  }
+  .gs-case-row > .gs-case-date {
+    grid-area: date;
+  }
+}
+
+/* One case. */
+.gs-state {
+  padding: 4px 10px;
+  border-radius: 9px;
+  background: var(--g-fill);
+  color: var(--g-ink-dim);
+  font-size: 13px;
+  font-weight: 650;
+}
+.gs-state[data-active="true"] {
+  background: color-mix(in srgb, var(--tone-bad, #f87171) 14%, transparent);
+  color: color-mix(in srgb, var(--tone-bad, #f87171) 80%, var(--g-ink));
+}
+.gs-case-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 760px) {
+  .gs-case-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.gs-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--g-line);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--g-ground) 88%, var(--g-ink) 2%);
+}
+.gs-card-label {
+  margin: 8px 0 0;
+  color: var(--g-ink-dim);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.gs-card-label:first-child {
+  margin-top: 0;
+}
+.gs-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.gs-person[data-large="true"] .gs-who-pic {
+  width: 44px;
+  height: 44px;
+  font-size: 16px;
+}
+.gs-person-copy {
+  display: grid;
+  min-width: 0;
+}
+.gs-person-name {
+  overflow: hidden;
+  color: var(--g-ink);
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gs-person-id {
+  color: var(--g-ink-dim);
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-size: 12px;
+}
+.gs-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  color: var(--g-ink-dim);
+  font-size: 14px;
+}
+.gs-line[data-tone="warn"] {
+  color: var(--tone-warn, #fbbf24);
+}
+.gs-action {
+  margin: 0;
+  color: var(--g-ink);
+  font-size: 18px;
+  font-weight: 700;
+}
+.gs-reason {
+  margin: 0;
+  color: var(--g-ink);
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.gs-quiet {
+  color: var(--g-ink-dim);
+}
+.gs-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.gs-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: var(--g-accent);
+  color: var(--g-on-accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 160ms cubic-bezier(0.32, 0.72, 0, 1),
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+.gs-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.gs-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.gs-btn-quiet {
+  border-color: var(--g-line);
+  background: transparent;
+  color: var(--g-ink);
+}
+.gs-btn-quiet:hover {
+  background: var(--g-fill);
+}
+.gs-btn-danger {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--tone-bad, #f87171) 12%, transparent);
+  color: var(--tone-bad, #f87171);
+}
+.gs-btn-danger[data-armed="true"] {
+  background: var(--tone-bad, #f87171);
+  color: #1a0808;
+}
+.gs-edit {
+  display: grid;
+  gap: 12px;
+}
+.gs-field {
+  display: grid;
+  gap: 6px;
+}
+.gs-field input,
+.gs-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--g-line);
+  border-radius: 11px;
+  background: var(--g-fill);
+  color: var(--g-ink);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 140ms ease;
+}
+.gs-field input:focus,
+.gs-field textarea:focus {
+  border-color: color-mix(in srgb, var(--g-ink) 22%, transparent);
+}
+.gs-problem {
+  margin: 8px 0 0;
+  color: var(--tone-bad, #f87171);
+  font-size: 14px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gs-panel-shell {
+    animation: none;
+  }
+}
+
+/* A ticket's transcript, in Discord's own dark colours (transcript/[id]). */
+.gs-transcript {
+  overflow: hidden;
+  border: 1px solid var(--g-line);
+  border-radius: 16px;
+  background: #1b1b1b;
+  color: #dedede;
+}
+.gs-transcript-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: #949ba4;
+}
+.gs-transcript-name {
+  color: #f3f3f3;
+  font-weight: 650;
+}
+.gs-transcript-count {
+  margin-left: auto;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.gs-transcript-body {
+  padding: 8px 4px 16px;
+}
+.gs-transcript discord-messages {
+  border: 0 !important;
+  background: transparent !important;
+}
+.gs-day {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 16px 8px;
+  color: #949ba4;
+  font-size: 12px;
+  font-weight: 600;
+}
+.gs-day::before,
+.gs-day::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}

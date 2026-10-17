@@ -1,0 +1,720 @@
+/* The Tickets tab (part of manage-window.css) */
+
+/* ── tickets ──
+
+   Every group is a panel with its name and one action in the header row, and
+   everything inside is a row, like every other tab. */
+.manage-root .gw-pane .gw-tk-page > .gw-set,
+.manage-root .gw-pane .gw-tk-view > .gw-set {
+  margin-bottom: var(--u5);
+}
+
+/* The views, under the page's title: one thing at a time, and the control
+   that says what the others are. */
+.manage-root .gw-pane .gw-tk-views {
+  margin: 0 0 var(--u5);
+}
+@media (min-width: 761px) {
+  .manage-root .gw-pane .gw-tk-views {
+    max-width: 420px;
+  }
+}
+.manage-root .gw-pane .gw-tk-view {
+  animation: gw-tk-view-in 260ms var(--gw-ease);
+}
+@keyframes gw-tk-view-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* Inside an open subject: its pages, then the page. */
+.manage-root .gw-pane .gw-tk-pages {
+  margin: var(--u1) 0 var(--u4);
+}
+.manage-root .gw-pane .gw-tk-page-body {
+  animation: gw-tk-view-in 220ms var(--gw-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gw-pane .gw-tk-view,
+  .manage-root .gw-pane .gw-tk-page-body {
+    animation: none;
+  }
+}
+.manage-root .gw-pane .gw-tk-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--u2);
+  margin-top: var(--u4);
+  padding-top: var(--u3);
+  border-top: 1px solid var(--mac-hair);
+}
+.manage-root .gw-pane .gw-tk-foot .gw-tk-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: -10px;
+}
+.manage-root .gw-pane .gw-tk-foot .gw-tk-ghost + .gw-tk-ghost {
+  margin-left: 0;
+  margin-right: -10px;
+}
+.manage-root .gw-pane .gw-tk-foot .gw-tk-ghost[data-tone="bad"] {
+  color: var(--mac-label-dim);
+}
+
+/* A welcome or close message: a row that opens into its editor, drawn like
+   the list above it rather than as a box of its own. */
+.manage-root .gw-pane .gw-tk-message {
+  border: 1px solid var(--mac-hair);
+  border-radius: var(--r-row, 10px);
+  overflow: clip;
+  clip-path: inset(0 round var(--r-row, 10px));
+}
+.manage-root .gw-pane .gw-tk-message-head {
+  display: flex;
+  align-items: center;
+  gap: var(--u3);
+  width: 100%;
+  min-height: 56px;
+  padding: 10px var(--u4);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms var(--g-ease-state);
+}
+@media (hover: hover) {
+  .manage-root .gw-pane .gw-tk-message-head:hover {
+    background: var(--g-fill);
+  }
+}
+.manage-root .gw-pane .gw-tk-message-mark {
+  flex: none;
+  color: var(--mac-label-dim);
+}
+.manage-root .gw-pane .gw-tk-message-copy {
+  flex: 1;
+  min-width: 0;
+}
+.manage-root .gw-pane .gw-tk-message-name {
+  display: block;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: 650;
+  color: var(--g-ink);
+}
+.manage-root .gw-pane .gw-tk-message-say {
+  display: block;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+.manage-root .gw-pane .gw-tk-message-chev {
+  flex: none;
+  color: var(--mac-label-dim);
+  transition: transform 320ms var(--gw-ease);
+}
+.manage-root .gw-pane .gw-tk-message[data-open="true"] .gw-tk-message-chev {
+  transform: rotate(180deg);
+}
+.manage-root .gw-pane .gw-tk-message-body {
+  padding: var(--u4);
+  border-top: 1px solid var(--mac-hair);
+}
+
+/* The subjects on a panel: chips you switch on and off. */
+.manage-root .gw-pane .gw-tk-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u2);
+}
+.manage-root .gw-pane .gw-tk-pick {
+  height: 32px;
+  min-height: 0 !important;
+  padding: 0 12px;
+  border: 1px solid var(--g-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mac-label);
+  font: inherit;
+  font-size: var(--t-small);
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--g-ease-state),
+    border-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state);
+}
+.manage-root .gw-pane .gw-tk-pick[data-on="true"] {
+  border-color: var(--g-accent-line);
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+}
+@media (pointer: coarse) {
+  .manage-root .gw-pane .gw-tk-pick {
+    height: 38px;
+    padding: 0 14px;
+  }
+}
+
+/* The one warning on the AI's handover: a line under the channel field it is
+   about, in the warning's colour and no box of its own. */
+.manage-root .gw-pane .gw-tk-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: none;
+  margin: 10px 0 0;
+  padding: 0;
+  color: var(--tone-warn);
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  animation: gw-tk-warn-in 260ms var(--gw-ease) both;
+}
+.manage-root .gw-pane .gw-tk-warn svg {
+  flex: none;
+  margin-top: 2px;
+}
+@keyframes gw-tk-warn-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -4px, 0);
+  }
+}
+
+/* Stepper (fields.tsx): a number between a minus and a plus, with one rim like
+   a field. The number rolls in the direction it changed. */
+.manage-root .gw-stepper {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 40px;
+  padding: 3px;
+  border: 1px solid var(--g-line);
+  border-radius: 12px;
+  background: var(--g-fill);
+}
+.manage-root .gw-stepper:focus-within {
+  border-color: var(--g-line-strong);
+}
+.manage-root .gw-stepper-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  min-height: 0 !important;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--mac-label-dim);
+  cursor: pointer;
+  transition:
+    background-color 120ms var(--g-ease-state),
+    color 120ms var(--g-ease-state),
+    transform 160ms var(--gw-ease);
+}
+@media (hover: hover) {
+  .manage-root .gw-stepper-btn:hover:not(:disabled) {
+    background: var(--g-fill-2);
+    color: var(--g-ink);
+  }
+}
+.manage-root .gw-stepper-btn:active:not(:disabled) {
+  transform: scale(0.9);
+}
+.manage-root .gw-stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.manage-root .gw-stepper-value {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  min-width: 88px;
+  padding: 0 6px;
+  overflow: hidden;
+  color: var(--g-ink);
+  font-size: var(--t-body);
+  font-weight: 650;
+  white-space: nowrap;
+  user-select: none;
+}
+.manage-root .gw-stepper-num {
+  display: inline-block;
+  min-width: 1ch;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.manage-root .gw-stepper-num[data-dir="up"] {
+  animation: gw-step-up 240ms var(--gw-ease) both;
+}
+.manage-root .gw-stepper-num[data-dir="down"] {
+  animation: gw-step-down 240ms var(--gw-ease) both;
+}
+.manage-root .gw-stepper-unit {
+  color: var(--mac-label-dim);
+  font-weight: 550;
+}
+@keyframes gw-step-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 60%, 0);
+  }
+}
+@keyframes gw-step-down {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -60%, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gw-stepper-num,
+  .manage-root .gw-pane .gw-tk-warn {
+    animation: none;
+  }
+}
+.manage-root .gw-pane .gw-tk-routes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--u2);
+}
+.manage-root .gw-pane .gw-tk-route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto;
+  align-items: center;
+  gap: var(--u2);
+  width: 100%;
+}
+.manage-root .gw-pane .gw-tk-route-x {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  min-height: 0 !important;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--mac-label-dim);
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .manage-root .gw-pane .gw-tk-route-x:hover {
+    background: var(--tone-bad-soft);
+    color: var(--tone-bad);
+  }
+}
+@media (max-width: 560px) {
+  .manage-root .gw-pane .gw-tk-route {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .manage-root .gw-pane .gw-tk-route > :nth-child(2) {
+    grid-column: 1;
+  }
+  .manage-root .gw-pane .gw-tk-route > .gw-tk-route-x {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+.manage-root .gw-pane .gw-tk .gw-set-head {
+  min-height: 64px;
+}
+.manage-root .gw-pane .gw-tk-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 8px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--g-fill-2);
+  color: var(--mac-label);
+  font-size: var(--t-micro);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0;
+  vertical-align: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The header's action. Quiet at rest, so the header reads as a heading; the
+   plus turns to a cross while its form is open, and the same press shuts it. */
+.manage-root .gw-pane .gw-tk-add {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px 0 10px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--mac-label);
+  font: inherit;
+  font-size: var(--t-small);
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--g-ease-state),
+    border-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state);
+}
+.manage-root .gw-pane .gw-tk-add:hover {
+  border-color: var(--g-line-strong);
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+.manage-root .gw-pane .gw-tk-add-plus {
+  transition: transform 320ms var(--gw-ease);
+}
+.manage-root .gw-pane .gw-tk-add[data-open="true"] .gw-tk-add-plus {
+  transform: rotate(45deg);
+}
+
+/* The empty state as a line in a group's panel: no box, no mark. */
+.manage-root .gw-pane .gator-empty.gator-empty-row {
+  display: block;
+  padding: 18px var(--u4) 20px;
+  border: 0;
+  border-top: 1px solid var(--mac-hair);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+}
+.manage-root .gw-pane .gator-empty-row .gator-empty-title {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: 650;
+  color: var(--mac-label);
+}
+.manage-root .gw-pane .gator-empty-row .gator-empty-hint {
+  max-width: none;
+  margin: 2px 0 0;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+.manage-root .gw-pane .gator-empty-row .gator-empty-action {
+  margin-top: 12px;
+}
+/* A header's words wrap before they crush: the action drops under the
+   heading on a narrow screen rather than squeezing it to a word a line. */
+.manage-root .gw-pane .gw-tk .gw-set-head {
+  flex-wrap: wrap;
+  row-gap: 10px;
+}
+.manage-root .gw-pane .gw-tk .gw-set-head-copy {
+  flex: 1 1 16rem;
+}
+.manage-root .gw-pane .gw-tk-loading {
+  padding: var(--u3) var(--u4);
+  border-top: 1px solid var(--mac-hair);
+}
+
+/* Name it and press Enter. */
+.manage-root .gw-pane .gw-tk-create {
+  display: flex;
+  gap: 8px;
+  padding: 12px var(--u4);
+  border-top: 1px solid var(--mac-hair);
+}
+.manage-root .gw-pane .gw-tk-create-field {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-control);
+  background: var(--mac-raise-2);
+  color: var(--g-ink);
+  font: inherit;
+  font-size: var(--t-body);
+  outline: none;
+  caret-color: var(--g-accent);
+  transition: border-color 140ms var(--g-ease-state);
+}
+.manage-root .gw-pane .gw-tk-create-field:focus {
+  border-color: var(--g-line-strong);
+  box-shadow: none;
+}
+.manage-root .gw-pane .gw-tk-create-field::placeholder {
+  color: var(--mac-label-dim);
+}
+.manage-root .gw-pane .gw-tk-create-go {
+  flex: none;
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--g-accent);
+  color: var(--g-on-accent);
+  font: inherit;
+  font-size: var(--t-small);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transition:
+    background-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state),
+    transform 160ms var(--g-ease-out);
+}
+@media (hover: hover) {
+  .manage-root .gw-pane .gw-tk-create-go:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--g-accent) 86%, #fff);
+  }
+}
+.manage-root .gw-pane .gw-tk-create-go:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.manage-root .gw-pane .gw-tk-create-go:disabled {
+  background: var(--g-fill-2);
+  color: var(--g-ink-faint);
+  box-shadow: none;
+  cursor: default;
+}
+
+/* A subject or a panel: a row that opens. */
+.manage-root .gw-pane .gw-tk-item {
+  border-top: 1px solid var(--mac-hair);
+}
+.manage-root .gw-pane .gw-tk-item-head {
+  display: flex;
+  align-items: center;
+  gap: var(--u3);
+  width: 100%;
+  min-height: 60px;
+  padding: 10px var(--u4);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms var(--g-ease-state);
+}
+@media (hover: hover) {
+  .manage-root .gw-pane .gw-tk-item-head:hover {
+    background: var(--g-fill);
+  }
+}
+.manage-root .gw-pane .gw-tk-item-copy {
+  flex: 1;
+  min-width: 0;
+}
+.manage-root .gw-pane .gw-tk-item-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: 650;
+  color: var(--g-ink);
+}
+.manage-root .gw-pane .gw-tk-item-say {
+  display: block;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+.manage-root .gw-pane .gw-tk-unsaved {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+  font-size: var(--t-micro);
+  font-weight: 700;
+}
+.manage-root .gw-pane .gw-tk-item-chev {
+  flex: none;
+  color: var(--mac-label-dim);
+  transform: rotate(-90deg);
+  transition: transform 320ms var(--gw-ease);
+}
+.manage-root .gw-pane .gw-tk-item[data-open="true"] .gw-tk-item-chev {
+  transform: none;
+}
+.manage-root .gw-pane .gw-tk-item-body {
+  padding: 4px var(--u4) var(--u4);
+}
+/* Inside an open subject or panel: short lists of rows under small headings,
+   the rail's label style, so the editor reads as parts rather than a wall. */
+.manage-root .gw-pane .gw-tk-sub-name {
+  margin: 0 0 8px 2px;
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mac-label-dim);
+}
+.manage-root .gw-pane .gw-tk-sub-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--u3);
+  margin-bottom: 8px;
+}
+.manage-root .gw-pane .gw-tk-sub-head .gw-tk-sub-name {
+  margin-bottom: 0;
+}
+.manage-root .gw-pane .gw-tk-sub-head .gw-tk-add {
+  height: 28px;
+}
+.manage-root .gw-pane .gw-tk-add:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.manage-root .gw-pane .gw-tk-questions {
+  margin-top: 10px;
+}
+.manage-root .gw-pane .gw-tk-sub-empty {
+  margin: 0;
+  padding: 4px 2px;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+.manage-root .gw-pane .gw-tk-list {
+  border: 1px solid var(--mac-hair);
+  border-radius: var(--r-row, 10px);
+  overflow: clip;
+}
+.manage-root .gw-pane .gw-tk-list > .gw-set-row + .gw-set-row {
+  border-top: 1px solid var(--mac-hair);
+}
+/* The parts further down the editor are still hand-drawn boxes; they take
+   the list's edge and surface so the two kinds sit together. */
+.manage-root .gw-pane .gw-tk-item-body .rounded-xl.border {
+  border-color: var(--mac-hair) !important;
+  border-radius: var(--r-row, 10px) !important;
+  background: transparent !important;
+}
+.manage-root .gw-pane .gw-tk-item-body p.text-xs.font-bold.uppercase {
+  font-size: var(--t-micro);
+  letter-spacing: 0.06em;
+  color: var(--mac-label-dim);
+}
+
+/* A saved item or an unanswered question: its text, one line about it, and
+   its actions as words at the right. */
+.manage-root .gw-pane .gw-tk-row {
+  border-top: 1px solid var(--mac-hair);
+}
+.manage-root .gw-pane .gw-tk-row-main {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--u4);
+  padding: 14px var(--u4);
+}
+.manage-root .gw-pane .gw-tk-row-copy {
+  flex: 1;
+  min-width: 0;
+}
+.manage-root .gw-pane .gw-tk-row-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--g-ink);
+}
+.manage-root .gw-pane .gw-tk-row-meta {
+  margin: 2px 0 0;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+.manage-root .gw-pane .gw-tk-row-acts {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: -4px -6px -4px 0;
+}
+.manage-root .gw-pane .gw-tk-ghost {
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--mac-label-dim);
+  font: inherit;
+  font-size: var(--t-small);
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 120ms var(--g-ease-state),
+    color 120ms var(--g-ease-state);
+}
+.manage-root .gw-pane .gw-tk-ghost[data-tone="accent"] {
+  color: var(--g-accent-ink);
+}
+@media (hover: hover) {
+  .manage-root .gw-pane .gw-tk-ghost:hover:not(:disabled) {
+    background: var(--g-fill-2);
+    color: var(--g-ink);
+  }
+  .manage-root .gw-pane .gw-tk-ghost[data-tone="bad"]:hover:not(:disabled) {
+    color: var(--tone-bad, #f87171);
+  }
+}
+.manage-root .gw-pane .gw-tk-ghost:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.manage-root .gw-pane .gw-tk-form {
+  padding: 12px var(--u4) 14px;
+  border-top: 1px solid var(--mac-hair);
+}
+.manage-root .gw-pane .gw-tk-row .gw-tk-form {
+  border-top: 0;
+  padding-top: 0;
+}
+.manage-root .gw-pane .gw-tk-form[data-inline="true"] {
+  padding: 14px var(--u4);
+}
+.manage-root .gw-pane .gw-tk-form-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+.manage-root .gw-pane .gw-tk-form-acts[data-split="true"] {
+  justify-content: space-between;
+}
+
+.manage-root .gw-pane .gw-tk-minutes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.manage-root .gw-pane .gw-tk-minutes > :first-child {
+  width: 112px;
+}
+.manage-root .gw-pane .gw-tk-unit {
+  font-size: var(--t-small);
+  color: var(--mac-label-dim);
+}
+@media (max-width: 560px) {
+  .manage-root .gw-pane .gw-tk-row-main {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .manage-root .gw-pane .gw-tk-row-acts {
+    margin: 0 0 0 -10px;
+  }
+}

@@ -1,0 +1,1671 @@
+/* The workflow editor. The dotted grid makes the canvas read as a plane, so
+   dragging a block moves it somewhere. */
+
+.wf-shell {
+  overflow: hidden;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.075));
+  border-radius: var(--gs-radius-card, 0.95rem);
+  background: var(--gs-canvas, #0a0a0b);
+}
+
+.wf-shell-head {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem 1.15rem;
+}
+
+/* A bare mark, not boxed, though it doubles as the back control. */
+.wf-shell-mark {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.55));
+}
+
+.wf-shell-mark-link:hover {
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-shell-name {
+  overflow: hidden;
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-shell-state {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.45));
+}
+
+.wf-shell-state.is-on {
+  color: #34d399;
+}
+
+.wf-shell-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* Two halves, one lit. A single switch does not say which state it is in
+   without a label; this shows both options with the live one filled. */
+.wf-shell-toggle {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.09));
+  border-radius: 999px;
+  background: var(--gs-surface, rgba(255, 255, 255, 0.02));
+}
+
+.wf-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 1.15rem;
+  border-bottom: 1px solid var(--gs-line, rgba(255, 255, 255, 0.07));
+}
+
+.wf-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.42));
+  font-size: 0.9rem;
+  font-weight: 650;
+  transition: color 160ms var(--gs-ease);
+}
+
+.wf-tab:hover {
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.7));
+}
+
+.wf-tab.is-on {
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-tab.is-on::after {
+  content: "";
+  position: absolute;
+  right: 0.6rem;
+  bottom: -1px;
+  left: 0.6rem;
+  height: 2px;
+  border-radius: 999px;
+  background: #34d399;
+}
+
+/* ── The canvas ─────────────────────────────────────────────────────────── */
+
+/* A viewport and a palette side by side. Grid rather than flex, so the palette
+   keeps its width when the graph inside the canvas is wide. */
+.wf-canvas-wrap {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20.5rem;
+  gap: 0.75rem;
+  align-items: stretch;
+  /* Fills what the shell leaves rather than having a fixed height, so the page
+     itself does not scroll. */
+  min-height: 0;
+  transition: grid-template-columns 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wf-canvas-wrap[data-palette="closed"] {
+  grid-template-columns: minmax(0, 1fr) 0;
+  gap: 0;
+}
+
+@media (max-width: 1100px) {
+  .wf-canvas-wrap,
+  .wf-canvas-wrap[data-palette="closed"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The handle rides on the palette's edge and stays put when it closes, so the
+   control that brings the panel back is where the panel was. */
+.wf-palette-handle {
+  position: absolute;
+  top: 50%;
+  right: 20.5rem;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 3.25rem;
+  margin-top: -1.6rem;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.12));
+  border-right: 0;
+  border-radius: 0.5rem 0 0 0.5rem;
+  background: var(--gs-surface-solid, #121212);
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.5));
+  transition:
+    right 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 160ms var(--gs-ease);
+}
+
+.wf-palette-handle:hover {
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-canvas-wrap[data-palette="closed"] .wf-palette-handle {
+  right: 0;
+}
+
+@media (max-width: 1100px) {
+  .wf-palette-handle {
+    display: none;
+  }
+}
+
+/* The cursor shows what a press will do: an open hand where a press grabs, a
+   closed hand while grabbing. `[data-drag]` is the component's own drag state,
+   not `:active`. */
+.wf-canvas-wrap[data-panning="true"] .wf-canvas,
+.wf-canvas-wrap[data-panning="true"] .wf-node {
+  cursor: grab;
+}
+
+.wf-canvas-wrap[data-drag="canvas"] .wf-canvas,
+.wf-canvas-wrap[data-drag="canvas"] .wf-canvas *,
+.wf-canvas-wrap[data-panning="true"][data-drag="canvas"] .wf-node {
+  cursor: grabbing;
+}
+
+.wf-canvas-wrap[data-drag="node"] .wf-node {
+  cursor: grabbing;
+}
+
+.wf-canvas {
+  position: relative;
+  overflow: hidden;
+  /* Nothing on the canvas is selectable text or a draggable image (that turned
+     pans into text selections and drag ghosts). Port inputs and the title field
+     opt back in below. */
+  user-select: none;
+  -webkit-user-select: none;
+  /* The canvas takes the height the shell gives it. */
+  height: 100%;
+  min-height: 0;
+  background-color: #0b0c0d;
+  /* The grid. Two layers so the plane still reads at a glance without the dots
+     competing with the blocks sitting on it. */
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(255, 255, 255, 0.09) 1px,
+    transparent 0
+  );
+  /* `background-size` and `background-position` are set inline from the pan and
+     zoom, so the dots move with the plane. */
+  background-size: 20px 20px;
+  /* `grab`, because empty canvas pans on a plain drag. Blocks and controls set
+     their own cursors below. */
+  cursor: grab;
+  touch-action: none;
+}
+
+:root[data-theme="light"] .wf-canvas {
+  background-color: #eeecea;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(16, 14, 14, 0.12) 1px,
+    transparent 0
+  );
+}
+
+.wf-canvas-wrap[data-panning="true"] .wf-canvas:active {
+  cursor: grabbing;
+}
+
+.wf-surface {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+}
+
+.wf-edges {
+  position: absolute;
+  top: -4000px;
+  left: -4000px;
+  width: 8000px;
+  height: 8000px;
+  overflow: visible;
+  /* The SVG covers the whole canvas, so it takes no pointer events; only the
+     wires' hit strokes do. */
+  pointer-events: none;
+}
+
+/* The svg is offset so negative coordinates draw; the group puts them back. */
+.wf-edges > * {
+  transform: translate(4000px, 4000px);
+}
+
+.wf-edge {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.75;
+  transition: stroke-width 120ms ease, opacity 120ms ease;
+}
+
+/* The wire under the pointer, so a two-pixel line says it can be acted on
+   before you commit to double-clicking it. */
+.wf-edge-hot {
+  stroke-width: 3.5;
+  opacity: 1;
+}
+
+/* A transparent 16px stroke over each wire's curve, as its pointer target. */
+.wf-edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 16;
+  stroke-linecap: round;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.wf-edge-live {
+  stroke-dasharray: 5 4;
+  opacity: 1;
+}
+
+/* ── Blocks ─────────────────────────────────────────────────────────────── */
+
+.wf-node {
+  position: absolute;
+  overflow: hidden;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.1));
+  border-radius: 0.7rem;
+  background: #151515;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  cursor: grab;
+  user-select: none;
+}
+
+:root[data-theme="light"] .wf-node {
+  background: #ffffff;
+  box-shadow: 0 14px 32px rgba(16, 14, 14, 0.14);
+}
+
+.wf-node-on {
+  border-color: rgba(52, 211, 153, 0.55);
+}
+
+.wf-node-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-height: 58px;
+  padding: 0.6rem 0.75rem;
+}
+
+.wf-node-title {
+  overflow: hidden;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #ffffff;
+}
+
+.wf-node-sub {
+  overflow: hidden;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* `BLO-001`. Short enough to say out loud, which is the point — "the reason on
+   BLO-003" is a sentence two people can have about a canvas. */
+.wf-node-ref {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.wf-node-body {
+  padding: 12px 0;
+}
+
+.wf-port {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 30px;
+  padding: 0 0.75rem;
+}
+
+.wf-port-out {
+  justify-content: flex-end;
+}
+
+.wf-port-label {
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.72));
+}
+
+.wf-port-label i {
+  margin-left: 0.15rem;
+  color: #fb7185;
+  font-style: normal;
+}
+
+/* The dot is the connector and the type at once. Colour is meaning here: once
+   you have learned purple is text, every purple dot is a place text can go. */
+.wf-dot {
+  position: relative;
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  cursor: crosshair;
+  transition: box-shadow 140ms var(--gs-ease), transform 140ms var(--gs-ease);
+}
+
+/* A generous invisible target — 11px is right to look at and far too small to
+   hit with a thumb. */
+.wf-dot::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+}
+
+.wf-dot:hover,
+.wf-dot:focus-visible {
+  outline: none;
+  transform: scale(1.25);
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 25%, transparent);
+}
+
+.wf-port-in .wf-dot {
+  margin-left: -1.1rem;
+}
+
+.wf-port-out .wf-dot {
+  margin-right: -1.1rem;
+}
+
+/* Fields directly on the node, for inputs that rarely need a wire (like a
+   message's text). Styled for the canvas, not as dashboard form rows. */
+
+.wf-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.35rem 0.75rem 0.15rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--gs-line, rgba(255, 255, 255, 0.07));
+}
+
+.wf-field {
+  display: block;
+  cursor: auto;
+}
+
+.wf-field-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.35));
+}
+
+.wf-field input,
+.wf-field textarea,
+.wf-field select {
+  width: 100%;
+  padding: 0.32rem 0.45rem;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.09));
+  border-radius: 0.4rem;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--gs-text, #f5f2f2);
+  font-family: inherit;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  outline: none;
+  resize: none;
+  transition: border-color 140ms var(--gs-ease);
+}
+
+.wf-field input:focus,
+.wf-field textarea:focus,
+.wf-field select:focus {
+  border-color: rgba(52, 211, 153, 0.5);
+}
+
+.wf-field textarea {
+  min-height: 2.6rem;
+}
+
+.wf-field ::placeholder {
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.28));
+}
+
+:root[data-theme="light"] .wf-field input,
+:root[data-theme="light"] .wf-field textarea,
+:root[data-theme="light"] .wf-field select {
+  background: rgba(16, 14, 14, 0.03);
+}
+
+.wf-node-delete {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.4rem;
+  background: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.wf-node-delete:hover {
+  background: rgba(237, 66, 69, 0.3);
+  color: #ffd7d7;
+}
+
+.wf-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(24rem, 80%);
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.4));
+  font-size: 0.88rem;
+  line-height: 1.6;
+  pointer-events: none;
+}
+
+.wf-empty p:first-child {
+  font-weight: 700;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.6));
+}
+
+/* ── Adding a block ─────────────────────────────────────────────────────── */
+
+/* ── The palette ────────────────────────────────────────────────────────── */
+
+/* The docked palette (instead of a modal picker that hid the canvas). */
+
+.wf-palette {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.1));
+  border-radius: 0.85rem;
+  background: var(--gs-surface-solid, #121212);
+}
+
+@media (max-width: 1100px) {
+  .wf-palette {
+    max-height: 26rem;
+  }
+}
+
+.wf-palette-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.8rem;
+  border-bottom: 1px solid var(--gs-line, rgba(255, 255, 255, 0.08));
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.4));
+}
+
+.wf-palette-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 0.85rem;
+  color: var(--gs-text, #f5f2f2);
+  outline: none;
+}
+
+.wf-palette-search button {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0.15rem;
+  border-radius: 0.3rem;
+  color: inherit;
+}
+
+.wf-palette-search button:hover {
+  color: var(--gs-text, #f5f2f2);
+}
+
+/* Category chips. A filter you can see the state of beats a dropdown you have
+   to open to find out what it is set to. */
+.wf-palette-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  border-bottom: 1px solid var(--gs-line, rgba(255, 255, 255, 0.08));
+}
+
+.wf-chip {
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.1));
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.6));
+  transition:
+    border-color 160ms var(--gs-ease),
+    background-color 160ms var(--gs-ease),
+    color 160ms var(--gs-ease);
+}
+
+.wf-chip:hover {
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-chip.is-on {
+  border-color: var(--wf-accent, #34d399);
+  background: color-mix(in srgb, var(--wf-accent, #34d399) 22%, transparent);
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-palette-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.6rem;
+}
+
+.wf-palette-group + .wf-palette-group {
+  margin-top: 0.9rem;
+}
+
+.wf-palette-group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+  padding: 0 0.15rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.wf-palette-group-title span {
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  opacity: 0.75;
+}
+
+/* A palette entry is drawn as the block it becomes, ports included, so you can
+   see what it accepts. */
+.wf-palette-card {
+  overflow: hidden;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.09));
+  border-left: 3px solid var(--wf-accent, #5c5c5c);
+  border-radius: 0.5rem;
+  background: var(--gs-surface, rgba(255, 255, 255, 0.02));
+  cursor: grab;
+  transition:
+    border-color 160ms var(--gs-ease),
+    transform 160ms var(--gs-ease);
+}
+
+.wf-palette-card + .wf-palette-card {
+  margin-top: 0.35rem;
+}
+
+.wf-palette-card:hover {
+  border-color: var(--wf-accent, #5c5c5c);
+  transform: translateX(2px);
+}
+
+.wf-palette-card:active {
+  cursor: grabbing;
+}
+
+.wf-palette-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.4));
+}
+
+.wf-palette-card-label {
+  display: block;
+  overflow: hidden;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-palette-card-hint {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  margin-top: 0.1rem;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.5));
+}
+
+.wf-palette-card-ports {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.15rem 0.5rem;
+  padding: 0.4rem 0.6rem 0.5rem;
+  border-top: 1px dashed var(--gs-line, rgba(255, 255, 255, 0.08));
+}
+
+.wf-palette-card-ports ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wf-palette-card-ports li {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  overflow: hidden;
+  font-size: 0.66rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.55));
+}
+
+.wf-palette-card-ports .is-out li {
+  justify-content: flex-end;
+}
+
+/* Same dot as on the node, at the size a legend wants rather than the size a
+   target wants — these are not connectable, they are the key. */
+.wf-palette-card-ports i {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+
+.wf-palette-empty {
+  padding: 1.5rem 0.75rem;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.5));
+}
+
+/* ── Viewport controls, hints and problems ──────────────────────────────── */
+
+.wf-viewport-controls {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.1));
+  border-radius: 0.5rem;
+  background: var(--gs-surface-solid, #121212);
+}
+
+.wf-viewport-controls button {
+  display: grid;
+  place-items: center;
+  min-width: 2rem;
+  height: 1.9rem;
+  padding: 0 0.4rem;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.6));
+  transition: background-color 160ms var(--gs-ease), color 160ms var(--gs-ease);
+}
+
+.wf-viewport-controls button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-zoom-level {
+  min-width: 3rem !important;
+  border-right: 1px solid var(--gs-line, rgba(255, 255, 255, 0.1));
+  border-left: 1px solid var(--gs-line, rgba(255, 255, 255, 0.1));
+}
+
+/* The modifiers, stated. A held key nobody knows about is a feature nobody
+   has, and this is the one place on the page to say it. */
+.wf-pan-hint {
+  position: absolute;
+  right: 0.85rem;
+  bottom: 0.95rem;
+  font-size: 0.68rem;
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.32));
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 780px) {
+  .wf-pan-hint {
+    display: none;
+  }
+}
+
+.wf-problems {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: min(22rem, calc(100% - 1.5rem));
+  text-align: right;
+}
+
+.wf-problems-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid rgba(251, 113, 133, 0.4);
+  border-radius: 999px;
+  background: color-mix(in srgb, #fb7185 16%, var(--gs-surface-solid, #121212));
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fda4af;
+}
+
+.wf-problems-badge:hover {
+  border-color: rgba(251, 113, 133, 0.75);
+}
+
+.wf-problems-list {
+  margin: 0.35rem 0 0;
+  padding: 0.3rem;
+  overflow: hidden auto;
+  max-height: 14rem;
+  list-style: none;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.1));
+  border-radius: 0.55rem;
+  background: var(--gs-surface-solid, #121212);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.55);
+  text-align: left;
+}
+
+.wf-problems-list button {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.35rem;
+  text-align: left;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.72));
+}
+
+.wf-problems-list button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-problems-ref {
+  flex: 0 0 auto;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 0.66rem;
+  color: #fda4af;
+}
+
+/* A block with something wrong with it says so on the block, not only in the
+   list — the list tells you how many, the border tells you which. */
+.wf-node-warn {
+  border-color: rgba(251, 113, 133, 0.5);
+}
+
+.wf-node-warn.wf-node-on {
+  border-color: rgba(251, 113, 133, 0.85);
+}
+
+/* Ports that cannot take what you are holding fade while you hold it. */
+.wf-dot.is-dim {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+
+@media (max-width: 640px) {
+  .wf-canvas {
+    height: 60vh;
+  }
+
+}
+
+/* ── The message a block sends ──────────────────────────────────────────── */
+
+/* A message field shows what is in the message; changing it opens the full
+   editor. */
+.wf-field-message {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px dashed var(--gs-line, rgba(255, 255, 255, 0.14));
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.03);
+  text-align: left;
+  font-size: 0.75rem;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.7));
+  transition: border-color 160ms var(--gs-ease), color 160ms var(--gs-ease);
+}
+
+.wf-field-message:hover:not(:disabled) {
+  border-color: #f472b6;
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-field-message span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wf-message-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+/* A heavy scrim, so the message dialog reads as in front of the canvas. */
+.wf-message-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 4, 5, 0.78);
+  backdrop-filter: blur(10px) saturate(0.85);
+  animation: wfScrimIn 180ms ease both;
+}
+
+@keyframes wfScrimIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.wf-message-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(72rem, 100%);
+  max-height: min(90vh, 56rem);
+  overflow: hidden;
+  border: 1px solid var(--gs-line-strong, rgba(255, 255, 255, 0.14));
+  border-radius: 1.15rem;
+  background: var(--gs-surface-solid, #101011);
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(0, 0, 0, 0.5);
+  animation: wfPanelIn 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes wfPanelIn {
+  from { opacity: 0; transform: translateY(0.6rem) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wf-message-scrim,
+  .wf-message-panel {
+    animation-duration: 1ms;
+  }
+}
+
+.wf-message-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.05rem 1.15rem;
+  border-bottom: 1px solid var(--gs-line, rgba(255, 255, 255, 0.08));
+  /* The accent is on the icon only. */
+  background: linear-gradient(180deg, rgba(244, 114, 182, 0.06), transparent);
+}
+
+.wf-message-head-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 1px solid rgba(244, 114, 182, 0.28);
+  border-radius: 0.6rem;
+  background: rgba(244, 114, 182, 0.12);
+  color: #f9a8d4;
+}
+
+.wf-message-head > button {
+  margin-left: auto;
+  padding: 0.25rem;
+  border-radius: 0.35rem;
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.45));
+}
+
+.wf-message-head > button:hover {
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-message-title {
+  font-size: 0.92rem;
+  font-weight: 750;
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-message-sub {
+  margin-top: 0.1rem;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.5));
+}
+
+.wf-message-modes {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.6rem 1rem 0;
+}
+
+.wf-message-mode {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.55));
+}
+
+.wf-message-mode.is-on {
+  border-color: var(--gs-line, rgba(255, 255, 255, 0.12));
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--gs-text, #f5f2f2);
+}
+
+/* Editor and preview side by side, because a message you cannot see while you
+   write it is a message you write twice. */
+.wf-message-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+  gap: 1rem;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1rem;
+}
+
+@media (max-width: 1000px) {
+  .wf-message-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.wf-message-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.wf-message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.76rem;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.6));
+}
+
+.wf-message-content textarea,
+.wf-message-content select {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.1));
+  border-radius: 0.45rem;
+  background: var(--gs-surface, rgba(255, 255, 255, 0.03));
+  font-size: 0.82rem;
+  color: var(--gs-text, #f5f2f2);
+  resize: vertical;
+}
+
+.wf-message-error {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(251, 113, 133, 0.4);
+  border-radius: 0.45rem;
+  font-size: 0.76rem;
+  color: #fda4af;
+}
+
+.wf-message-preview {
+  min-width: 0;
+  /* Sticks, so it stays beside the field being edited instead of scrolling
+     out of sight the moment an embed section opens. */
+  position: sticky;
+  top: 0;
+  align-self: start;
+}
+
+/* A surface under the message preview, so it reads as the other half of the
+   editor. */
+.wf-message-preview-stage {
+  padding: 0.9rem;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.08));
+  border-radius: 0.85rem;
+  background:
+    radial-gradient(120% 100% at 50% 0%, rgba(255, 255, 255, 0.035), transparent 70%),
+    rgba(0, 0, 0, 0.28);
+}
+
+.wf-message-preview-label {
+  margin-bottom: 0.45rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.4));
+}
+
+.wf-message-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--gs-line, rgba(255, 255, 255, 0.08));
+}
+
+.wf-message-cancel,
+.wf-message-save {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.12));
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.wf-message-cancel {
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.6));
+}
+
+.wf-message-save {
+  border-color: #f472b6;
+  background: color-mix(in srgb, #f472b6 22%, transparent);
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-message-save:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── the editor fills the window ──
+
+   The chrome is pinned and the canvas takes everything else; nothing outside it
+   scrolls. `100dvh`, because on mobile Safari `100vh` is the height with the
+   toolbars hidden. */
+
+.wf-page {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.wf-page-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 0.75rem;
+}
+
+.wf-page-inner .wf-shell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Everything after the tab strip is the working area. */
+.wf-page-inner .wf-shell > :last-child {
+  flex: 1;
+  min-height: 0;
+}
+
+.wf-page-inner .wf-canvas-wrap {
+  height: 100%;
+}
+
+/* The mark is the way back; it swaps to an arrow on hover. */
+.wf-shell-mark-link {
+  position: relative;
+  transition: color 160ms var(--gs-ease), border-color 160ms var(--gs-ease);
+}
+
+.wf-shell-mark-back {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 160ms var(--gs-ease);
+}
+
+.wf-shell-mark-icon {
+  transition: opacity 160ms var(--gs-ease);
+}
+
+.wf-shell-mark-link:hover .wf-shell-mark-icon {
+  opacity: 0;
+}
+
+.wf-shell-mark-link:hover .wf-shell-mark-back {
+  opacity: 1;
+}
+
+.wf-shell-saved {
+  margin-left: 0.4rem;
+  font-weight: 500;
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.4));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wf-canvas-wrap,
+  .wf-palette-handle {
+    transition: none;
+  }
+}
+
+/* ── arming a port ──
+
+   Click an output and the palette narrows to the blocks that can continue from
+   it; picking one places, wires and selects it, then re-arms on the new block,
+   so a chain is click, click, click. Dragging still works. */
+
+.wf-dot.is-armed {
+  background: currentColor;
+  transform: scale(1.35);
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 28%, transparent);
+}
+
+/* A ring that keeps pulsing while the port is held, so the canvas says "I am
+   waiting on you" rather than leaving the state entirely in the side panel. */
+@media (prefers-reduced-motion: no-preference) {
+  .wf-dot.is-armed::before {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    animation: wfArmed 1.6s ease-out infinite;
+  }
+}
+
+@keyframes wfArmed {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.75);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+.wf-armed {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.6rem 0.7rem;
+  border-bottom: 1px solid var(--gs-line, rgba(255, 255, 255, 0.08));
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent-peach, #f7a8c4) 14%, transparent),
+    transparent
+  );
+}
+
+.wf-armed-dot {
+  flex: 0 0 auto;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 25%, transparent);
+}
+
+.wf-armed-title {
+  display: block;
+  overflow: hidden;
+  font-size: 0.8rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gs-text, #f5f2f2);
+}
+
+.wf-armed-hint {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.55));
+}
+
+.wf-armed > button {
+  margin-left: auto;
+  padding: 0.2rem;
+  border-radius: 0.3rem;
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.45));
+}
+
+.wf-armed > button:hover {
+  color: var(--gs-text, #f5f2f2);
+}
+
+/* While a port is armed the palette is a shortlist, not a catalogue — so it
+   stops looking like a catalogue. */
+.wf-palette[data-armed="true"] .wf-palette-card-ports {
+  display: none;
+}
+
+.wf-palette-lands {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.65));
+}
+
+.wf-palette-lands i {
+  width: 6px;
+  height: 6px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+
+/* ── the node look ──
+
+   The /manage material on a canvas: the warm near-black, the one-pixel top
+   highlight, the accent, and a dashed rule. */
+
+.wf-node {
+  border-radius: 0.85rem;
+  /* Warm, not slate. A blue-grey card on a warm-black page is the tell that a
+     canvas was dropped in from somewhere else. */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 5rem),
+    var(--manage-panel, #151515);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 1.25rem 2.75rem rgba(0, 0, 0, 0.5);
+}
+
+/* The category is a 3px spine down the left edge rather than a filled header
+   band. */
+.wf-node-head {
+  position: relative;
+  min-height: 52px;
+  padding: 0.65rem 0.8rem 0.55rem;
+  background: transparent;
+}
+
+.wf-node::before {
+  content: "";
+  position: absolute;
+  top: 0.55rem;
+  bottom: 0.55rem;
+  left: 0;
+  width: 3px;
+  border-radius: 0 999px 999px 0;
+  background: var(--wf-accent, #5c5c5c);
+}
+
+/* A dashed rule separates the name from the ports. */
+.wf-node-head::after {
+  content: "";
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0;
+  left: 0.8rem;
+  border-top: 1px dashed var(--gs-line, rgba(255, 255, 255, 0.12));
+}
+
+.wf-node-ref {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  color: var(--gs-text-faint, rgba(245, 242, 242, 0.35));
+}
+
+.wf-node-on {
+  border-color: var(--accent-peach, #f7a8c4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 0 0 1px color-mix(in srgb, var(--accent-peach, #f7a8c4) 35%, transparent),
+    0 1.5rem 3rem rgba(0, 0, 0, 0.55);
+}
+
+/* Edges taper from heavy to light to show direction. */
+.wf-edge {
+  stroke-width: 2.25;
+  opacity: 0.7;
+}
+
+.wf-edge-live {
+  stroke-dasharray: 6 5;
+  stroke-width: 2.5;
+  opacity: 1;
+}
+
+/* ── blocks that do not run yet ──
+
+   Dimmed in the palette, not hidden or disabled: they save, round-trip and will
+   work once the engine supports them, so building ahead is allowed. */
+
+.wf-palette-card[data-runnable="false"] {
+  opacity: 0.55;
+}
+
+.wf-palette-card[data-runnable="false"]:hover {
+  opacity: 0.85;
+}
+
+.wf-soon {
+  margin-left: 0.35rem;
+  padding: 0.02rem 0.3rem;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: 0.25rem;
+  background: rgba(251, 191, 36, 0.1);
+  font-size: 0.55rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fcd34d;
+  vertical-align: middle;
+}
+
+
+/* ── a port's typed value ──
+
+   Every unwired input port gets an editor underneath (the engine reads
+   `node.values[portId]` when no edge feeds the port; a wire wins). Indented to
+   the port's label, so it reads as belonging to that port. */
+.wf-port-input {
+  margin: 0.15rem 0 0.5rem 1.35rem;
+}
+
+.wf-port-input input,
+.wf-port-input select {
+  width: 100%;
+  padding: 0.34rem 0.5rem;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.1));
+  border-radius: 0.42rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  font-size: 0.74rem;
+  line-height: 1.3;
+}
+
+.wf-port-input input:focus,
+.wf-port-input select:focus {
+  outline: none;
+  border-color: var(--wf-accent, rgb(var(--accent-rgb) / 0.5));
+}
+
+.wf-port-input input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+/* The pickers portal to the body, so they are not clipped by the node — but
+   their trigger has to sit at the node's own scale and type size. */
+.wf-port-input [data-picker-trigger],
+.wf-port-input button {
+  font-size: 0.74rem;
+}
+
+.wf-port-hint {
+  margin: 0.05rem 0 0.5rem 1.35rem;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+:root[data-theme="light"] .wf-port-input input,
+:root[data-theme="light"] .wf-port-input select {
+  background: rgba(16, 14, 14, 0.03);
+  border-color: rgba(16, 14, 14, 0.12);
+}
+
+:root[data-theme="light"] .wf-port-hint {
+  color: rgba(16, 14, 14, 0.42);
+}
+
+
+/* The editable title looks like the heading until focused. */
+.wf-shell-name-input {
+  width: 100%;
+  padding: 0.15rem 0.4rem;
+  margin-left: -0.4rem;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.wf-shell-name-input:hover {
+  background: var(--gs-surface, rgba(255, 255, 255, 0.03));
+}
+
+.wf-shell-name-input:focus {
+  outline: none;
+  border-color: var(--gs-line-strong, rgba(255, 255, 255, 0.18));
+  background: var(--gs-surface, rgba(255, 255, 255, 0.04));
+}
+
+.wf-shell-name-input::placeholder {
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.35));
+}
+
+.wf-settings-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--gs-line, rgba(255, 255, 255, 0.1));
+  border-radius: 0.75rem;
+  background: var(--gs-surface, rgba(255, 255, 255, 0.03));
+  color: var(--gs-text, #f5f2f2);
+  font-size: 0.85rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.wf-settings-action:hover:not(:disabled) {
+  border-color: var(--gs-line-strong, rgba(255, 255, 255, 0.2));
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.wf-settings-action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.wf-settings-action-danger {
+  border-color: rgba(248, 113, 113, 0.28);
+  color: rgba(254, 202, 202, 0.92);
+}
+
+.wf-settings-action-danger:hover:not(:disabled) {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+
+/* No native dragging on the canvas: an <img> stays draggable even with
+   `user-select: none`, and its drag ghost would block the pan. The palette
+   outside still drags blocks in. */
+.wf-canvas img,
+.wf-canvas svg,
+.wf-canvas a {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* Exceptions: port value editors and the node title are real text inputs. */
+.wf-canvas input,
+.wf-canvas textarea,
+.wf-canvas select,
+.wf-canvas [contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+
+/* `grab` is inherited from the canvas, so non-grabbable things set their own
+   cursor. Port dots get `crosshair` (they start a wire), hence `:not(.wf-dot)`. */
+.wf-canvas button:not(.wf-dot),
+.wf-canvas a,
+.wf-canvas label,
+.wf-canvas select {
+  cursor: pointer;
+}
+
+.wf-canvas input,
+.wf-canvas textarea,
+.wf-canvas [contenteditable="true"] {
+  cursor: text;
+}
+
+
+/* ── Right-click menu ──────────────────────────────────────────────────── */
+
+.wf-menu {
+  position: absolute;
+  z-index: 60;
+  min-width: 15rem;
+  max-width: 20rem;
+  padding: 0.35rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #131415;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.72);
+}
+
+.wf-menu-title {
+  padding: 0.35rem 0.5rem 0.15rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.wf-menu-search {
+  width: 100%;
+  margin-bottom: 0.25rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 12px;
+  color: #f5f2f2;
+  outline: none;
+}
+
+.wf-menu-search:focus {
+  border-color: rgb(var(--accent-rgb) / 0.55);
+}
+
+.wf-menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.55rem;
+  text-align: left;
+  transition: background-color 120ms ease;
+}
+
+.wf-menu-item:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.wf-menu-item:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wf-menu-item.is-danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.wf-menu-item.is-danger .wf-menu-item-label {
+  color: #fca5a5;
+}
+
+.wf-menu-item-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.wf-menu-item-sub {
+  display: block;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.wf-menu-empty {
+  padding: 0.5rem;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+}

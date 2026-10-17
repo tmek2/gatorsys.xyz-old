@@ -1,0 +1,330 @@
+/* The server picker (part of manage-window.css) */
+
+/* ── the server picker ───────────────────────────────────────────────────── */
+
+/* The picker drops from the server tab that opened it. */
+.gw-pick-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  /* The motion contract (styles/motion.css) puts `will-change` on anything with
+     `data-enter`. Here that would make the layer a backdrop root, and the
+     scrim's blur could not see the page behind it. The layer never moves, so it
+     gets no hint. */
+  will-change: auto;
+}
+/* Same reason: the contract fades `data-enter` elements from opacity 0, and
+   opacity below 1 also makes a backdrop root, so the blur would snap in at the
+   end of the entrance. The layer stays opaque and still; the panel and the
+   scrim animate on their own rules. */
+.gw-pick-layer[data-enter] {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+/* The page behind the picker blurs from the top down, starting at the bar's
+   lower edge, as the panel drops. The blur radius never animates (the
+   compositor cannot cache a changing radius); a keyframe on `data-open` reveals
+   it from the first frame, and closing runs it back up. */
+.gw-pick-layer {
+  pointer-events: none;
+}
+.gw-pick-layer > * {
+  pointer-events: auto;
+}
+.gw-pick-scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--g-ground) 16%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(1.15);
+  backdrop-filter: blur(10px) saturate(1.15);
+  cursor: default;
+}
+/* The blurred region grows with the layer's height on the sheet curve. Not a
+   clip-path wipe: Safari does not redraw a blurred layer's clip while it
+   animates. */
+.gw-pick-scrim {
+  transform-origin: 50% 0;
+  transform: scaleY(0);
+  will-change: transform;
+}
+.gw-pick-layer[data-open="idle"] .gw-pick-scrim {
+  visibility: hidden;
+  pointer-events: none;
+}
+.gw-pick-layer[data-open="true"] .gw-pick-scrim {
+  animation: gw-veil-down 460ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.gw-pick-layer[data-open="false"] .gw-pick-scrim {
+  animation: gw-veil-up 220ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+@keyframes gw-veil-down {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes gw-veil-up {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-pick-layer .gw-pick-scrim {
+    animation-duration: 1ms;
+  }
+}
+
+/* The panel unrolls from the tab: quick to arrive, soft to land, opaque before
+   it stops moving. Closing is faster than opening. */
+.gw-pick {
+  position: absolute;
+  width: min(400px, calc(100vw - var(--u6)));
+  padding: var(--u1);
+  border: 1px solid var(--mac-hair);
+  border-radius: var(--r-panel);
+  background: var(--mac-raise);
+  box-shadow: 0 34px 80px -24px rgba(0, 0, 0, 0.78);
+  transform-origin: 28px 0;
+  opacity: 0;
+  transform: translate3d(0, -6px, 0) scale(0.96, 0.92);
+  transition:
+    opacity 120ms linear,
+    transform 180ms cubic-bezier(0.4, 0, 1, 1);
+  will-change: transform, opacity;
+}
+.gw-pick-layer[data-enter="to"] .gw-pick {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 150ms linear,
+    transform 340ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+:root[data-theme="light"] .gw-pick {
+  box-shadow: 0 34px 80px -28px rgba(80, 35, 50, 0.3);
+}
+
+/* Search sits in the panel's top edge as one ruled line; the caret is the
+   focus. */
+.gw-pick-find {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  margin: calc(var(--u1) * -1) calc(var(--u1) * -1) 0;
+  padding-inline: 16px;
+  border-bottom: 1px solid var(--mac-hair);
+  color: var(--mac-label-dim);
+  transition: color 140ms ease;
+}
+.gw-pick-find:focus-within {
+  color: var(--g-ink);
+}
+.gw-pick-find input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--g-ink);
+  font: inherit;
+  font-size: var(--t-body);
+  outline: none;
+  caret-color: var(--g-accent);
+}
+.gw-pick-find input::placeholder {
+  color: var(--mac-label-dim);
+}
+/* The focus ring goes on the search box, not the bare input inside it. */
+.gw-pick-find input:focus,
+.gw-pick-find input:focus-visible {
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Six rows at 48 is 288, which is the tallest this can be before it stops
+   reading as a list hung off a tab and starts reading as a panel of its own. */
+.gw-pick-list {
+  max-height: 288px;
+  margin-top: var(--u1);
+  padding: 2px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Cut across a row, a list says nothing about having more in it. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--u5)), transparent);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - var(--u5)),
+    transparent
+  );
+}
+
+.gw-pick-row {
+  display: flex;
+  align-items: center;
+  gap: var(--u3);
+  width: 100%;
+  height: var(--u12);
+  padding-inline: var(--u2);
+  border: 0;
+  border-radius: var(--r-row);
+  background: transparent;
+  color: var(--mac-label);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  /* Rows have no entrance of their own; the panel's opening is the entrance. */
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.gw-pick-row[data-lit="true"] {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-pick,
+  .gw-pick-layer[data-enter="to"] .gw-pick {
+    transition-duration: 1ms;
+  }
+}
+
+.gw-pick-art {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--u8);
+  height: var(--u8);
+  border-radius: var(--r-tile);
+  object-fit: cover;
+  background: var(--g-fill-2);
+  color: var(--mac-label);
+  font-size: var(--t-micro);
+  font-weight: 800;
+}
+.gw-pick-row[data-here="true"] .gw-pick-art {
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+}
+/* Server icons show as they are; the filled disc is only behind initials when
+   there is no icon. */
+img.gw-pick-art,
+img.gw-tab-art {
+  border-radius: 6px;
+  background: transparent !important;
+  object-fit: contain;
+}
+.gw-pick-say {
+  min-width: 0;
+  flex: 1;
+}
+.gw-pick-name {
+  display: block;
+  overflow: hidden;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gw-pick-note {
+  display: block;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+
+/* The server you are in: listed first, dimmed, and labelled in words. */
+.gw-pick-row[data-here="true"] {
+  opacity: 0.55;
+  cursor: default;
+}
+.gw-pick-row[data-here="true"]:hover,
+.gw-pick-row[data-here="true"][data-lit="true"] {
+  background: transparent;
+  opacity: 0.72;
+}
+.gw-pick-pill {
+  flex: none;
+  padding: 3px var(--u2);
+  border-radius: 999px;
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+  font-size: var(--t-micro);
+  font-weight: 700;
+}
+.gw-pick-go {
+  flex: none;
+  color: var(--mac-label-dim);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 140ms ease,
+    transform 200ms var(--g-ease-out);
+}
+.gw-pick-row[data-lit="true"] .gw-pick-go {
+  opacity: 1;
+  transform: none;
+}
+
+.gw-pick-note-line {
+  padding: var(--u5) var(--u3);
+  color: var(--mac-label-dim);
+  font-size: var(--t-small);
+  text-align: center;
+}
+
+.gw-pick-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--u1);
+  /* Ruled edge to edge, like the search above the list. */
+  margin: var(--u1) calc(var(--u1) * -1) 0;
+  padding: var(--u1) var(--u1) 0;
+  border-top: 1px solid var(--mac-hair);
+}
+.gw-pick-act {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--u2);
+  height: var(--u8);
+  padding-inline: var(--u3);
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--mac-label-dim);
+  font: inherit;
+  font-size: var(--t-small);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.gw-pick-act:hover {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+.gw-pick-keys {
+  margin-left: auto;
+  display: flex;
+  gap: var(--u1);
+  padding-right: var(--u1);
+  color: var(--mac-label-dim);
+  font-size: var(--t-micro);
+}
+.gw-pick-keys kbd {
+  padding: 1px var(--u1);
+  border-radius: 5px;
+  background: var(--g-fill-2);
+  font-family: inherit;
+  font-weight: 700;
+}

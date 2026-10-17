@@ -1,0 +1,71 @@
+/* Unlayered, like the rest: Tailwind v3's preflight is unlayered and beats
+   every layered rule. */
+
+/* No `position` in the base rule: the caller owns it (the hero's field is
+   absolute inside a sticky screen, the picker's is fixed to the viewport), and
+   a base `position` would make the result depend on stylesheet import order. */
+.g-dots {
+  /* Dark dot strength. Dark is the appearance the site was designed in, so its
+     field should read at least as clearly as light's. The ceiling is the
+     pointer's glow, which multiplies this base: at 0.32 a dot under the pointer
+     reaches 0.93, and much past 0.34 the brightest dots clip and the halo
+     flattens into a disc. */
+  --g-dot-alpha: 0.32;
+
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  /* The live square is 462px on a side and follows the pointer, so near an
+     edge it hangs over one. This is what keeps it inside the field. */
+  overflow: hidden;
+}
+
+/* The two surfaces: the resting grid, field-sized and drawn once, and the live
+   square, fixed-size and moved with a transform, so the compositor gets the
+   same small texture every frame. See the note at the top of dot-field.tsx. */
+.g-dots-rest,
+.g-dots-live {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+}
+.g-dots-rest {
+  width: 100%;
+  height: 100%;
+}
+.g-dots-live {
+  /* Hidden when there is nothing to show (it would only duplicate the resting
+     grid under it), so removing it costs no repaint. */
+  visibility: hidden;
+  will-change: transform;
+}
+
+/* Light theme dots: a deeper ink and a higher alpha, and still the quieter of
+   the two fields.
+
+   The two themes cannot match exactly. A light dot on near-black is a large
+   luminance increment, which the eye is very sensitive to; a dark dot on paper
+   is a decrement, capped at 100%. The dark pink is 10.6:1 on the dark ground;
+   even light's deeper accent is only about 3:1 on paper, so no alpha of it
+   reads the same there.
+   `--g-accent-ink` (the deeper pink used for light-theme links) at 0.55 gives
+   about a 56% decrement and keeps headroom for the pointer's glow, which
+   multiplies this base.
+
+   `--g-dot-ink` is a hex value rather than `var(--g-accent-ink)` because
+   dot-field.tsx reads it with `getPropertyValue`, and a token that is itself a
+   `var()` may not resolve there. */
+:root[data-theme="light"] .g-dots {
+  --g-dot-ink: #a8345d;
+  --g-dot-alpha: 0.55;
+}
+/* Written out again rather than grouped: grouped, this media query would beat
+   an explicit light choice made on a device set to dark. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .g-dots {
+    --g-dot-ink: #a8345d;
+    --g-dot-alpha: 0.55;
+  }
+}

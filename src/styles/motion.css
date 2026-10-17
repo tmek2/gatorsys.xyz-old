@@ -1,0 +1,208 @@
+/**
+ * One motion system for the whole app. Timing is set once here and every
+ * `data-state` surface (dialogs, popovers, dropdowns, selects, tooltips) uses
+ * it; hand-rolled overlays use `usePresence` (components/motion.tsx) for the
+ * same open/closed contract.
+ *
+ * Performance rules: - animate only `opacity` and `transform` (composited, no
+ * layout or paint); - no `filter`, `box-shadow`, `width`/`height`/`top`/`left`
+ * transitions; - `will-change` only on elements mid-transition, via the open
+ * state.
+ */
+
+:root {
+  /* Fast enough to feel instant, slow enough to be read as motion. */
+  --motion-instant: 90ms;
+  --motion-fast: 160ms;
+  --motion-base: 220ms;
+  --motion-slow: 320ms;
+
+  /* Decelerate in, accelerate out: things arrive gently and leave decisively. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  /* A little overshoot, for things that should feel physical. */
+  --ease-spring: cubic-bezier(0.22, 1.15, 0.36, 1);
+}
+
+/* ── Radix surfaces ─────────────────────────────────────────────────────────
+   Every primitive already emits data-state; this makes them agree on timing. */
+
+[data-radix-popper-content-wrapper] > *,
+[data-state][role="dialog"],
+[data-state][role="menu"],
+[data-state][role="listbox"],
+[data-state][role="tooltip"] {
+  animation-duration: var(--motion-fast) !important;
+  animation-timing-function: var(--ease-out) !important;
+}
+
+[data-state="closed"][role="dialog"],
+[data-state="closed"][role="menu"],
+[data-state="closed"][role="listbox"],
+[data-state="closed"][role="tooltip"] {
+  animation-duration: var(--motion-instant) !important;
+  animation-timing-function: var(--ease-in) !important;
+}
+
+/* Dialogs are heavier and get a touch more travel. */
+[data-state][role="alertdialog"],
+[data-state][role="dialog"] {
+  animation-duration: var(--motion-base) !important;
+}
+
+/* ── presence contract for hand-rolled overlays ──
+
+   Use with `usePresence`: the element mounts as `data-enter="from"`, flips to
+   "to" on the next frame, and returns to "from" while animating out. The
+   two-step mount guarantees a starting frame to transition from. */
+
+[data-enter] {
+  transition:
+    opacity var(--motion-base) var(--ease-out),
+    transform var(--motion-base) var(--ease-spring);
+}
+
+[data-enter="from"] {
+  opacity: 0;
+  transform: translateY(-0.5rem) scale(0.97);
+}
+
+[data-enter="to"] {
+  opacity: 1;
+  transform: none;
+  will-change: transform, opacity;
+}
+
+/* Directional variants, for things anchored somewhere specific. */
+[data-enter][data-enter-from="bottom"][data-enter="from"] {
+  transform: translateY(0.75rem) scale(0.98);
+}
+[data-enter][data-enter-from="left"][data-enter="from"] {
+  transform: translateX(-0.75rem);
+}
+[data-enter][data-enter-from="right"][data-enter="from"] {
+  transform: translateX(0.75rem);
+}
+[data-enter][data-enter-from="scale"][data-enter="from"] {
+  transform: scale(0.94);
+}
+
+/* ── entrances for content on load ──
+
+   Cards, rows and panels that render on load: very short and very small. */
+
+@keyframes gator-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.gator-rise {
+  animation: gator-rise var(--motion-base) var(--ease-out) both;
+}
+
+/* Staggered lists. Capped deliberately: past about ten items the tail is just
+   a wait, so everything after it lands together. */
+.gator-stagger > * {
+  animation: gator-rise var(--motion-base) var(--ease-out) both;
+}
+.gator-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.gator-stagger > *:nth-child(2) { animation-delay: 24ms; }
+.gator-stagger > *:nth-child(3) { animation-delay: 48ms; }
+.gator-stagger > *:nth-child(4) { animation-delay: 72ms; }
+.gator-stagger > *:nth-child(5) { animation-delay: 96ms; }
+.gator-stagger > *:nth-child(6) { animation-delay: 120ms; }
+.gator-stagger > *:nth-child(7) { animation-delay: 144ms; }
+.gator-stagger > *:nth-child(8) { animation-delay: 168ms; }
+.gator-stagger > *:nth-child(9) { animation-delay: 192ms; }
+.gator-stagger > *:nth-child(n + 10) { animation-delay: 210ms; }
+
+/* ── interactive feedback ──
+
+   The press is faster than the release. */
+
+.gator-press {
+  transition:
+    transform var(--motion-fast) var(--ease-out),
+    background-color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out);
+}
+
+.gator-press:active {
+  transform: scale(0.97);
+  transition-duration: var(--motion-instant);
+}
+
+/* ── reduced motion ──
+
+   Opacity stays so state changes remain visible; only movement goes. */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-instant: 1ms;
+    --motion-fast: 1ms;
+    --motion-base: 1ms;
+    --motion-slow: 1ms;
+  }
+
+  .gator-rise,
+  .gator-stagger > * {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
+
+  [data-enter="from"],
+  [data-enter][data-enter-from][data-enter="from"] {
+    transform: none;
+  }
+
+  .gator-press:active {
+    transform: none;
+  }
+}
+
+/* ── overlay entrances ──
+
+   A conditionally mounted modal cannot animate its exit from CSS alone (it is
+   gone on unmount); exits need `usePresence` at the call site. This handles the
+   entrance. */
+
+@keyframes gator-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes gator-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.gator-overlay {
+  animation: gator-overlay-in var(--motion-fast) var(--ease-out) both;
+}
+
+/* The panel inside an overlay moves; the scrim only fades. Animating both the
+   same way makes the backdrop feel detached from the dialog. */
+.gator-overlay > :not(button):not(.gator-overlay-scrim) {
+  animation: gator-panel-in var(--motion-base) var(--ease-spring) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gator-overlay,
+  .gator-overlay > :not(button):not(.gator-overlay-scrim) {
+    animation-duration: 1ms !important;
+  }
+}

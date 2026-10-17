@@ -1,0 +1,108 @@
+/* Placeholder ("not yet") styles shared by every page with a waiting state,
+   separate from any one page's stylesheet.
+
+   Unlayered, like the rest of the restyle: Tailwind v3's preflight is unlayered
+   and beats every layered rule. */
+
+/* ── waiting ──
+
+   A placeholder is the shape of what replaces it: the card's own height and
+   columns, so nothing moves when content arrives. One sweep per placeholder via
+   a translating pseudo-element (compositor only), rather than an animated
+   `background-position`, which repaints every frame. */
+
+.skel-bar,
+.skel-dot {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--g-r-pill);
+  background: var(--g-fill-2);
+}
+.skel-bar {
+  height: 0.85em;
+}
+.skel-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+.skel-round {
+  width: 40px;
+  height: 40px;
+}
+.skel-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+}
+.skel-pill {
+  height: 38px;
+  border-radius: var(--g-r-pill);
+}
+
+.skel-bar::after,
+.skel-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--skel-sheen),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: skelSweep 1.5s ease-in-out infinite;
+}
+
+@keyframes skelSweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+:root {
+  --skel-sheen: rgba(255, 255, 255, 0.055);
+}
+:root[data-theme="light"] {
+  --skel-sheen: rgba(255, 255, 255, 0.85);
+}
+/* Written out again rather than grouped, so an explicit light choice on a dark
+   device still wins. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --skel-sheen: rgba(255, 255, 255, 0.85);
+  }
+}
+
+/* The same tracks the real columns resolve to, so the grid does not reflow
+   under the cards when they land. */
+.skel-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+}
+.skel-card {
+  display: flex;
+  height: 8.25rem;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 17px 20px 18px;
+  border: 1px solid var(--mac-hairline);
+  border-radius: 14px;
+  background: var(--g-raise);
+}
+.skel-card .skel-bar {
+  height: 1rem;
+}
+
+/* A placeholder that pulses is a placeholder somebody has asked not to see
+   move. The shape stays; the sweep stops. */
+@media (prefers-reduced-motion: reduce) {
+  .skel-bar::after,
+  .skel-dot::after {
+    animation: none;
+    opacity: 0;
+  }
+}

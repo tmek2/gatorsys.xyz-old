@@ -1,0 +1,751 @@
+/* The window, its chrome bar, the broken-settings menu, the body and the status
+   strip (part of manage-window.css) */
+
+/* ── the window ──────────────────────────────────────────────────────────── */
+
+.gw {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: var(--gw-side);
+  border: 1px solid var(--mac-hair);
+  border-radius: var(--r-window);
+  background: var(--mac-pane-bg);
+  /* Clips the rail and pane to the window's corners. Popovers are portalled to
+     <body>, so nothing needs to escape. */
+  overflow: clip;
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.75);
+}
+:root[data-theme="light"] .gw {
+  box-shadow: 0 30px 80px -34px rgba(80, 35, 50, 0.22);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .gw {
+    box-shadow: 0 30px 80px -34px rgba(80, 35, 50, 0.22);
+  }
+}
+@media (max-width: 900px) {
+  .gw {
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+  }
+}
+
+/* ── the chrome bar ──────────────────────────────────────────────────────── */
+
+/* The bar: the mark and the open server on the leading edge, the tools on the
+   trailing edge. Gaps between groups (8px) are larger than gaps inside them
+   (4px) so the groups read as groups. */
+.gw-bar {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: var(--u2);
+  height: var(--gw-bar);
+  /* Inset by the window radius plus a step so the mark sits clear of the
+     rounded corner. On a phone the window has no corners and this is just the
+     step. */
+  padding-inline: calc(var(--r-window) + var(--u1)) calc(var(--r-window) + var(--u1));
+  background: var(--mac-bar);
+  box-shadow: inset 0 -1px 0 var(--mac-hair);
+  font-family: var(--gw-chrome);
+  user-select: none;
+}
+
+/* Every zone stands on the bar's bottom edge at the tab's height, so the mark,
+   the tab and the icons share one centre line. */
+.gw-zone {
+  display: flex;
+  align-items: center;
+  align-self: flex-end;
+  height: var(--u10);
+  gap: var(--u1);
+  flex: none;
+}
+.gw-zone[data-grow="true"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.gw-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--u8);
+  height: var(--u8);
+  border-radius: var(--r-control);
+  color: var(--g-accent-display, var(--g-accent));
+  transition:
+    background-color 140ms ease,
+    transform 300ms var(--gw-ease);
+}
+.gw-mark:hover {
+  background: var(--g-fill-2);
+  transform: rotate(-6deg);
+}
+
+/* The open server, drawn as a browser tab joined to the pane below: the pane is
+   that server's settings. 40px tall inside the 56px bar, standing on the bottom
+   edge; its outline leaves out the bottom so the tab and the window read as one
+   surface. */
+.gw-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--u2);
+  align-self: flex-end;
+  max-width: 280px;
+  min-width: 0;
+  height: var(--u10);
+  padding: 0 var(--u3) 0 var(--u2);
+  border: 0;
+  border-radius: var(--r-row) var(--r-row) 0 0;
+  background: var(--mac-raise);
+  color: var(--g-ink);
+  font: inherit;
+  font-size: var(--t-body);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 var(--mac-tab-rim),
+    inset 1px 0 0 var(--mac-tab-rim),
+    inset -1px 0 0 var(--mac-tab-rim);
+  transition: background-color 140ms ease;
+}
+.gw-tab:hover,
+.gw-tab[data-open="true"] {
+  background: var(--mac-raise-2);
+}
+/* The tab is wrapped in its coach mark and tooltip. Both wrappers must be
+   invisible to layout so the tab still stands on the bar's edge and, on a
+   phone, takes the bar's spare width. */
+.gw-tab-coach,
+.gw-tab-coach > .relative {
+  align-self: flex-end;
+  display: flex;
+  min-width: 0;
+  max-width: 280px;
+}
+.gw-tab-coach > .relative > .gw-tab {
+  align-self: auto;
+}
+/* Server icons are round, as in Discord. */
+.gw-tab-art {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--u6);
+  height: var(--u6);
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.gw-tab-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gw-tab-chev {
+  flex: none;
+  color: var(--mac-label-dim);
+  transition: transform 260ms var(--gw-ease);
+}
+.gw-tab[data-open="true"] .gw-tab-chev {
+  transform: rotate(180deg);
+}
+
+/* Naked icon buttons: nothing at rest, a soft squircle under the pointer. */
+.gw-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--u8);
+  height: var(--u8);
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--mac-label-dim);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    transform 160ms var(--g-ease-out);
+}
+.gw-icon:hover {
+  background: var(--g-fill-2);
+  color: var(--mac-label);
+}
+.gw-icon:active {
+  transform: scale(0.94);
+}
+.gw-icon[data-on="true"] {
+  background: var(--g-line);
+  color: var(--g-ink);
+}
+.gw-icon:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+.gw-icon:disabled:hover {
+  background: transparent;
+  color: var(--mac-label-dim);
+}
+@media (pointer: coarse) {
+  .gw-icon,
+  .gw-mark {
+    width: 44px;
+    height: 44px;
+  }
+}
+.gw-spin {
+  animation: gw-turn 900ms linear infinite;
+}
+@keyframes gw-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The appearance control and the search come from the landing, where they are
+   sized for a header. In this bar they stand beside 32px icon buttons. */
+.gw-bar .g-theme-block {
+  width: var(--u8);
+  height: var(--u8);
+  border-color: transparent;
+  background: transparent;
+}
+.gw-bar .g-theme-block:hover {
+  background: var(--g-fill-2);
+}
+/* No rim on the search button here: in this bar it is one of four plain icon
+   buttons. */
+.gw-bar .g-find {
+  width: var(--u8);
+  height: var(--u8);
+  border-color: transparent;
+  background: transparent;
+  color: var(--mac-label-dim);
+}
+@media (hover: hover) {
+  .gw-bar .g-find:hover {
+    border-color: transparent;
+    background: var(--g-fill-2);
+    color: var(--mac-label);
+  }
+}
+@media (pointer: coarse) {
+  .gw-bar .g-find {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.gw-sep {
+  width: 1px;
+  height: var(--u5);
+  margin-inline: var(--u1);
+  background: var(--mac-hair);
+}
+
+.gw-face {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--g-fill-2);
+  color: var(--mac-label);
+  font-size: var(--t-micro);
+  font-weight: 800;
+  transition: box-shadow 160ms ease;
+}
+.gw-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gw-face:hover {
+  box-shadow: 0 0 0 2px var(--g-accent-line);
+}
+
+/* ── what is broken ──────────────────────────────────────────────────────── */
+
+/* Beside the server it is about, and absent when there is nothing to say. */
+.gw-health {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.gw-health-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--u1);
+  height: var(--u5);
+  /* Overrides the site-wide 44px button min-height; the chip keeps its own size
+     and gets the larger target from its collar below. */
+  min-height: 0 !important;
+  padding-inline: var(--u2);
+  border: 0;
+  border-radius: 999px;
+  background: var(--tone-warn-wash);
+  color: var(--tone-warn);
+  font: inherit;
+  font-size: var(--t-micro);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter 140ms ease;
+}
+.gw-health-chip:hover {
+  filter: brightness(1.12);
+}
+.gw-health-panel {
+  position: absolute;
+  bottom: calc(100% + var(--u2));
+  right: 0;
+  z-index: 70;
+  width: min(380px, 80vw);
+  padding: var(--u1);
+  border: 1px solid var(--mac-hair);
+  border-radius: var(--r-panel);
+  background: var(--mac-raise);
+  box-shadow: var(--mac-shadow);
+  transform-origin: bottom right;
+  opacity: 0;
+  transform: translateY(6px) scale(0.97);
+  transition:
+    opacity 160ms var(--g-ease-state),
+    transform 240ms var(--gw-ease);
+}
+.gw-health-panel[data-enter="to"] {
+  opacity: 1;
+  transform: none;
+}
+@media (pointer: coarse) {
+  .gw-health-chip {
+    height: 28px;
+    padding-inline: 11px 12px;
+    gap: 6px;
+    font-size: var(--t-small);
+  }
+  /* 28 drawn, 44 to hit. */
+  .manage-root .gw-health-chip::after {
+    inset: -8px -6px;
+  }
+  .gw-health-panel {
+    width: min(380px, calc(100vw - var(--u6)));
+  }
+  .gw-health-row {
+    min-height: 52px;
+  }
+  /* No hover to reveal it, so it is always there. */
+  .gw-health-row .gw-health-go {
+    opacity: 1;
+  }
+}
+.gw-health-list {
+  max-height: 46vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.gw-health-row {
+  display: flex;
+  align-items: center;
+  gap: var(--u2);
+  width: 100%;
+  padding: var(--u2);
+  border: 0;
+  border-radius: var(--r-row);
+  background: transparent;
+  color: var(--mac-label);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.gw-health-row:hover {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+.gw-health-say {
+  min-width: 0;
+  flex: 1;
+}
+.gw-health-label {
+  display: block;
+  overflow: hidden;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gw-health-where {
+  display: block;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+.gw-health-tag {
+  flex: none;
+  padding: 2px var(--u2);
+  border-radius: 999px;
+  background: var(--tone-warn-wash);
+  color: var(--tone-warn);
+  font-size: var(--t-micro);
+  font-weight: 700;
+}
+.gw-health-go {
+  flex: none;
+  color: var(--mac-label-dim);
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+.gw-health-row:hover .gw-health-go {
+  opacity: 1;
+}
+
+@keyframes gw-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+}
+@keyframes gw-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+
+/* ── the body ────────────────────────────────────────────────────────────── */
+
+.gw-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* The rail. No divider line: the pane beside it is a step lighter, and the tone
+   change separates them. */
+.gw-side {
+  flex: none;
+  width: var(--gw-rail);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--mac-side-bg);
+  box-shadow: inset -1px 0 0 var(--mac-hair);
+  transition: width 300ms var(--gw-ease);
+}
+.gw[data-rail="false"] .gw-side {
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.gw-nav {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  padding: var(--u3) var(--u2) var(--u4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Its scrollbar is the page's (11-scrollbars-and-touch.css). The list fades
+     at the foot instead of being cut across a row. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--u6)), transparent);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - var(--u6)),
+    transparent
+  );
+}
+/* One highlight that travels between rows (as in the landing's header). 240ms
+   on the site's out-curve with no overshoot, so it lands together with the pane
+   change. Transform only, so it stays on the compositor. */
+.gw-blob {
+  position: absolute;
+  left: var(--u2);
+  top: 0;
+  width: calc(100% - var(--u4));
+  height: var(--blob-h, 0px);
+  border-radius: var(--r-control);
+  background: var(--g-fill-2);
+  box-shadow: inset 0 0 0 1px var(--mac-hair);
+  transform: translate3d(0, var(--blob-y, 0px), 0);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+  transition:
+    transform 240ms var(--gw-ease),
+    height 180ms var(--gw-ease),
+    opacity 160ms var(--g-ease-state);
+}
+.gw-nav[data-lit="true"] .gw-blob {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-blob {
+    transition-duration: 1ms;
+  }
+}
+
+/* 24 between groups, 4 under a caption: the step between two groups has to be
+   bigger than the step inside one. */
+.gw-group + .gw-group {
+  margin-top: var(--u6);
+}
+.gw-caption {
+  margin: 0 0 var(--u1) var(--u3);
+  font-family: var(--gw-chrome);
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mac-label-dim);
+}
+
+.gw-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--u3);
+  width: 100%;
+  height: var(--u8);
+  padding-inline: var(--u3);
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--mac-label-dim);
+  font: inherit;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+.gw-row:hover {
+  color: var(--mac-label);
+}
+.gw-row[data-current="true"] {
+  color: var(--g-ink);
+  font-weight: 650;
+}
+.gw-row[data-off="true"] {
+  opacity: 0.44;
+}
+.gw-row-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--u4);
+  height: var(--u4);
+  color: inherit;
+}
+.gw-row[data-current="true"] .gw-row-icon {
+  color: var(--g-accent-ink);
+}
+.gw-row-label {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gw-row-badge {
+  flex: none;
+  min-width: var(--u5);
+  padding: 1px var(--u1);
+  border-radius: 999px;
+  background: var(--g-accent);
+  color: var(--g-on-accent);
+  font-size: var(--t-micro);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+/* Warning tone: settings on this tab that point at a channel or role Discord no
+   longer has. */
+.gw-row-badge[data-warn="true"] {
+  background: var(--tone-warn-wash);
+  color: var(--tone-warn);
+}
+@media (pointer: coarse) {
+  .gw-row {
+    height: 44px;
+  }
+}
+
+/* The pane, the one scrolling box. It keeps the `manage-content` class because
+   manage-restyle.css styles the controls inside a tab through it. */
+.manage-root .gw-pane {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: clip;
+  overscroll-behavior: contain;
+  padding: var(--u6) clamp(var(--u4), 2.4vw, var(--u8)) var(--u12);
+  background: var(--mac-pane-bg) !important;
+  background-image: none !important;
+}
+
+/* Every line of prose in a tab, held inside the 45–75 character band. */
+.manage-root .gw-pane p {
+  max-width: 68ch;
+}
+
+/* The tab, across the pane. The measure is a variable so a tab could still be
+ * given one; none is set. */
+.manage-root .gw-pane > .gw-place {
+  width: 100%;
+  max-width: var(--set-max);
+  margin-inline: auto;
+}
+.manage-root .gw-pane > .gw-place[data-measure="wide"] {
+  max-width: var(--wide-max);
+}
+
+/* Entering a tab: a 6px rise and a fade over 200ms, timed to finish with the
+   rail's highlight. */
+.gw-place {
+  animation: gw-place-in 200ms var(--gw-ease) both;
+}
+@keyframes gw-place-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-place {
+    animation: none;
+  }
+}
+
+/* ── the status strip ────────────────────────────────────────────────────── */
+
+.gw-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--u4);
+  height: var(--gw-foot);
+  padding-inline: var(--u3);
+  background: var(--mac-bar);
+  box-shadow: inset 0 1px 0 var(--mac-hair);
+  font-family: var(--gw-chrome);
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  color: var(--mac-label-dim);
+}
+/* On a phone this strip is the navigation button; with a pointer it is a
+   breadcrumb that opens the same list. The server name is quiet, the tab name
+   is the ink, and the hover is a chip inside the strip. */
+.gw-path {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  height: 24px;
+  padding-inline: 8px 6px;
+  margin-inline: -8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--mac-label-dim);
+  font: inherit;
+  font-size: var(--t-micro);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 160ms var(--g-ease-state),
+    color 160ms var(--g-ease-state);
+}
+.gw-path:hover,
+.gw-path[aria-expanded="true"] {
+  background: var(--g-fill-2);
+}
+.gw-path-server {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  transition: color 160ms var(--g-ease-state);
+}
+.gw-path:hover .gw-path-server {
+  color: var(--mac-label);
+}
+/* A slash drawn rather than typed, so it has the hairline's weight and not
+   the font's. */
+.gw-path-sep {
+  flex: none;
+  width: 1px;
+  height: 11px;
+  background: var(--g-line-strong);
+  transform: skewX(-18deg);
+}
+.gw-path-here {
+  flex: none;
+  font-weight: 700;
+  color: var(--g-ink);
+}
+.gw-path-chev {
+  flex: none;
+  margin-left: -1px;
+  opacity: 0.55;
+  transition:
+    opacity 160ms var(--g-ease-state),
+    transform 260ms var(--gw-ease);
+}
+.gw-path:hover .gw-path-chev {
+  opacity: 1;
+}
+.gw-foot-end {
+  display: flex;
+  align-items: center;
+  gap: var(--u3);
+  flex: none;
+}
+.gw-count {
+  font-variant-numeric: tabular-nums;
+}
+/* The gator pun: the mark in the corner, and the joke is what it says when
+   pressed. */
+.gw-pun {
+  display: grid;
+  place-items: center;
+  width: var(--u6);
+  height: var(--u6);
+  border: 0;
+  border-radius: var(--r-tile);
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.45;
+  transition:
+    opacity 140ms ease,
+    background-color 140ms ease,
+    transform 300ms var(--gw-ease);
+}
+.gw-pun:hover {
+  opacity: 1;
+  background: var(--g-fill-2);
+  transform: rotate(-8deg);
+}

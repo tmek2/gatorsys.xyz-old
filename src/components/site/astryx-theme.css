@@ -1,0 +1,88 @@
+/* Astryx in Gator's colours. Nothing here restyles an Astryx component: it
+   rebinds the semantic tokens they read (per Astryx's own principles).
+
+   The neutral theme is scoped as `@scope ([data-astryx-theme="neutral"]) to
+   ([data-astryx-theme])`, so its tokens only exist under that attribute, which
+   is only on the landing root. The overrides below beat the theme's `:scope`
+   rules by being unlayered (the theme sits in `@layer astryx-theme`) and more
+   specific. */
+
+@import "@astryxdesign/core/astryx.css";
+@import "@astryxdesign/theme-neutral/theme.css";
+
+.g-root[data-astryx-theme="neutral"] {
+  /* Surfaces */
+  --color-background-body: var(--g-ground);
+  --color-background-surface: var(--g-raise);
+  --color-background-card: var(--g-raise);
+  --color-background-popover: var(--g-raise-2);
+  --color-background-muted: var(--g-raise-2);
+
+  /* Ink */
+  --color-text-primary: var(--g-ink);
+  --color-text-secondary: var(--g-ink-dim);
+  --color-text-disabled: var(--g-ink-faint);
+  --color-icon-primary: var(--g-ink);
+  --color-icon-secondary: var(--g-ink-dim);
+
+  /* The one accent. Astryx uses `accent` for primary buttons and focus, which
+     is exactly the role pink plays on this page. */
+  --color-accent: var(--g-accent);
+  --color-accent-muted: var(--g-accent-soft);
+  --color-on-accent: var(--g-on-accent);
+  --color-text-accent: var(--g-accent);
+  --color-icon-accent: var(--g-accent);
+
+  /* Lines and overlays */
+  --color-border: var(--g-line);
+  --color-border-emphasized: var(--g-line-strong);
+  /* A film over the ground rather than a fixed white one, so the secondary
+     button shows on light paper. */
+  --color-overlay: var(--g-fill-2);
+  --color-overlay-hover: var(--g-fill-2);
+  --color-overlay-pressed: var(--g-line);
+  --color-tint-hover: var(--g-fill-2);
+
+  /* Type. One face across the whole page, Astryx components included. */
+  --font-family-body: var(--font-ui);
+  --font-family-heading: var(--font-ui);
+
+  /* The page's radius system, handed to Astryx so its controls are the site's
+     shape rather than a third rounding. */
+  --radius-element: var(--g-r-control);
+  --radius-container: var(--g-r-container);
+  --radius-inner: var(--g-r-inset);
+
+  /* Astryx reads these for its own transitions; keeping them equal to the
+     page's means an Astryx button and a plain one settle together. */
+  --duration-fast-min: var(--g-fast);
+  --duration-medium-min: var(--g-med);
+}
+
+/* Preflight shim: Astryx styles live in `@layer astryx-base`, and Tailwind v3's
+   unlayered preflight overrides every layered rule, resetting colours, fills,
+   margins, padding and font size on Astryx buttons. `revert-layer` removes the
+   unlayered values inside a Gator root so the component styles apply. The list
+   is preflight's own reset list; update it if Tailwind's grows. */
+.g-root :where([class*="astryx-"]) {
+  /* the form-control reset */
+  margin: revert-layer;
+  padding: revert-layer;
+  font-family: revert-layer;
+  font-size: revert-layer;
+  font-weight: revert-layer;
+  line-height: revert-layer;
+  letter-spacing: revert-layer;
+  color: revert-layer;
+  /* the button reset */
+  -webkit-appearance: revert-layer;
+  appearance: revert-layer;
+  background-color: revert-layer;
+  background-image: revert-layer;
+  /* the border reset */
+  border-color: revert-layer;
+  border-style: revert-layer;
+  border-width: revert-layer;
+  /* the anchor reset */
+  text-decoration: revert-layer;
+}

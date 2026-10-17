@@ -1,0 +1,2052 @@
+/**
+ * Dashboard palette and controls (/manage).
+ *
+ * States the dashboard palette in literal hex as `--manage-*` tokens: the tab
+ * (content area), the panels, and the controls. Neutral greys throughout.
+ *
+ * Imported by manage-shell after globals.css and heavy on !important, because
+ * globals.css defines several of these rules, some more than once. Dark surface
+ * rules use `:root:not([data-theme="light"]) .manage-root …` (0,3,1) because
+ * globals.css has !important rules at (0,3,0); a tie would be settled by bundle
+ * order.
+ */
+
+/* Declared on :root too: Radix portals popovers, dropdowns, colour pickers and
+   confirm menus to <body>, outside `.manage-root`. An unresolved var()
+   invalidates the whole declaration (floating panels came out transparent).
+   :root holds the dark values as the default; the `.manage-root` block keeps
+   the dashboard winning if anything sets these higher up. */
+:root,
+.manage-root {
+  --manage-tab: #0b0b0b;
+  /* The tab and content area, the sidebar strip, and components inside a tab. */
+  --manage-chrome-surface: #131415;
+  /* Cards and controls. Not the top bar: that is #0b0b0b, the same as the tab
+     it sits on, so the bar and the content read as one surface. */
+  --manage-panel: #101010;
+  --manage-control: #101010;
+  /* One solid step up from the control rather than a translucent wash, so
+     hovered fields and buttons match. */
+  --manage-control-hover: #171717;
+  --manage-line: rgba(255, 255, 255, 0.07);
+  --manage-line-strong: rgba(255, 255, 255, 0.12);
+  --manage-text: #f5f2f2;
+  --manage-text-dim: rgba(245, 242, 242, 0.55);
+  --manage-text-faint: rgba(245, 242, 242, 0.38);
+
+  /* The tone tokens are in globals.css, since status components also render
+     outside the dashboard (department pages, the application form). */
+}
+
+/* ── Surfaces ───────────────────────────────────────────────────────────── */
+
+/* The page behind the window takes the panel colour. */
+:root:not([data-theme="light"]) .manage-root {
+  background: var(--manage-chrome-surface) !important;
+  background-image: none !important;
+}
+
+:root:not([data-theme="light"]) .manage-root .manage-window,
+:root:not([data-theme="light"]) .manage-root .manage-content {
+  background: var(--manage-tab) !important;
+  background-image: none !important;
+}
+
+/* ── the window ── */
+
+@media (min-width: 1024px) {
+  .manage-root .manage-window {
+    /* The left border runs the full height and turns the corner; no border
+       across the top. */
+    /* The strip of chrome above the tab. */
+    margin: 0.55rem 0 0 0;
+    /* Subtract the top margin from the height, or the page scrolls and the
+       scrollbar takes width from the window. */
+    min-height: calc(100vh - 0.55rem) !important;
+    border-top: 0 !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+    border-left: 1px solid var(--manage-line-strong) !important;
+    border-radius: 1.1rem 0 0 0;
+    /* No drop shadow: the panel runs off the screen edge. */
+    box-shadow: none !important;
+  }
+}
+
+@media (hover: hover) {
+  .settings-card:hover {
+    border-color: var(--manage-line-strong) !important;
+  }
+}
+
+/* ── Controls ───────────────────────────────────────────────────────────────
+   Anything you operate is recessed into its card. */
+
+/* `.application-share-modal` is listed rather than given `manage-content`,
+   which also carries the shell's `w-full flex-1`. */
+/* Every dashboard control takes the panel colour, except those marked
+   `[data-bare]`: text drawn without a surface on purpose (the application
+   editor's question title and description, answers in the review panel), and
+   the window's own text field, `.gw-field` (13-fields-and-bar.css), which a
+   dropdown's trigger and a search box match; painted over here, a typed field
+   sat darker than the dropdown beside it. */
+.manage-content input:not([type="checkbox"]):not([type="radio"]):not([data-bare]):not([data-bare] *):not(.gw-field),
+.manage-content textarea:not([data-bare]):not([data-bare] *):not(.gw-field),
+.manage-content select:not([data-bare]):not([data-bare] *),
+.application-share-modal input:not([type="checkbox"]):not([type="radio"]),
+.application-share-modal textarea,
+.application-share-modal select,
+.gator-control,
+.manage-content [role="combobox"],
+.manage-content [role="listbox"] {
+  background: var(--manage-control) !important;
+  border-color: var(--manage-line) !important;
+}
+
+.manage-content input:not([data-bare]):not(.gw-field):focus,
+.manage-content textarea:not([data-bare]):not(.gw-field):focus,
+.gator-control:focus {
+  border-color: color-mix(in srgb, var(--accent-peach) 45%, transparent) !important;
+}
+
+/* Dropdown menus float above everything, so they take the control colour with
+   a stronger edge rather than blending into the card behind them. */
+/* Literal fallbacks: this !important rule paints every floating panel, and an
+   unresolved var() inside a portal would make them transparent. */
+[data-radix-popper-content-wrapper] > *,
+.manage-content [role="menu"] {
+  background: var(--manage-control, #101010) !important;
+  border-color: var(--manage-line-strong, rgba(255, 255, 255, 0.12)) !important;
+  /* It floats over content, so it needs to read as lifted rather than as a
+     hole cut in the page. */
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.62) !important;
+}
+
+/* ── Server switcher ────────────────────────────────────────────────────── */
+
+.server-switcher {
+  background: #1c1d1e !important;
+  border: 1px solid var(--manage-line) !important;
+  border-radius: 0.75rem;
+}
+
+@media (hover: hover) {
+  .server-switcher:hover {
+    background: #232425 !important;
+    border-color: var(--manage-line-strong) !important;
+  }
+}
+
+/* ── Section headings ───────────────────────────────────────────────────── */
+
+.section-header-title {
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+/* ── mobile ── */
+
+@media (max-width: 640px) {
+  .manage-content {
+    padding-inline: 0.9rem;
+  }
+
+  .section-header-title {
+    font-size: clamp(1.4rem, 7vw, 1.9rem) !important;
+    line-height: 1.15;
+  }
+
+  .manage-content .grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Text buttons reach a tap size. Switches, icon buttons and option cards are
+     excluded. */
+  .manage-content
+    button:not(.sidebar-item):not([data-compact]):not([role="switch"]):not(.gator-press):not([aria-label]) {
+    min-height: 40px;
+  }
+
+  /* Keyed on the `Toggle` component's class, not `[role="switch"]`: module
+     cards and option tiles are switches too. */
+  .manage-content .gator-switch {
+    min-height: 0;
+    /* 28px on touch; the collar below makes the pressable area 44px without
+       changing the look. */
+    height: 28px;
+    flex: none;
+  }
+  .manage-content .gator-switch::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+  }
+
+  /* iOS zooms the page when a focused input is under 16px. */
+  .manage-content input,
+  .manage-content textarea,
+  .manage-content select {
+    font-size: 16px;
+  }
+}
+
+/* Nothing may pan the page sideways; wide content scrolls in its own box. */
+.manage-window {
+  overflow-x: clip;
+}
+
+/* ── the roster on a phone ──
+
+   The roster is a table with fixed tracks set inline. Below 640px each row
+   becomes a card instead: identity on the first line, the stats as labelled
+   chips that wrap, and the column captions move onto the chips. Flex layout
+   also takes the row out of the blanket `.manage-content .grid` single-column
+   rule above (which beats the inline template because it is !important). */
+
+@media (max-width: 640px) {
+  /* The header row's second cell is the rank itself (colour dot, name, member
+     count, reorder arrows), so only the captions are hidden. */
+  .manage-content .roster-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    min-width: 0;
+    gap: 0.5rem;
+  }
+
+  .manage-content .roster-head > [data-roster-caption] {
+    display: none;
+  }
+
+  .manage-content .roster-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    /* Beats Tailwind's `min-w-[720px]` (0,1,0) on specificity alone. */
+    min-width: 0;
+    gap: 0.45rem 0.4rem;
+    padding-block: 0.85rem;
+  }
+
+  /* Line one is the select, the name and the row menu. `order` moves the menu
+     up from the end (it is the last table column in the DOM). */
+  .manage-content .roster-row > .roster-select {
+    order: 0;
+  }
+
+  .manage-content .roster-row > .roster-identity {
+    order: 1;
+    /* Claims the rest of line one, which is what pushes the chips onto the
+       lines below without needing a spacer element between them. */
+    flex: 1 1 calc(100% - 5.5rem);
+    min-width: 0;
+  }
+
+  .manage-content .roster-row > .roster-actions {
+    order: 2;
+  }
+
+  .manage-content .roster-row > .roster-select,
+  .manage-content .roster-row > .roster-actions {
+    flex: 0 0 auto;
+  }
+
+  .manage-content .roster-row > [data-roster-cell] {
+    order: 3;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.4rem;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0.3rem 0.55rem;
+    border-radius: 0.6rem;
+    /* Tokens, so the chip shows in both themes. */
+    border: 1px solid var(--manage-line);
+    background: var(--manage-panel);
+    text-align: left;
+  }
+
+  /* The caption the hidden header carried. Cells that already say what they are
+     have no `data-label` and get no caption. */
+  .manage-content .roster-row > [data-roster-cell][data-label]::before {
+    content: attr(data-label);
+    flex: none;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--manage-text-faint);
+  }
+
+  /* An editable cell is an <input>, which cannot have ::before, so it is
+     labelled by its placeholder and sized to its content. */
+  .manage-content .roster-row > input[data-roster-cell] {
+    /* Overrides Tailwind's `w-full`, which is for the desktop track. */
+    flex: 0 0 auto;
+    width: 8.5rem;
+    height: 1.9rem;
+    text-align: left;
+    padding-inline: 0.55rem;
+  }
+
+  /* The checkbox column's tall hit zone is sized for a table row; as a chip it
+     takes the chip's height. */
+  .manage-content .roster-row > button[data-roster-cell] {
+    height: auto;
+  }
+
+  /* The rank card no longer has anything wider than itself to scroll. */
+  .manage-content .roster-row,
+  .manage-content .roster-head {
+    max-width: 100%;
+  }
+}
+
+.manage-content table,
+.manage-content pre {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* ── leaving a tab ──
+
+   The counterpart to `.section-enter`. The shell waits SECTION_EXIT_MS before
+   swapping tabs so the old pane can leave. Short on purpose. */
+
+@keyframes section-leave {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+}
+
+/* ── Arrival ────────────────────────────────────────────────────────────── */
+
+.manage-content .settings-card:nth-of-type(1) { animation-delay: 0ms; }
+.manage-content .settings-card:nth-of-type(2) { animation-delay: 40ms; }
+.manage-content .settings-card:nth-of-type(3) { animation-delay: 80ms; }
+.manage-content .settings-card:nth-of-type(4) { animation-delay: 110ms; }
+.manage-content .settings-card:nth-of-type(5) { animation-delay: 135ms; }
+.manage-content .settings-card:nth-of-type(n + 6) { animation-delay: 150ms; }
+
+/* ── message editors ──
+
+   Three classes for nested editor surfaces: - `.editor-block`: a block on a
+   card, recessed like a control - `.editor-nested`: a block inside a block, one
+   step back up - `.editor-popover`: a menu over both, control colour with a
+   hard edge
+
+   Discord previews keep Discord's own greys. */
+
+.manage-content .editor-block {
+  border-radius: 0.7rem;
+  border: 1px solid var(--manage-line);
+  background: var(--manage-control) !important;
+}
+
+/* A block inside a block steps back toward the card instead of stacking two
+   identical recesses with only a hairline between them. */
+.manage-content .editor-block .editor-block {
+  border-radius: 0.6rem;
+  border: 1px solid var(--manage-line);
+  background: color-mix(in srgb, #ffffff 3.5%, var(--manage-control)) !important;
+}
+
+.manage-content .editor-block:focus-within {
+  border-color: var(--manage-line-strong);
+}
+
+/* Blocks are draggable and reorder often enough that a plain snap looks like a
+   glitch. Same easing as everything else that moves in here. */
+.manage-content .editor-block {
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+/* ── light mode ──
+
+   The same three surfaces as the dark palette, in the other direction. */
+
+/* On :root for the same portal reason as the dark block at the top. data-theme
+   is only "light" on /manage and /docs, so this cannot leak into the landing. */
+:root[data-theme="light"],
+:root[data-theme="light"] .manage-root {
+  /* Warm paper tones, the landing page's own. */
+  --manage-tab: #f7f1e8;
+  --manage-chrome-surface: #ede3d8;
+  --manage-panel: #fdf8f2;
+  --manage-control: #fdf8f2;
+  --manage-control-hover: #f4ece1;
+  --manage-line: rgba(60, 42, 30, 0.14);
+  --manage-line-strong: rgba(60, 42, 30, 0.22);
+  --manage-text: #2a1d14;
+  --manage-text-dim: rgba(42, 29, 20, 0.62);
+  --manage-text-faint: rgba(42, 29, 20, 0.45);
+
+}
+
+:root[data-theme="light"] .manage-root {
+  background: var(--manage-chrome-surface) !important;
+}
+
+:root[data-theme="light"] .manage-root .manage-window,
+:root[data-theme="light"] .manage-root .manage-content {
+  background: var(--manage-tab) !important;
+  background-image: none !important;
+}:root[data-theme="light"] .manage-root :is(
+    .manage-content input:not([type="checkbox"]):not([type="radio"]),
+    .manage-content textarea,
+    .manage-content select,
+    .gator-control
+  ):not([data-bare]):not([data-bare] *) {
+  background: var(--manage-control) !important;
+  border-color: var(--manage-line) !important;
+  color: #2a1d14 !important;
+}
+
+/* Anything still carrying a colour chosen for a dark background. */
+:root[data-theme="light"] .manage-root :is(
+    .section-header-title,
+    .overview-hero .section-header-title,
+    .overview-hero .section-header-description
+  ) {
+  color: #2a1d14 !important;
+}
+
+/* Sidebar and module icons are light-inked artwork, so on paper they are
+   knocked out to dark, including disabled ones (globals.css dims those to a
+   near-white that disappears on beige). */
+:root[data-theme="light"] .manage-root :is(.sidebar-icon, .hero-stat-mark) svg,
+:root[data-theme="light"] .manage-root :is(.sidebar-icon, .hero-stat-mark) img {
+  color: rgba(42, 29, 20, 0.7) !important;
+  filter: none;
+}
+
+:root[data-theme="light"] .manage-root img[src$=".svg"]:not([src*="logo"]) {
+  filter: brightness(0) saturate(0) opacity(0.72);
+}
+
+/* ── server switcher ──
+
+   In tokens, so it follows the theme (globals.css sets a literal dark colour
+   with !important). */
+.manage-root .server-switcher {
+  border: 1px solid var(--manage-line) !important;
+  background: var(--manage-panel) !important;
+  box-shadow: none !important;
+}
+
+@media (hover: hover) {
+  .manage-root .server-switcher:hover {
+    border-color: var(--manage-line-strong) !important;
+  }
+}
+
+/* ═══ Controls ═══
+
+   People come to /manage to finish tasks, so consistency matters more than
+   expression. Everything below: 1. Uses the `--manage-*` tokens both palettes
+   define, so controls are right in either theme (fields.tsx's `inputClass` has
+   literal dark values). 2. Gives controls one height and radius. 3. Shows focus
+   as a ring, not a border tint. */
+
+.manage-root {
+  /* One height for everything you can type in or open. 2.25rem reads compact
+     without becoming a tap-target problem; the touch bump is at the bottom. */
+  --manage-control-h: 2.25rem;
+  --manage-radius-control: 0.6rem;
+  --manage-radius-card: 0.9rem;
+
+  /* One pair for state changes. Scattered 160/220/240/300/400ms values made
+     two adjacent controls settle at visibly different speeds. */
+  --manage-motion: 170ms;
+  --manage-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --manage-focus: color-mix(in srgb, var(--accent-peach) 55%, transparent);
+  --manage-text: #f5f2f2;
+  --manage-text-dim: rgba(245, 242, 242, 0.55);
+  --manage-text-faint: rgba(245, 242, 242, 0.38);
+}
+
+:root[data-theme="light"] .manage-root {
+  --manage-text: #2a1d14;
+  --manage-text-dim: rgba(42, 29, 20, 0.62);
+  --manage-text-faint: rgba(42, 29, 20, 0.45);
+}
+
+/* ── Every control, one shape ─────────────────────────────────────────────── */
+
+/* `[data-bare]` opts a subtree out of these rules: the question editor (title
+   and description are text, not fields) and the application form in a
+   department workspace and the review panel, which render the public form's own
+   controls. `[data-bare] *` carries the opt-out to everything inside. */
+.manage-root :is(
+    input[type="text"],
+    input[type="number"],
+    input[type="search"],
+    input[type="url"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    input[type="time"],
+    textarea,
+    select,
+    .gator-control
+  ):not([data-bare]):not([data-bare] *) {
+  min-height: var(--manage-control-h);
+  border: 1px solid var(--manage-line) !important;
+  border-radius: var(--manage-radius-control) !important;
+  background: var(--manage-control) !important;
+  color: var(--manage-text) !important;
+  font-size: 0.8125rem;
+  transition:
+    border-color var(--manage-motion) var(--manage-ease),
+    box-shadow var(--manage-motion) var(--manage-ease),
+    background-color var(--manage-motion) var(--manage-ease);
+}
+
+.manage-root textarea:not([data-bare]):not([data-bare] *) {
+  /* A textarea is the one control that should not be one line tall. */
+  min-height: 5rem;
+  padding-block: 0.55rem;
+  line-height: 1.55;
+}
+
+.manage-root input::placeholder,
+.manage-root textarea::placeholder {
+  color: var(--manage-text-faint) !important;
+}
+
+@media (hover: hover) {
+  .manage-root
+    :is(input, textarea, select, .gator-control):hover:not(:disabled):not([data-bare]):not([data-bare] *) {
+    border-color: var(--manage-line-strong) !important;
+  }
+}
+
+/* ── Focus you can actually see ───────────────────────────────────────────── */
+
+.manage-root
+  :is(input, textarea, select, .gator-control):focus-visible:not([data-bare]):not([data-bare] *),
+.manage-root button:focus-visible,
+.manage-root a:focus-visible,
+.manage-root [role="button"]:focus-visible,
+.manage-root [role="switch"]:focus-visible {
+  outline: none !important;
+  border-color: var(--manage-focus) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-peach) 22%, transparent) !important;
+}
+
+/* Typing into a field is the same state as focusing it, so it looks the same
+   whether you arrived by keyboard or by pointer. */
+.manage-root
+  :is(input, textarea, select):focus:not([data-bare]):not([data-bare] *) {
+  border-color: var(--manage-focus) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-peach) 18%, transparent) !important;
+}
+
+.manage-root :disabled,
+.manage-root [aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* ── type scale ──
+
+   Four levels: section, card, label, help. */
+
+.manage-root .section-header-title {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--manage-text) !important;
+}
+
+.manage-root .cool-text {
+  color: var(--manage-text-dim) !important;
+}
+
+/* ── cards ──
+
+   One padding and one radius. */
+
+.manage-root .settings-card,
+.manage-root .glass-panel {
+  border-radius: var(--manage-radius-card) !important;
+}
+
+/* Padding only for cards that hold a form. `.glass-panel` is also used on list
+   rows, which keep their compact padding. */
+.manage-root .settings-card {
+  padding: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .manage-root .settings-card {
+    padding: 1.5rem;
+  }
+}
+
+/* ── motion ──
+
+   Pressed controls move for 60ms and spring back on release. */
+
+.manage-root button:not(:disabled):active,
+.manage-root [role="button"]:not([aria-disabled="true"]):active {
+  transform: translateY(0.5px) scale(0.994);
+  transition-duration: 60ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manage-root *,
+  .manage-root *::before,
+  .manage-root *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}
+
+/* ── touch ──
+
+   Controls grow on touch devices. */
+
+@media (pointer: coarse) {
+  .manage-root {
+    --manage-control-h: 2.75rem;
+  }
+
+  .manage-root button,
+  .manage-root [role="button"] {
+    min-height: 2.75rem;
+  }
+}
+
+/* ── card rhythm ──
+
+   A card fills its column unless a grid places it, so a stack of cards shares
+   one left and right edge. */
+
+.manage-root .settings-card,
+.manage-root .glass-panel {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* A lone card in a grid keeps its column width (stretching it across the row
+   makes it look more important than its siblings). */
+
+/* ═══ Motion, by frequency ═══
+
+   - Frequent (many times a day: switching tabs, hovering, opening the sidebar,
+     typing): instant or none.
+   - Occasional (daily: the save prompt, a toast): subtle and fast.
+   - Rare (monthly: an empty state, first run): expressive motion is fine. */
+
+@keyframes gatorSidebarArrive {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}/* Rare, so it can have some life: an empty state is seen once in a while and
+   is the one place on an Operate surface where delight costs nothing. */
+.manage-root .gator-empty,
+.manage-root [data-empty="true"] {
+  animation: gatorEmptyArrive 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes gatorEmptyArrive {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gator-empty,
+  .manage-root [data-empty="true"] {
+    animation: none !important;
+  }
+}
+
+/* ── empty states ──
+
+   One size for every empty state, with its action inside it. */
+
+.manage-root .gator-empty {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.15rem 1rem;
+  border: 1px dashed var(--manage-line-strong);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--manage-panel) 55%, transparent);
+  padding: 1.15rem 1.35rem;
+  text-align: left;
+}
+
+.manage-root .gator-empty-compact {
+  padding: 0.85rem 1rem;
+}
+
+/* The mark spans both text rows so the row has one optical centre. */
+.manage-root .gator-empty-mark {
+  grid-row: 1 / -1;
+  /* Width only. The mark is 323x352; a square box squashed it by 8%. */
+  width: 2.125rem;
+  height: auto;
+  opacity: 0.38;
+}
+
+.manage-root .gator-empty-compact .gator-empty-mark {
+  width: 1.625rem;
+  height: auto;
+}
+
+.manage-root .gator-empty-title {
+  grid-column: 2;
+  color: var(--manage-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.manage-root .gator-empty-hint {
+  grid-column: 2;
+  max-width: 68ch;
+  color: var(--manage-text-dim);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+/* The action is the row's right-hand end, where every other panel on the
+   dashboard puts its button. */
+.manage-root .gator-empty-action {
+  grid-row: 1 / -1;
+  grid-column: 3;
+}
+
+/* One column when there is no room for three: the button goes full width
+   rather than squeezing the sentence beside it into a word per line. */
+@media (max-width: 720px) {
+  .manage-root .gator-empty {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.15rem 0.85rem;
+  }
+
+  .manage-root .gator-empty-action {
+    grid-row: auto;
+    grid-column: 1 / -1;
+    margin-top: 0.75rem;
+  }
+
+  .manage-root .gator-empty-action > * {
+    width: 100%;
+  }
+}
+
+.manage-root .gator-empty-loading {
+  border-style: solid;
+}
+
+.manage-root .gator-empty-spinner {
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 2px solid var(--manage-line-strong);
+  border-top-color: var(--accent-peach, #ed6fa2);
+  border-radius: 50%;
+  animation: gatorEmptySpin 620ms linear infinite;
+}
+
+@keyframes gatorEmptySpin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* Arriving is a one-off flourish; spinning is the whole point of a spinner,
+   so it keeps turning and only loses its entrance. */
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gator-empty-spinner {
+    animation-duration: 1.4s;
+  }
+}
+
+/* Skeletons, status indicators and meters are in globals.css, since /panel and
+   the public department pages use them too. */
+
+
+/* ── module card actions ──
+
+   Configure carries the weight. Enable is the accent, outlined. Disable is
+   quiet until hovered (it is a reversible toggle, not a warning). */
+
+.manage-root .module-btn {
+  display: inline-flex;
+  height: 2.125rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border: 1px solid transparent;
+  border-radius: 0.7rem;
+  padding: 0 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    background-color var(--manage-motion, 170ms) ease,
+    border-color var(--manage-motion, 170ms) ease,
+    color var(--manage-motion, 170ms) ease;
+}
+
+/* The one you came for, so it takes the room that is left. */
+.manage-root .module-btn-configure {
+  flex: 1 1 auto;
+  border-color: var(--manage-line-strong);
+  background: color-mix(in srgb, var(--manage-text) 6%, transparent);
+  color: var(--manage-text);
+}
+
+@media (hover: hover) {
+  .manage-root .module-btn-configure:hover {
+    border-color: color-mix(in srgb, var(--manage-text) 30%, transparent);
+    background: color-mix(in srgb, var(--manage-text) 10%, transparent);
+  }
+}
+
+/* ── schema field chrome ──
+
+   A type glyph, not a badge (see FIELD_ICONS in schema-section.tsx). */
+
+.manage-root .field-icon {
+  display: flex;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  color: var(--manage-text-faint, rgba(245, 242, 242, 0.38));
+}
+
+/* A card you are working in brings its glyph up with it, so the marker tracks
+   attention instead of sitting at one volume forever. */
+.manage-root .settings-card:focus-within .field-icon,
+.manage-root .glass-panel:focus-within .field-icon {
+  color: var(--accent-peach, #f7a8c4);
+}
+
+@media (hover: hover) {
+  .manage-root .settings-card:hover .field-icon,
+  .manage-root .glass-panel:hover .field-icon {
+    color: var(--manage-text-dim);
+  }
+}
+
+:root[data-theme="light"] .manage-root .field-icon {
+  color: rgba(42, 29, 20, 0.4);
+}
+
+/* ── the panel colour, applied ──
+
+   globals.css paints `.glass-panel, .feature-card, .editor-panel` with
+   `--gator-surface` (!important), and editor components use `bg-[#121212]` and
+   `bg-[#131415]` directly. Both are mapped to `--manage-panel` here so every
+   card matches the palette. */
+
+.manage-root :is(
+    .glass-panel,
+    .feature-card,
+    .editor-panel,
+    .settings-card
+  ),
+.manage-content :is(
+    .bg-\[\#121212\],
+    .bg-\[\#131415\],
+    .bg-\[\#0d0e0f\],
+    .bg-\[\#0f0f0f\],
+    .bg-white\/\[0\.02\]
+  ) {
+  background: var(--manage-panel) !important;
+  background-image: none !important;
+}
+
+/* A control in a panel is the same value with an edge, not a second translucent
+   shade. */
+.manage-content
+  :is(
+    input:not([type="checkbox"]):not([type="radio"]),
+    textarea,
+    select,
+    .gator-control
+  ):not([data-bare]):not([data-bare] *) {
+  background: var(--manage-control) !important;
+}
+
+/* The editor's own blocks step off the panel by tone, not by another box. */
+.manage-content .editor-block {
+  background: color-mix(in srgb, #ffffff 2.5%, var(--manage-panel)) !important;
+}
+
+.manage-content .editor-block .editor-block {
+  background: color-mix(in srgb, #ffffff 5%, var(--manage-panel)) !important;
+}
+
+/* ── group rhythm ──
+
+   A clear break above a group heading and a tight join below it, so the heading
+   belongs to its own group. */
+
+.manage-content .schema-group-header {
+  margin-bottom: 0.8rem;
+}
+
+/* A 62%-black drop shadow is right over #0b0b0b and looks like a bruise on
+   paper. Light mode gets the same lift at a weight the ground can carry. */
+:root[data-theme="light"] [data-radix-popper-content-wrapper] > *,
+:root[data-theme="light"] .manage-content [role="menu"] {
+  box-shadow: 0 18px 44px rgba(60, 42, 30, 0.16) !important;
+}
+
+
+/* `.sidebar-badge` is styled in globals.css, because the department portal
+   renders it without this stylesheet. */
+
+
+/* ── submitted answers ──
+
+   The review panel renders `FormQuestionCard`, the public form's component,
+   inside a `data-bare` wrapper, so the blanket control rules above leave it
+   alone. */
+
+/* ── editorial headings ──
+
+   `SectionHeader`'s `editorial` mode (kicker plus emphasis) gets its face here:
+   a display face announces a section, the UI face does the work, and the script
+   signs at most one word, never inside a control. */
+
+.manage-root .manage-editorial-title {
+  font-family: var(--font-ui);
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  font-weight: 400;
+  line-height: 1.15;
+  /* Serif display wants looser tracking than the 800-weight sans it replaces;
+     the -0.02em that suited Inter closes a PT Serif counter. */
+  letter-spacing: -0.015em;
+  color: var(--manage-text);
+}
+
+/* The emphasis slot. One phrase per section, in the script, and only ever in a
+   heading — a signature inside a button is a novelty font. */
+.manage-root .manage-editorial-title .accent {
+  font-family: inherit;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  color: var(--accent-peach, #f7a8c4);
+}
+
+/* The kicker says where you are: UI face, real weight, no ornament, in the
+   accent colour. */
+.manage-root .manage-kicker {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent-peach, #f7a8c4);
+}
+
+/* Card titles stay in the UI face; only sections get the display face. */
+
+/* ── Hand-drawn marks, where they earn their place ────────────────────────── */
+
+/* Decoration around real work, never on a control. A doodle beside an empty
+   state is warmth; a doodle on a save button is a toy. */
+.manage-root .doodle-mark {
+  display: inline-flex;
+  flex: 0 0 auto;
+  opacity: 0.82;
+  transition:
+    transform 320ms var(--gs-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+    opacity 320ms var(--gs-ease, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* Two rotations, so a row of them does not read as a stamp repeated. */
+.manage-root .doodle-mark:nth-of-type(odd) {
+  transform: rotate(-3deg);
+}
+
+.manage-root .doodle-mark:nth-of-type(even) {
+  transform: rotate(2.5deg);
+}
+
+.manage-root .doodle-mark:hover {
+  opacity: 1;
+  transform: rotate(0deg) scale(1.06);
+}
+
+/* The empty-state mark is sized as an illustration, above the copy. */
+.gator-empty-doodle {
+  margin-bottom: 0.5rem;
+  opacity: 0.45;
+}
+
+.gator-empty:hover .gator-empty-doodle {
+  opacity: 0.65;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .doodle-mark,
+  .manage-root .doodle-mark:hover {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ── material ──
+
+   An inner highlight along the top edge and one long shadow, so cards sit on
+   the page. */
+
+.manage-root .settings-card,
+.manage-root .glass-panel {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 1rem 2.5rem -1rem rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="light"] .manage-root .settings-card,
+:root[data-theme="light"] .manage-root .glass-panel {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 0.75rem 2rem -1rem rgba(16, 14, 14, 0.18);
+}
+
+/* ── control states ──
+
+   Rest, hover, open and disabled each look different, without new colours. */
+
+/* Rest: recessed, with the top edge slightly darker — the way something set
+   into a surface catches light. */
+.manage-content select:not([data-bare]),
+.manage-content [role="combobox"],
+.gator-control {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.28);
+  transition:
+    border-color 160ms var(--gs-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+    background-color 160ms var(--gs-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+    box-shadow 160ms var(--gs-ease, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* Hover: the edge lifts. A control that does not change under the pointer
+   reads as text that happens to have a box around it. */
+@media (hover: hover) {
+  .manage-content select:not([data-bare]):hover,
+  .manage-content [role="combobox"]:hover,
+  .gator-control:hover:not(:disabled) {
+    border-color: var(--manage-line-strong) !important;
+    background: var(--manage-control-hover, rgba(255, 255, 255, 0.05)) !important;
+  }
+}
+
+/* Open: the accent, and the recess inverts to a lift — the control is now the
+   thing in front, because its menu is. */
+.manage-content [role="combobox"][aria-expanded="true"],
+.gator-control[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--accent-peach) 55%, transparent) !important;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent-peach) 14%, transparent),
+    0 0.5rem 1.25rem -0.5rem rgba(0, 0, 0, 0.5);
+}
+
+/* Focus is a ring, not a border colour. */
+.manage-content input:not([data-bare]):focus-visible,
+.manage-content textarea:not([data-bare]):focus-visible,
+.manage-content select:not([data-bare]):focus-visible,
+.manage-content [role="combobox"]:focus-visible,
+.gator-control:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent-peach) 55%, transparent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-peach) 20%, transparent);
+}
+
+/* Disabled: flat and unlit (lower opacity alone reads as loading). */
+.manage-content input:disabled,
+.manage-content textarea:disabled,
+.manage-content select:disabled,
+.gator-control:disabled {
+  box-shadow: none;
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* A drawn chevron on native selects, so they match the custom dropdowns on
+   every OS. */
+.manage-content select:not([data-bare]) {
+  padding-right: 2.1rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%23f5f2f2' stroke-opacity='0.45' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  appearance: none;
+}
+
+/* Floating menus get the same lift as an open control, so the menu and the
+   thing that opened it read as one object. */
+.manage-content [role="listbox"],
+.new-resource-menu {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1.5rem 3.5rem -0.75rem rgba(0, 0, 0, 0.65);
+}
+
+:root[data-theme="light"] .manage-content select:not([data-bare]) {
+  /* The chevron inked for the light theme. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%232a1d14' stroke-opacity='0.5' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+}
+
+:root[data-theme="light"] .manage-content select:not([data-bare]),
+:root[data-theme="light"] .manage-content [role="combobox"],
+:root[data-theme="light"] .gator-control {
+  box-shadow: inset 0 1px 2px rgba(60, 42, 30, 0.07);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manage-content select:not([data-bare]),
+  .manage-content [role="combobox"],
+  .gator-control {
+    transition: none;
+  }
+}
+
+
+/* ── light theme for Tailwind white utilities ──
+
+   Content inside `.manage-content` uses Tailwind utilities written for a dark
+   ground (`text-white/NN`, `text-[#f5f2f2]`, white-alpha fills and hairlines),
+   which vanish on paper. This block gives those utility classes paper values
+   directly, so new uses are themed automatically. Three conversions:
+
+   - text: inverted to the ink scale, non-linearly, with a floor of 0.30 so the
+     faintest still reads. 0 stays 0 (it is a hover-reveal trick).
+   - border: inverted, scaled so `border-white/10` lands exactly on
+     `--manage-line`.
+   - bg: not inverted (raised surfaces are lighter in both themes); the alpha is
+     amplified and the wash is the warm panel tone. Hover backgrounds are the
+     exception and darken.
+
+   Discord previews opt out with `data-discord-preview`: they use their own
+   hardcoded Discord palette but also white-alpha utilities for scaffolding.
+   Values are derived from the tokens above. */
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).focus\:text-white\/0:focus,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/0 {
+  color: rgba(42, 29, 20, 0) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/15 {
+  color: rgba(42, 29, 20, 0.412) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/20 {
+  color: rgba(42, 29, 20, 0.45) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/25 {
+  color: rgba(42, 29, 20, 0.487) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/30 {
+  color: rgba(42, 29, 20, 0.525) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/35 {
+  color: rgba(42, 29, 20, 0.562) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/40 {
+  color: rgba(42, 29, 20, 0.6) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/45 {
+  color: rgba(42, 29, 20, 0.637) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/50 {
+  color: rgba(42, 29, 20, 0.675) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/55 {
+  color: rgba(42, 29, 20, 0.713) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:text-white\/60:hover,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/60 {
+  color: rgba(42, 29, 20, 0.75) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/65 {
+  color: rgba(42, 29, 20, 0.788) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:text-white\/70:hover,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/70 {
+  color: rgba(42, 29, 20, 0.825) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:text-white\/75:hover,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/75 {
+  color: rgba(42, 29, 20, 0.863) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:text-white\/80:hover,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/80 {
+  color: rgba(42, 29, 20, 0.9) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/85 {
+  color: rgba(42, 29, 20, 0.938) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-white\/90 {
+  color: rgba(42, 29, 20, 0.975) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).text-\[\#f5f2f2\] {
+  color: var(--manage-text) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/\[0\.012\] {
+  background-color: rgba(253, 248, 242, 0.096) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/\[0\.015\] {
+  background-color: rgba(253, 248, 242, 0.12) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/\[0\.018\] {
+  background-color: rgba(253, 248, 242, 0.144) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/\[0\.02\] {
+  background-color: rgba(253, 248, 242, 0.16) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/\[0\.025\] {
+  background-color: rgba(253, 248, 242, 0.2) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/\[0\.035\] {
+  background-color: rgba(253, 248, 242, 0.28) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/\[0\.04\] {
+  background-color: rgba(253, 248, 242, 0.32) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/\[0\.045\] {
+  background-color: rgba(253, 248, 242, 0.36) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/\[0\.06\] {
+  background-color: rgba(253, 248, 242, 0.48) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/\[0\.08\] {
+  background-color: rgba(253, 248, 242, 0.64) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/10,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/\[0\.1\] {
+  background-color: rgba(253, 248, 242, 0.8) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).bg-white\/25 {
+  background-color: rgba(253, 248, 242, 0.9) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:bg-white\/\[0\.02\]:hover {
+  background-color: rgba(60, 42, 30, 0.035) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:bg-white\/\[0\.035\]:hover {
+  background-color: rgba(60, 42, 30, 0.056) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).focus\:bg-white\/\[0\.04\]:focus,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:bg-white\/\[0\.04\]:hover {
+  background-color: rgba(60, 42, 30, 0.064) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).focus\:bg-white\/\[0\.06\]:focus,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:bg-white\/\[0\.06\]:hover {
+  background-color: rgba(60, 42, 30, 0.096) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:bg-white\/\[0\.08\]:hover,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:bg-white\/\[0\.1\]:hover {
+  background-color: rgba(60, 42, 30, 0.12) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).border-white\/\[0\.045\],
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).border-white\/\[0\.05\] {
+  border-color: rgba(60, 42, 30, 0.09) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).border-white\/\[0\.075\] {
+  border-color: rgba(60, 42, 30, 0.105) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).border-white\/\[0\.08\],
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:border-white\/\[0\.08\]:hover {
+  border-color: rgba(60, 42, 30, 0.112) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).border-white\/\[0\.14\],
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:border-white\/\[0\.14\]:hover {
+  border-color: rgba(60, 42, 30, 0.196) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).border-white\/15,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:border-white\/15:hover {
+  border-color: rgba(60, 42, 30, 0.21) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:border-white\/\[0\.16\]:hover {
+  border-color: rgba(60, 42, 30, 0.224) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).border-white\/20,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:border-white\/20:hover,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:border-white\/\[0\.2\]:hover {
+  border-color: rgba(60, 42, 30, 0.28) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).border-white\/25,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).focus\:border-white\/25:focus,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:border-white\/25:hover {
+  border-color: rgba(60, 42, 30, 0.35) !important;
+}
+
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).border-white\/30,
+:root[data-theme="light"] .manage-root :not([data-discord-preview]):not([data-discord-preview] *).hover\:border-white\/40:hover {
+  border-color: rgba(60, 42, 30, 0.4) !important;
+}
+
+/* ── groups that depend on a switch ──
+
+   A group gated by a switch (ER:LC's "Enable advanced tools" gates seven) is
+   indented with a rule connecting it to its switch, and stepped back while the
+   switch is off. Not hidden, so the page keeps its shape. */
+
+.manage-root .schema-gated {
+  position: relative;
+  padding-left: 1.35rem;
+  transition:
+    opacity 260ms var(--gs-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+    filter 260ms var(--gs-ease, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* The rule runs the group's height and stops, so consecutive dependent groups
+   read as a bracket. */
+.manage-root .schema-gated::before {
+  content: "";
+  position: absolute;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  left: 0.45rem;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    var(--manage-line-strong, rgba(255, 255, 255, 0.12)),
+    var(--manage-line, rgba(255, 255, 255, 0.07))
+  );
+}
+
+.manage-root .schema-gated[data-open="false"] {
+  opacity: 0.45;
+}
+
+/* Readable but not editable while off: reading helps decide whether to turn the
+   switch on. */
+.manage-root .schema-gated[data-open="false"] :is(input, textarea, select, button) {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .schema-gated {
+    transition: none;
+  }
+}
+
+/* ── tab header and density ──
+
+   Page title first, then groups, then controls in steady cards. */
+
+.manage-root .tab-page-header {
+  min-height: 6.25rem;
+  padding: 0.25rem 0 1.15rem;
+}
+
+.manage-root .tab-page-header .section-header-title {
+  font-size: clamp(2rem, 2.7vw, 2.55rem) !important;
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.025em !important;
+}
+
+.manage-root .schema-group-header {
+  margin-bottom: 1.05rem;
+}
+
+.manage-root .schema-group-heading-row {
+  display: grid;
+  grid-template-columns: auto minmax(2rem, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.manage-root .schema-group-heading-row h3 {
+  color: var(--manage-text) !important;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.manage-root .schema-group-rule {
+  min-width: 2rem;
+  border-top: 1px solid var(--manage-line);
+}
+
+.manage-root .overview-page {
+  color: var(--manage-text);
+}
+
+.manage-root .overview-intro {
+  display: grid;
+  grid-template-columns: minmax(17rem, 1fr) auto;
+  align-items: end;
+  gap: 2rem;
+  padding: 0.25rem 0 2rem;
+}
+
+.manage-root .overview-heading-copy h2 {
+  margin: 0;
+  color: var(--manage-text);
+  font-family: var(--font-ui);
+  font-size: clamp(2.2rem, 3.1vw, 2.85rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.manage-root .overview-feature-groups {
+  display: grid;
+  gap: 2.75rem;
+}
+
+.manage-root .overview-category-heading {
+  display: grid;
+  grid-template-columns: auto minmax(2rem, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.manage-root .overview-category-heading h3 {
+  color: var(--manage-text);
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.manage-root .overview-category-heading > span:last-child {
+  color: var(--manage-text-faint);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.manage-root .overview-category-rule {
+  min-width: 2rem;
+  border-top: 1px solid var(--manage-line);
+}
+
+@media (max-width: 1180px) {
+  .manage-root .overview-intro {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+}
+
+@media (max-width: 680px) {
+  .manage-root .tab-page-header {
+    min-height: 0;
+    padding-bottom: 0.85rem;
+  }
+
+  .manage-root .tab-page-header .section-header-title {
+    font-size: clamp(1.85rem, 9vw, 2.2rem) !important;
+  }
+
+  .manage-root .schema-group-heading-row,
+  .manage-root .overview-category-heading {
+    gap: 0.65rem;
+  }
+
+  .manage-root .overview-intro {
+    gap: 1.25rem;
+    padding-bottom: 1.6rem;
+  }
+
+  .manage-root .overview-feature-groups {
+    gap: 2.25rem;
+  }
+
+}
+
+/* Reference correction: dense feature overview and tabbed ERLC settings. */
+.manage-root .overview-intro {
+  display: block;
+  padding: 0.15rem 0 1.8rem;
+}
+
+.manage-root .overview-heading-copy h2 {
+  font-family: inherit;
+  font-size: clamp(1.9rem, 2.6vw, 2.35rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.manage-root .overview-feature-groups {
+  gap: 2.15rem;
+}
+
+.manage-root .overview-category-heading {
+  grid-template-columns: auto minmax(2rem, 1fr);
+  margin-bottom: 0.85rem;
+}
+
+.manage-root :is(
+  .overview-feature-configure,
+  .overview-feature-enable,
+  .overview-feature-disable
+) {
+  display: inline-flex;
+  min-height: 2rem;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  border: 1px solid var(--manage-line-strong);
+  border-radius: 0.52rem;
+  padding: 0 0.7rem;
+  font-size: 0.74rem;
+  font-weight: 750;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+/* ERLC keeps all related tools on one page, separated by a compact tab bar. */
+.manage-root .prc-settings {
+  display: grid;
+  gap: 1.75rem;
+}
+
+/* ── ER:LC section rail ──
+
+   A rail of rows (icon plus a line describing the section) beside the settings,
+   so switching sections does not move the content. The live connection sits
+   above. Below desktop width it becomes a horizontal scroller. */
+
+.manage-root .prc-shell {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1100px) {
+  .manage-root .prc-shell {
+    grid-template-columns: minmax(13rem, 15rem) minmax(0, 1fr);
+    gap: 2.25rem;
+    align-items: start;
+  }
+}
+
+.manage-root .prc-rail {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 0.25rem;
+}
+
+.manage-root .prc-rail::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .manage-root .prc-rail {
+    position: sticky;
+    /* Clears the top bar, so the rail is still reachable a long way down a
+       section like Game Logs. */
+    top: 5.5rem;
+    flex-direction: column;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+}
+
+.manage-root .prc-rail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex: 0 0 auto;
+  border: 1px solid transparent;
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.8rem;
+  color: var(--manage-text-dim);
+  text-align: left;
+  transition:
+    background-color var(--manage-motion, 170ms) var(--manage-ease, ease),
+    border-color var(--manage-motion, 170ms) var(--manage-ease, ease),
+    color var(--manage-motion, 170ms) var(--manage-ease, ease);
+}
+
+@media (min-width: 1100px) {
+  .manage-root .prc-rail-item {
+    width: 100%;
+  }
+}
+
+.manage-root .prc-rail-item:hover {
+  background: var(--manage-control-hover);
+  color: var(--manage-text);
+}
+
+.manage-root .prc-rail-item[data-active="true"] {
+  border-color: var(--manage-line-strong);
+  background: var(--manage-panel);
+  color: var(--manage-text);
+}
+
+.manage-root .prc-rail-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0.55rem;
+  background: var(--manage-control-hover);
+  color: inherit;
+}
+
+.manage-root .prc-rail-item[data-active="true"] .prc-rail-icon {
+  background: color-mix(in srgb, var(--accent-peach) 18%, transparent);
+  color: var(--accent-peach);
+}
+
+.manage-root .prc-rail-text {
+  display: grid;
+  min-width: 0;
+}
+
+.manage-root .prc-rail-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+/* The line that says what is in the section. Hidden in the horizontal
+   scroller, where six of them would make each row a paragraph wide. */
+.manage-root .prc-rail-blurb {
+  display: none;
+  margin-top: 0.1rem;
+  color: var(--manage-text-faint);
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+
+@media (min-width: 1100px) {
+  .manage-root .prc-rail-blurb {
+    display: block;
+    white-space: normal;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 900px) {
+  .manage-root .prc-rail-item {
+    min-height: 2.75rem;
+  }
+}
+
+.manage-root .prc-tab-groups {
+  display: grid;
+  gap: 2.4rem;
+}
+
+.manage-root .prc-merged-module {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.manage-root .prc-merged-module-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.manage-root .prc-merged-module-head h3 {
+  color: var(--manage-text);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.manage-root .prc-merged-module-head p {
+  max-width: 72ch;
+  margin-top: 0.3rem;
+  color: var(--manage-text-dim);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 680px) {
+  .manage-root .overview-intro {
+    padding-bottom: 1.4rem;
+  }
+
+  .manage-root .prc-settings {
+    gap: 1.8rem;
+  }
+
+  .manage-root .prc-merged-module-head {
+    flex-direction: column;
+  }
+}
+
+/* ── row actions ──
+
+   The message editor's per-row buttons (move up, move down, duplicate, unwrap,
+   delete) in one rule: 16px icons at a readable weight with the row height
+   unchanged. Arrows at the end of their range are disabled, not hidden. */
+.manage-root .gator-row-actions {
+  gap: 0.125rem;
+}
+
+.manage-root .gator-row-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  color: var(--manage-text-dim);
+  transition:
+    background-color var(--manage-motion, 170ms) var(--manage-ease, ease),
+    color var(--manage-motion, 170ms) var(--manage-ease, ease);
+}
+
+.manage-root .gator-row-action:hover:not(:disabled) {
+  background: var(--manage-control-hover);
+  color: var(--manage-text);
+}
+
+.manage-root .gator-row-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.manage-root .gator-row-action-danger:hover:not(:disabled) {
+  background: var(--tone-bad-soft);
+  color: var(--tone-bad);
+}
+
+/* On a phone these are the row's only controls and they sit beside each other,
+   so they take the touch floor like everything else. */
+@media (pointer: coarse) and (max-width: 900px) {
+  .manage-root .gator-row-action {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
+/* ── flow builder ──
+
+   Steps fold, and a thread runs between them so the flow reads as a sequence. */
+
+.manage-root .gator-flow-step {
+  display: grid;
+  justify-items: stretch;
+}
+
+/* The connector between two steps. After a step that can end the flow early it
+   moves left, because what follows is conditional. */
+.manage-root .gator-flow-thread {
+  width: 2px;
+  height: 0.85rem;
+  justify-self: center;
+  border-radius: 999px;
+  background: var(--manage-line-strong);
+  transition: height var(--manage-motion, 170ms) var(--manage-ease, ease);
+}
+
+.manage-root .gator-flow-thread[data-branch="true"] {
+  justify-self: start;
+  margin-left: 1.35rem;
+  height: 1.35rem;
+  background: var(--tone-warn-line);
+}
+
+/* A folded run closes up rather than leaving rungs hanging in space. */
+.manage-root .gator-flow-thread[data-collapsed="true"] {
+  height: 0.35rem;
+}
+
+.manage-root .gator-flow-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.manage-root .gator-flow-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem 0.4rem 0.65rem;
+}
+
+.manage-root .gator-flow-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.25rem;
+  text-align: left;
+}
+
+.manage-root .gator-flow-trigger:hover {
+  background: color-mix(in srgb, var(--manage-text) 3%, transparent);
+}
+
+.manage-root .gator-flow-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.5rem;
+  background: var(--manage-control-hover);
+  color: var(--manage-text-dim);
+}
+
+.manage-root .gator-flow-name {
+  flex: none;
+  color: var(--accent-peach);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.manage-root .gator-flow-ordinal {
+  margin-left: 0.35rem;
+  color: var(--manage-text-faint);
+}
+
+/* What this step is configured to do. "Send Message" three times over says
+   nothing about the flow; the message does. */
+.manage-root .gator-flow-summary {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: var(--manage-text-dim);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manage-root .gator-flow-body {
+  border-top: 1px solid var(--manage-line);
+  padding: 0.85rem;
+}
+
+.manage-root .gator-flow-error {
+  margin-bottom: 0.6rem;
+  border-radius: 0.6rem;
+  background: var(--tone-warn-soft);
+  padding: 0.5rem 0.65rem;
+  color: var(--tone-warn);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gator-flow-thread {
+    transition: none;
+  }
+}
+
+/* ── add-a-thing picker ──
+
+   One menu for both the block picker and the flow's action picker, with
+   type-to-filter. See picker-popover.tsx. */
+
+.gator-picker {
+  max-height: min(34rem, calc(100vh - 1.5rem));
+  width: min(34rem, calc(100vw - 1.5rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--manage-line);
+  border-radius: 1rem;
+  background: var(--manage-chrome-surface);
+  padding: 0.5rem;
+  color: var(--manage-text);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.72);
+}
+
+.gator-picker-head {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin-bottom: 0.35rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--manage-chrome-surface) 96%, transparent);
+  padding: 0.5rem 0.65rem 0.6rem;
+  backdrop-filter: blur(6px);
+}
+
+.gator-picker-title {
+  color: var(--manage-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.gator-picker-lede {
+  margin-top: 0.25rem;
+  color: var(--manage-text-dim);
+  font-size: 0.6875rem;
+  line-height: 1.45;
+}
+
+.gator-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  border: 1px solid var(--manage-line);
+  border-radius: 0.6rem;
+  background: var(--manage-control);
+  padding: 0 0.6rem;
+  height: 2.25rem;
+}
+
+.gator-picker-search:focus-within {
+  border-color: var(--manage-focus);
+}
+
+.gator-picker-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--manage-text);
+  font-size: 0.8125rem;
+  outline: none;
+}
+
+.gator-picker-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .gator-picker-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.gator-picker-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3.625rem;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  transition: background-color var(--manage-motion, 170ms) var(--manage-ease, ease);
+}
+
+.gator-picker-option:hover {
+  background: var(--manage-control-hover);
+}
+
+.gator-picker-option:focus-visible {
+  outline: 2px solid var(--manage-focus);
+  outline-offset: -2px;
+}
+
+.gator-picker-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.6rem;
+  background: var(--manage-control-hover);
+  color: var(--manage-text-dim);
+}
+
+.gator-picker-label {
+  display: block;
+  color: var(--manage-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.gator-picker-hint {
+  display: block;
+  margin-top: 0.1rem;
+  color: var(--manage-text-dim);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+}
+
+.gator-picker-empty {
+  padding: 1rem 0.75rem 1.25rem;
+  color: var(--manage-text-dim);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+@media (pointer: coarse) and (max-width: 900px) {
+  .gator-picker-option {
+    min-height: 3.25rem;
+  }
+}

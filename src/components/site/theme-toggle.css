@@ -1,0 +1,268 @@
+/* The appearance control.
+
+   Unlayered, like the rest of the restyle: Tailwind v3's preflight is unlayered
+   and beats every layered rule.
+
+   One button the size of the search field and profile chip beside it. See
+   theme-toggle.tsx for why it cycles and how all three settings stay reachable. */
+
+.g-theme {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.g-theme-block {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  /* The mark, bare: a tile appears under the pointer, not round the icon at
+     rest. Icons in squares are the one look this site keeps out. */
+  border: 1px solid transparent;
+  border-radius: var(--g-r-control);
+  background: transparent;
+  color: var(--g-ink-dim);
+  cursor: pointer;
+  transition:
+    border-color var(--g-fast) var(--g-ease-state),
+    background-color var(--g-fast) var(--g-ease-state),
+    color var(--g-fast) var(--g-ease-state),
+    transform 160ms var(--g-ease-out);
+}
+@media (hover: hover) {
+  .g-theme-block:hover {
+    background: var(--g-fill);
+    color: var(--g-ink);
+  }
+}
+.g-theme-block:active {
+  background: var(--g-fill-2);
+  transform: scale(0.94);
+}
+
+/* --------------------------------------------------------------- the icons */
+
+/* All three icons stacked in one cell, one shown. A grid, so the button is
+   sized by its contents. */
+.g-theme-icons {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+}
+.g-theme-icon {
+  display: grid;
+  grid-area: 1 / 1;
+  place-items: center;
+  /* Out: turned a little and small. The one coming in runs the same values
+     backwards, so they pass through each other rather than crossfading. */
+  transform: rotate(-70deg) scale(0.4);
+  opacity: 0;
+  transition:
+    transform 320ms var(--g-ease-out),
+    opacity 200ms var(--g-ease-state);
+}
+.g-theme-icon[data-on="true"] {
+  transform: none;
+  opacity: 1;
+}
+.g-theme-icon svg {
+  display: block;
+}
+/* Until the stored setting has been read there is no honest icon to show. */
+.g-theme[data-ready="false"] .g-theme-icon {
+  opacity: 0;
+}
+
+/* A press turns the whole cell once, which is what makes the swap read as one
+   movement instead of two shapes exchanging places. */
+.g-theme[data-turning="true"] .g-theme-icons {
+  animation: g-theme-turn 320ms var(--g-ease-out);
+}
+@keyframes g-theme-turn {
+  from {
+    transform: rotate(-38deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+/* --------------------------------------------------------------- the label */
+
+/* Two lines: the current appearance and what one more press gives. */
+/* Drawn at the end of the document and told where to be — see the note in the
+   component, and the same note in hover-tip.tsx. */
+.g-theme-tip {
+  position: fixed;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  /* The same surface and shadow as every other tooltip (`.gw-tip`, `.g-tip`). */
+  padding: 7px 10px;
+  border: 1px solid var(--g-line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--mac-raise) 96%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--mac-shadow);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -3px);
+  /* Only in the document while open, so it enters from one starting frame, like
+     every other label (see hover-tip.css). */
+  transform-origin: 50% 0;
+  animation: g-theme-tip-in 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes g-theme-tip-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -7px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+/* The label is shown by the component's hook (it is drawn at the end of the
+   document, out of reach of selectors rooted here). Only keyboard focus opens
+   it (a click also focuses the control), and a pointer leaving closes it (touch
+   keeps `:hover` stuck). */
+
+.g-theme-tip-now {
+  color: var(--g-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.g-theme-tip-next {
+  color: var(--g-ink-faint);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+/* ------------------------------------------------------- the flourish */
+
+/* Leaving the button as the appearance changes: stars on the way to dark, a
+   ring of rays on the way to light. At the end of the document, centred on
+   the button, deaf to the pointer, and gone in under a second. It is drawn in
+   the new appearance, so it opens with the wipe. */
+.g-theme-burst {
+  position: fixed;
+  z-index: 130;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.g-theme-star {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s);
+  height: var(--s);
+  margin: calc(var(--s) / -2);
+  fill: var(--g-ink);
+  opacity: 0;
+  animation: g-theme-star 760ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+/* In, a twinkle, out. */
+@keyframes g-theme-star {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-45deg);
+  }
+  32% {
+    opacity: 1;
+    transform: scale(1.15) rotate(0deg);
+  }
+  55% {
+    opacity: 0.55;
+    transform: scale(0.82) rotate(8deg);
+  }
+  72% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(25deg);
+  }
+}
+.g-theme-ray {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 6px;
+  margin: -3px -1px;
+  border-radius: 2px;
+  background: var(--g-accent);
+  opacity: 0;
+  animation: g-theme-ray 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* Out from the button's rim, lengthening as they go, and fading. */
+@keyframes g-theme-ray {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(-13px) scaleY(0.3);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(-25px) scaleY(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-theme-burst {
+    display: none;
+  }
+}
+
+/* ----------------------------------------------------------- the wipe */
+
+/* Turns off the default cross-fade of the whole page while the appearance wipe
+   runs, scoped by `data-wipe` (set on the root for the transition and removed
+   whether it finishes or fails) so route-change view transitions are
+   unaffected. `mix-blend-mode: normal` because the default `plus-lighter` turns
+   two overlapping full-page snapshots white. */
+:root[data-wipe="true"]::view-transition-old(root),
+:root[data-wipe="true"]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+/* The old appearance stays put and the new one opens over it. Without this the
+   new snapshot is painted under the old and the circle reveals nothing. */
+:root[data-wipe="true"]::view-transition-new(root) {
+  z-index: 1;
+}
+:root[data-wipe="true"]::view-transition-old(root) {
+  z-index: 0;
+}
+
+/* A finger has no hover, so the label would only ever appear stuck after a
+   press. The `aria-label` still carries the whole sentence. */
+@media (hover: none) {
+  .g-theme-tip {
+    display: none;
+  }
+}
+
+/* A control that springs is a control somebody has asked not to see spring.
+   It still changes; it just gets there directly. */
+@media (prefers-reduced-motion: reduce) {
+  .g-theme-icon,
+  .g-theme-tip,
+  .g-theme-block {
+    transition-duration: 1ms;
+  }
+  .g-theme[data-turning="true"] .g-theme-icons {
+    animation: none;
+  }
+}

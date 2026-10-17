@@ -1,0 +1,315 @@
+/* Landing design tokens.
+
+   Layer order: Astryx ships its reset in @layer reset and its components in
+   @layer astryx-base. Declaring the order here lets `gator` beat Astryx's
+   component defaults while unlayered Tailwind utilities still beat `gator`.
+
+   Two appearances and three settings: dark (the default), light (below), and
+   Auto, which is the absence of a choice: `[data-theme]` is not set and the
+   device decides. */
+@layer reset, astryx-base, astryx-theme, gator;
+
+:root {
+  /* Ground. Off-black, never #000: pure black flattens the plates against the
+     page and kills the sense that they sit above it. */
+  --g-ground: #0c0c0c;
+  --g-raise: #151515;
+  --g-raise-2: #1e1e1e;
+  --g-line: rgba(255, 255, 255, 0.1);
+  --g-line-strong: rgba(255, 255, 255, 0.18);
+  /* A film over the ground, for card fills. Light mode flips its polarity. */
+  --g-fill: rgba(255, 255, 255, 0.025);
+  --g-fill-2: rgba(255, 255, 255, 0.055);
+
+  --g-ink: #f4f2f0;
+  --g-ink-dim: #a6a6a6;
+  /* 4.5:1 on the window's ground and 4.8:1 on the page's (it carries the legal
+     line). */
+  /* Clears 4.5:1 at 13px on every surface it is used on. */
+  --g-ink-faint: #919191;
+
+  /* One accent for the whole page. Light pink, per the brief. */
+  --g-accent: #f7a8c4;
+  --g-accent-soft: rgba(247, 168, 196, 0.14);
+  --g-accent-line: rgba(247, 168, 196, 0.34);
+  /* The accent for text that must be read (links, captions, small labels). On
+     this ground the accent is already 10.6:1, so the two match; on paper they
+     cannot. */
+  --g-accent-ink: #f7a8c4;
+  --g-accent-display: #f7a8c4;
+  /* Text that sits ON the accent. 11:1 against #f7a8c4. */
+  --g-on-accent: #2a0e19;
+  --g-on-tint: #2a0e19;
+
+  /* The mark and the mascot keep the gator green. It is deliberately not a UI
+     accent: it appears on the animal and nowhere else. */
+  --g-gator: #5fd08a;
+
+  /* macOS window chrome, dark appearance. */
+  /* Opaque ground for a sheet over a dimmed page (other fills are alphas and
+     would let the page show through). */
+  --g-sheet-ground: #181818;
+
+  /* Apple's grouped surfaces: a container always sits above its ground (lighter
+     in dark, white on grey in light). `--g-lifted` is a control raised above a
+     container: the selected segment of a segmented control. */
+  --g-grouped-ground: #151515;
+  --g-grouped-box: #202020;
+  --g-lifted: #3d3d3d;
+
+  /* The card material shared across the site: hairline, lift and sheen.
+     `saturate` before `blur` is the platform's order (the boost keeps a blurred
+     dark ground from going grey). */
+  /* Solid, not glass: a near-black panel one step above the ground with a real
+     hairline. `--mac-vibrancy` resolves to nothing but is kept because some
+     rules still reference it. */
+  --mac-vibrancy: none;
+  --mac-glass: #141414;
+  --mac-glass-strong: #181818;
+  /* ── card measurements for /servers ──
+
+     The server card and the department card read these same numbers so the two
+     stay one shape. */
+  --card-band: 54px;
+  --card-tile: 40px;
+  --card-inset: 12px;
+  --mac-hairline: rgba(255, 255, 255, 0.07);
+  /* Was 8%, which drew a visible gloss line along the top of every card. A
+     luminance lift you can see is too strong; this one you can only miss. */
+  --mac-sheen: rgba(255, 255, 255, 0.02);
+  /* Structural surfaces are nearly flat; only floating things (popovers,
+     modals) get the high lift. */
+  --mac-lift: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --mac-lift-high: 0 8px 24px rgba(0, 0, 0, 0.28);
+  --mac-inset: inset 0 1px 0 var(--mac-sheen);
+  --mac-radius: 12px;
+  --mac-radius-sheet: 16px;
+
+  /* One ground for the whole window: bar, sidebar and pane share a colour and
+     hairlines separate them. What sits above it is a card. */
+  --mac-bar: #0e0e0e;
+  /* No darker band behind the tabs; the active tab is found by its outline
+     (`--mac-tab-rim`, see `.g-tab-strip`). */
+  --mac-side-bg: #0e0e0e;
+  --mac-pane-bg: #0e0e0e;
+  /* What sits on the canvas (a panel, a tile, a field): one step up from the
+     ground. */
+  --mac-raise: #131313;
+  --mac-raise-2: #1a1a1a;
+  /* A real hairline: on near-black there is little tonal room between surfaces,
+     so the edge does more of the separating. */
+  --mac-hair: rgba(255, 255, 255, 0.07);
+  /* The one seam between chrome and content. Every surface is the same colour,
+     so this edge is carried by a hairline, half again as strong as the others
+     so it reads as a rule on near-black. */
+  --mac-seam: rgba(255, 255, 255, 0.11);
+  /* The outline of the open tab. The tab is the bar's colour (tab and window
+     are one surface), so the outline is what marks it: about 11 L* points clear
+     of the surface on both sides. Top and both sides only, never across the
+     join. */
+  --mac-tab-rim: rgba(255, 255, 255, 0.1);
+  /* Neutral greys (Discord's text greys carry a blue cast next to the landing's
+     warm white). */
+  --mac-label: #e8e6e3;
+  --mac-label-dim: #9e9c99;
+  /* No large cloud shadow or white rim, even for a window over a dimmed page. */
+  --mac-shadow: 0 18px 50px rgba(0, 0, 0, 0.38), 0 2px 8px rgba(0, 0, 0, 0.22);
+
+  /* One radius system: interactive is a pill, containers are 16, insets are 10. */
+  /* Pills only where the shape fits: status chips, counts, avatars. Not
+     buttons, headers or fields. */
+  --g-r-pill: 999px;
+  /* A card is 12 and an inset inside it 8, so inner curves follow the outer
+     one. */
+  --g-r-container: 12px;
+  --g-r-inset: 8px;
+  /* The chrome's own two: a bar, and a control set into one. */
+  --g-r-bar: 12px;
+  --g-r-control: 9px;
+
+  --g-fast: 120ms;
+  --g-med: 240ms;
+  --g-slow: 420ms;
+  /* Expo-out for entrances, standard for state changes. */
+  --g-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --g-ease-state: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Apple's sheet curve: leaves fast, arrives slowly, no overshoot. For
+     anything sliding or morphing into place. */
+  --g-ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* One gutter for the whole site, so a page's left edge does not shift between
+     sections. */
+  --g-gutter: clamp(20px, 4.6vw, 76px);
+
+  --g-shell: 1400px;
+
+  color-scheme: dark;
+}
+
+/* Light, written twice on purpose: once for an explicit choice and once for a
+   device preference when no choice has been made. Grouping the two selectors
+   would let the device beat the choice.
+
+   A palette rather than an inversion: warm paper, surfaces tinted with the
+   accent's red, and the accent deepened until it can be read. */
+:root[data-theme="light"] {
+  /* Warm paper with a blush rather than white and grey. */
+  --g-ground: #f3dfc1;
+  --g-raise: #f8ebd9;
+  --g-raise-2: #f5e5cc;
+  --g-line: rgba(74, 36, 49, 0.16);
+  --g-line-strong: rgba(74, 36, 49, 0.28);
+  /* Warm, so a card sits on the paper rather than greying it. */
+  --g-fill: rgba(74, 36, 49, 0.05);
+  --g-fill-2: rgba(74, 36, 49, 0.09);
+
+  --g-ink: #4a2431;
+  --g-ink-dim: #6f4d51;
+  --g-ink-faint: #7d5c5c;
+
+  /* The accent: a rose deep enough to read as pink on cream. The paler brand
+     pink (#df8592) was 2.0:1 on the ground, so a module that was on, a
+     selected pill and a pink mark all washed into the paper. This one is at
+     least 3:1 on the ground and both raised surfaces, so marks, borders and
+     selections carry on their own. `--g-accent-ink` is the same family at
+     4.9:1 or better, for anything read as text. */
+  --g-accent: #d94f7c;
+  --g-accent-ink: #a8345d;
+  /* Display type: the accent a step deeper at the same hue (H 340), because
+     the same pink looks paler as open type on a wide pale field than as a
+     compact fill. */
+  --g-accent-display: #d43a6c;
+  --g-accent-soft: rgba(217, 79, 124, 0.14);
+  --g-accent-line: rgba(217, 79, 124, 0.5);
+  /* 4.6:1 on the accent, the same dark plum dark mode puts on its pink. */
+  --g-on-accent: #2a0e19;
+  /* Text on a folder's own tint, which is a paler fill than the brand pink and
+     needs a deeper brown to read on all ten hues. */
+  --g-on-tint: #321821;
+
+  --g-gator: #1f8b4c;
+
+  --g-sheet-ground: #f9f0e2;
+
+  --g-grouped-ground: #f3dfc1;
+
+  --g-grouped-box: #f9f0e2;
+
+  --g-lifted: #fdf9f3;
+
+  --mac-glass: #fdf7ec;
+  --mac-glass-strong: #fffaf3;
+  --mac-hairline: rgba(90, 40, 55, 0.12);
+  --mac-sheen: rgba(255, 255, 255, 0.4);
+  --mac-lift: 0 1px 2px rgba(80, 35, 50, 0.06);
+  --mac-lift-high: 0 8px 24px rgba(80, 35, 50, 0.12);
+
+  --mac-bar: #faf1e4;
+  --mac-side-bg: #faf1e4;
+  --mac-pane-bg: #faf1e4;
+  --mac-raise: #fdf7ec;
+  --mac-raise-2: #fffaf2;
+  --mac-hair: rgba(74, 36, 49, 0.12);
+  /* Already a rule with air under it on paper — see the dark side's note. */
+  --mac-seam: rgba(74, 36, 49, 0.12);
+  /* Barely there on paper, where the fill is already doing the work. */
+  --mac-tab-rim: rgba(74, 36, 49, 0.07);
+  --mac-label: #4a2431;
+  /* 0.62 is the first value that clears AA at 12-13px on both the grouped
+     ground and a card. */
+  --mac-label-dim: #7d5c5c;
+  --mac-shadow: 0 18px 50px rgba(74, 36, 49, 0.16),
+    0 2px 8px rgba(74, 36, 49, 0.1);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --g-ground: #f3dfc1;
+    --g-raise: #f8ebd9;
+    --g-raise-2: #f5e5cc;
+    --g-line: rgba(74, 36, 49, 0.16);
+    --g-line-strong: rgba(74, 36, 49, 0.28);
+    /* Warm, so a card sits on the paper rather than greying it. */
+    --g-fill: rgba(74, 36, 49, 0.05);
+    --g-fill-2: rgba(74, 36, 49, 0.09);
+
+    --g-ink: #4a2431;
+    --g-ink-dim: #6f4d51;
+    --g-ink-faint: #7d5c5c;
+
+    --g-accent: #d94f7c;
+    --g-accent-ink: #a8345d;
+    --g-accent-display: #d43a6c;
+    --g-accent-soft: rgba(217, 79, 124, 0.14);
+    --g-accent-line: rgba(217, 79, 124, 0.5);
+    /* 4.6:1 on the accent, the same dark plum dark mode puts on its pink. */
+    --g-on-accent: #2a0e19;
+  /* Text on a folder's own tint, which is a paler fill than the brand pink and
+     needs a deeper brown to read on all ten hues. */
+  --g-on-tint: #321821;
+
+    --g-gator: #1f8b4c;
+
+    --g-sheet-ground: #f9f0e2;
+
+    --g-grouped-ground: #f3dfc1;
+
+    --g-grouped-box: #f9f0e2;
+
+    --g-lifted: #fdf9f3;
+
+    --mac-glass: #fdf7ec;
+    --mac-glass-strong: #fffaf3;
+    --mac-hairline: rgba(90, 40, 55, 0.12);
+    --mac-sheen: rgba(255, 255, 255, 0.4);
+    --mac-lift: 0 1px 2px rgba(80, 35, 50, 0.06);
+    --mac-lift-high: 0 8px 24px rgba(80, 35, 50, 0.12);
+
+    --mac-bar: #faf1e4;
+    --mac-side-bg: #faf1e4;
+    --mac-pane-bg: #faf1e4;
+    --mac-raise: #fdf7ec;
+    --mac-raise-2: #fffaf2;
+    --mac-hair: rgba(74, 36, 49, 0.12);
+  /* Already a rule with air under it on paper — see the dark side's note. */
+  --mac-seam: rgba(74, 36, 49, 0.12);
+  /* Barely there on paper, where the fill is already doing the work. */
+  --mac-tab-rim: rgba(74, 36, 49, 0.07);
+    --mac-label: #4a2431;
+    --mac-label-dim: #7d5c5c;
+    --mac-shadow: 0 18px 50px rgba(74, 36, 49, 0.16),
+      0 2px 8px rgba(74, 36, 49, 0.1);
+
+    color-scheme: light;
+  }
+}
+
+.g-root {
+  background: var(--g-ground);
+  color: var(--g-ink);
+  font-family: var(--font-ui);
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* One focus ring everywhere, in the accent. It sets no border-radius: an
+   outline already follows the element's own radius, and forcing one reshaped
+   pills and circles on focus. */
+.g-root :where(a, button, [tabindex]):focus-visible {
+  outline: 2px solid var(--g-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-root *,
+  .g-root *::before,
+  .g-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

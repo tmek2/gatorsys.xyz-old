@@ -1,0 +1,78 @@
+/* The segmented control (`Segments` in components/Manage/segments.tsx): views of
+   one page, with a thumb that slides between them. Site-wide, so the dashboard,
+   the owner page and anything else share one control. */
+
+/* Segmented control for any number of options. Each option is its label's width
+   plus an equal share of the rest. The thumb is positioned from measurements
+   (`--seg-x`, `--seg-w`) and assumes equal columns until measured. */
+.gw-segs {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--seg-n), auto);
+  padding: 3px;
+  border-radius: 11px;
+  background: var(--g-fill-2);
+  box-shadow: inset 0 0 0 1px var(--mac-hair, rgba(255, 255, 255, 0.07));
+  font-family: var(--font-ui, inherit);
+}
+.gw-segs-opt {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  height: 32px;
+  min-height: 0 !important;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mac-label-dim, #9b9aa1);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 200ms var(--g-ease-state, ease);
+}
+.gw-segs-opt:hover,
+.gw-segs-opt[data-on="true"] {
+  color: var(--g-ink);
+}
+.gw-segs-opt:focus-visible {
+  outline: 2px solid var(--g-accent);
+  outline-offset: -2px;
+}
+.gw-segs-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gw-segs-count {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--g-fill-2);
+  color: var(--mac-label, #e8e6e3);
+  font-size: 11px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+.gw-segs-count[data-alert="true"] {
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+}
+@media (pointer: coarse) {
+  .gw-segs-opt {
+    height: 38px;
+  }
+}
+.gw-segs > .g-jelly {
+  --jelly-r: 8px;
+}

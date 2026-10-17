@@ -1,0 +1,1890 @@
+/* The server picker (/servers).
+
+   Unlayered on purpose: Tailwind v3 emits its preflight from `@tailwind base`
+   with no cascade layer, and an unlayered rule beats every layered one
+   regardless of specificity.
+
+   The layout predates the current palette; its four colour tokens are rebound
+   to the site's, so it follows the appearance toggle without redrawing the
+   layout. */
+
+.servers-page {
+  /* The page's original four tokens mapped onto the site palette: `pink` was a
+     fill, so it becomes a surface; `wine` was the accent. */
+  --servers-paper: var(--g-ground);
+  --servers-ink: var(--g-ink);
+  --servers-pink: var(--g-raise);
+  --servers-wine: var(--g-accent);
+  position: relative;
+  min-height: 100dvh;
+  overflow-x: clip;
+  background: var(--servers-paper);
+  color: var(--servers-ink);
+}
+
+/* The site's gutter, so the picker lines up with the header. */
+.servers-shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding-inline: var(--g-gutter);
+  padding-block: clamp(40px, 7vh, 88px) clamp(48px, 8vh, 96px);
+}
+
+/* The hero is sized by its content, with a minimum height. */
+.servers-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--g-r-container);
+  border: 1px solid var(--g-line);
+  background: var(--g-fill);
+  color: var(--servers-ink);
+}
+
+/* The hero's top half: greeting, headline, actions. It carries the height
+   floor; the server list below supplies the rest. */
+.servers-hero-top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: min(18rem, 40vh);
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 3.25rem clamp(1.5rem, 5vw, 5.5rem) 2.75rem;
+}
+
+/* The annotation: a label with a rotated rule under it. The rule starts far
+   enough below the label's baseline that its -3deg rotation cannot cross the
+   text. */
+.servers-hero::before {
+  content: "";
+  position: absolute;
+  top: 5.4rem;
+  right: 5%;
+  width: min(22rem, 30vw);
+  height: 1px;
+  background: rgb(var(--accent-rgb) / 0.42);
+  transform: rotate(-1.4deg);
+}
+
+.servers-hero::after {
+  content: "pick a place to begin";
+  position: absolute;
+  top: 3.6rem;
+  right: 5%;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.servers-hero-title {
+  max-width: 50rem;
+}
+
+.servers-hero h1 {
+  margin: 0;
+  font-size: clamp(4.1rem, 7.3vw, 7.8rem);
+  font-weight: 950;
+  line-height: 0.75;
+  letter-spacing: -0.04em;
+}
+
+.servers-hero h1 span {
+  font-family: var(--font-ui);
+  font-weight: 400;
+}
+
+.servers-actions {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  align-self: flex-end;
+  margin-bottom: 0.35rem;
+}
+
+.servers-actions-menu {
+  width: 11rem;
+  padding: 0.35rem;
+}
+
+.servers-actions-item {
+  border-radius: 0.55rem;
+  font-size: 0.82rem;
+}
+
+.servers-actions-item:focus {
+  background: var(--g-accent-soft);
+  color: var(--servers-ink);
+}
+
+/* Gap between the hero (which contains the server list) and the next section.
+   This is the last `.servers-departments` block in the file, so it decides. */
+.servers-departments {
+  margin-top: 0;
+  padding-top: clamp(2.25rem, 3.5vw, 3.25rem);
+  border-top: 1px solid rgba(18, 9, 13, 0.18);
+}
+
+.servers-section-heading {
+  margin-bottom: 2.3rem;
+}
+
+.servers-section-heading-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.servers-section-heading h2 {
+  margin: 0;
+  font-size: clamp(2.8rem, 5vw, 5.2rem);
+  font-weight: 950;
+  line-height: 0.88;
+  letter-spacing: -0.04em;
+}
+
+.servers-section-heading p {
+  max-width: 42rem;
+  margin: 0.85rem 0 0;
+  color: rgba(18, 9, 13, 0.65);
+  font-size: 0.95rem;
+}
+
+.servers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.servers-department-menu {
+  position: absolute;
+}
+.servers-error {
+  margin: 1rem 0 0;
+  border-radius: 0.8rem;
+  padding: 0.8rem 1rem;
+  background: #7d2041;
+  color: var(--g-raise);
+  font-size: 0.82rem;
+}
+
+.servers-empty-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.servers-empty {
+  display: flex;
+  width: min(30rem, 100%);
+  flex-direction: column;
+  align-items: center;
+  border-radius: 1rem;
+  padding: 3rem 1.5rem;
+  background: var(--g-accent-soft);
+  color: var(--servers-ink);
+  text-align: center;
+}
+
+.servers-empty-icon {
+  display: flex;
+  width: 3.5rem;
+  height: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--g-gator);
+  color: var(--servers-wine);
+}
+
+.servers-empty h3 {
+  margin: 1rem 0 0;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.servers-empty p {
+  max-width: 25rem;
+  margin: 0.5rem 0 1.2rem;
+  color: rgba(18, 9, 13, 0.65);
+  font-size: 0.82rem;
+}
+
+/* The join sheet. Layout only: the material is in the macOS section below and
+   the action is a RippleButton. A stack with one 16px gap. */
+.servers-join-dialog {
+  position: relative;
+  width: min(28rem, calc(100vw - 2rem));
+  overflow: hidden;
+}
+
+/* The sheet's title bar: its name and the close button. No fill; the hairline
+   separates it. */
+.servers-dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--g-line);
+}
+
+.servers-dialog-heading h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.servers-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+/* One line saying where a code comes from. A sheet with a single unexplained
+   field asks the reader to already know the answer. */
+.servers-dialog-say {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--g-ink-dim);
+}
+
+.servers-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.servers-dialog-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--g-ink-dim);
+}
+
+/* The field is a code, so it is set in the mono face at tracking wide enough
+   to read a code back character by character. */
+.servers-code-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  color: var(--g-ink);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  outline: none;
+}
+
+.servers-code-input::placeholder {
+  color: var(--g-ink-faint);
+  letter-spacing: 0.14em;
+}
+
+/* Under the field, where the thing it is about is. */
+.servers-dialog-note {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--tone-bad);
+}
+@keyframes servers-pulse {
+  to {
+    opacity: 0.38;
+  }
+}
+
+@media (max-width: 900px) {
+  .servers-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .servers-hero-top {
+    min-height: 26rem;
+  }
+
+}
+
+@media (max-width: 640px) {
+  .servers-shell {
+    width: min(100% - 1rem, 92rem);
+    padding-top: 5.8rem;
+  }
+
+  .servers-hero-top {
+    min-height: 20rem;
+    align-items: flex-end;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 3rem 1.2rem 1.3rem;
+  }
+
+  .servers-hero::before,
+  .servers-hero::after {
+    display: none;
+  }
+
+  .servers-hero h1 {
+    font-size: clamp(4rem, 20vw, 6rem);
+  }
+
+  .servers-actions {
+    width: 100%;
+  }
+
+  .servers-actions > button:last-child {
+    flex: 1;
+  }
+
+  .servers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .servers-section-heading h2 {
+    font-size: 3.3rem;
+  }
+
+  .servers-section-heading-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* Unified server picker --------------------------------------------------- */
+.servers-page {
+  --servers-paper: var(--g-ground);
+  --servers-ink: var(--g-ink);
+  --servers-pink: var(--g-accent);
+  --servers-wine: var(--g-accent);
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at 76% 5%,
+      rgb(var(--accent-rgb) / 0.09),
+      transparent 28rem
+    ),
+    var(--g-ground);
+  color: var(--g-ink);
+}
+
+.servers-shell {
+  width: min(86rem, calc(100% - 2rem));
+  padding: 7.25rem 0 5rem;
+}
+
+.servers-error {
+  border: 1px solid rgb(var(--accent-rgb) / 0.22);
+  background: rgb(var(--accent-rgb) / 0.075);
+  color: #ffd2cd;
+}
+
+/* The hero box: border, surface, shadow. Height and padding live on
+   `.servers-hero-top`, since the box also contains the server list. */
+.servers-hero {
+  border: 1px solid var(--mac-hairline);
+  border-radius: var(--g-r-container);
+  /* A luminance lift and one hairline, no shadow: the panel is not floating
+     over anything. */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.018),
+      rgba(255, 255, 255, 0) 55%
+    ),
+    var(--g-raise);
+  color: var(--g-ink);
+  box-shadow: none;
+}
+
+.servers-hero-top {
+  min-height: 21rem;
+  align-items: flex-end;
+  padding: clamp(2rem, 5vw, 4.25rem);
+}
+
+.servers-hero::before {
+  background: rgb(var(--accent-rgb) / 0.42);
+}
+
+.servers-hero::after {
+  color: rgba(245, 242, 242, 0.4);
+}
+
+.servers-hero h1,
+.servers-section-heading h2,
+.servers-dialog-heading h2 {
+  color: var(--g-ink);
+  font-family: var(--font-ui);
+  letter-spacing: -0.035em;
+}
+
+.servers-hero h1 span {
+  color: var(--g-accent-ink, var(--g-accent));
+}
+/* Small text, so the accent is used at its text-contrast value. */
+.servers-department-count {
+  color: var(--g-accent-ink);
+}
+
+.servers-grid {
+  gap: 0.85rem;
+}
+
+.servers-actions-menu {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--g-raise-2);
+  color: var(--g-ink);
+}
+
+.servers-actions-item {
+  color: rgba(245, 242, 242, 0.72);
+}
+
+.servers-actions-item:hover {
+  background: rgb(var(--accent-rgb) / 0.09);
+  color: var(--g-ink);
+}
+
+.servers-empty-icon {
+  border: 1px solid rgb(var(--accent-rgb) / 0.24);
+  background: rgb(var(--accent-rgb) / 0.1);
+  color: var(--g-accent-ink, var(--g-accent));
+}
+
+.servers-empty p {
+  color: rgba(245, 242, 242, 0.56);
+}
+
+@media (max-width: 720px) {
+  .servers-shell {
+    width: min(100% - 1rem, 86rem);
+    padding-top: 5.75rem;
+  }
+
+  .servers-hero-top {
+    min-height: 22rem;
+    padding: 1.25rem;
+  }
+
+}
+
+/* Copy is left-aligned; card actions read as links. */
+/* These belong to the hero's copy half. `align-items: center` on the outer box
+   would shrink the server list to its content width. */
+.servers-hero-top {
+  min-height: min(24rem, 52vh);
+  align-items: center;
+}
+
+@media (max-width: 720px) {
+  .servers-hero-top {
+    min-height: 22rem;
+    align-items: flex-start;
+    justify-content: flex-end;
+  }
+
+  .servers-actions {
+    align-self: stretch;
+    margin-bottom: 0;
+  }
+}
+
+/* ── phones ──
+
+   One column below 560px (two 175px cards side by side at 390px wrap names to
+   three lines). The art panel above each card is shorter too. */
+
+@media (max-width: 560px) {
+  .servers-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.85rem;
+  }
+
+  /* Every control reaches a real tap size. */
+  .servers-shell a[class*="btn"],
+  .servers-shell button:not([aria-label]):not([role="switch"]) {
+    min-height: 44px;
+  }
+
+  /* Wide rows scroll in their own box rather than panning the page. */
+  .servers-shell {
+    overflow-x: clip;
+  }
+}
+
+.servers-filter-empty {
+  margin: 0;
+  padding: 2.5rem 0;
+  color: rgba(245, 242, 242, 0.5);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Cards arrive one after another, capped at nine steps so the last one does not
+   lag. */
+@keyframes serversCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.7rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Touch has no hover to reveal it. */
+
+/* Leaving a department from the card's menu: a button among links, aligned like
+   them. */
+.servers-department-leave,
+.servers-department-leave-confirm {
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.servers-department-leave-confirm:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.servers-department-leave-error {
+  margin: 4px 4px 2px;
+  padding: 0 8px;
+  color: var(--tone-bad, #d0453b);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+/* ── servers, inside the hero ──
+
+   The server list sits inside the hero under its copy, so the prompt and the
+   servers are on screen together. */
+
+.servers-hero-list {
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 1.35rem clamp(1.5rem, 5vw, 5.5rem) 1.6rem;
+}
+
+@media (max-width: 560px) {
+
+  /* A thumb-sized filter field. Inputs under 16px make iOS zoom on focus; the
+     field is the target and the input only carries the text. */
+  .servers-filter-field {
+    width: 100%;
+    min-height: 44px;
+  }
+  .servers-filter {
+    font-size: 1rem;
+  }
+}
+
+/* Dark surfaces for the cards, panels, empty state and join dialog (previously
+   shared a rule with the server card, which now has its own block). */
+
+.servers-empty,
+.servers-join-dialog {
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  border-radius: 0.95rem;
+  background: var(--g-raise);
+  color: var(--g-ink);
+  box-shadow: none;
+}
+
+/* ── text colours on dark cards ──
+
+   Only text colours change here. The dark `rgba(18, 9, 13, …)` borders and
+   offset shadows elsewhere in this file stay: a shadow is meant to be darker
+   than what it falls on. */
+
+.servers-section-heading p,
+.servers-department-body p,
+.servers-empty p {
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.62));
+}
+
+/* ── the restyle ──
+
+   Everything above is the picker's layout. From here the surfaces are redrawn
+   for the current palette; components, order and behaviour are unchanged. */
+
+/* The hero is a band on the page, not a card. */
+.servers-hero {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+  padding: 0 0 clamp(28px, 4vh, 48px);
+}
+.servers-hero-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px 40px;
+  padding: 0;
+}
+
+.servers-hero-title {
+  padding: 0;
+}
+.servers-hero-title h1 {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: clamp(2.2rem, 5.2vw, 3.8rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.038em;
+  text-transform: none;
+  color: var(--g-ink);
+}
+.servers-hero-title h1 span {
+  color: var(--g-accent-ink, var(--g-accent));
+}
+
+/* ── list ── */
+
+.servers-hero-list {
+  border-top: 1px solid var(--g-line);
+  padding: clamp(24px, 3.4vh, 40px) 0 0;
+  background: transparent;
+}
+/* The input carries only the text. The `<label>` around it draws the border,
+   fill, inset shadow, focus ring and magnifier. The line height matters: a
+   caret is as tall as its line box, not the field. */
+.servers-filter {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--g-ink);
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.55;
+  caret-color: var(--g-accent);
+  outline: none;
+}
+.servers-filter::placeholder {
+  color: var(--g-ink-faint);
+}
+/* Safari draws its own clear button on a search input, over ours. */
+.servers-filter::-webkit-search-cancel-button {
+  display: none;
+}
+.servers-filter-empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--g-ink-faint);
+}
+
+/* Departments only. Servers are laid out in independent columns, because a grid
+   row shares its height and a card that grows would stretch its row. */
+.servers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
+}
+.servers-section-heading {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--g-ink-faint);
+}
+
+.servers-error {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-r-container);
+  background: var(--g-fill);
+  font-size: 13.5px;
+  color: var(--g-ink-dim);
+}
+/* Repeated here to win on document order over an earlier block that re-declares
+   the shell and hero. */
+.servers-shell {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding-inline: var(--g-gutter);
+  padding-block: clamp(36px, 6vh, 80px) clamp(28px, 4vh, 44px);
+}
+
+.servers-page {
+  background: var(--g-ground);
+}
+
+.servers-hero {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.servers-hero-top {
+  min-height: 0;
+  padding: 0;
+  align-items: flex-end;
+}
+.servers-hero::before,
+.servers-hero::after {
+  content: none;
+}
+
+.servers-error {
+  border: 1px solid var(--g-accent-line);
+  background: var(--g-accent-soft);
+  color: var(--g-ink);
+}
+.servers-error {
+  border-color: var(--g-line);
+  background: var(--g-fill);
+  color: var(--g-ink-dim);
+}
+
+/* Section headings are small kickers, not large caps. */
+.servers-section-heading,
+.servers-section-heading h2 {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--g-ink-faint);
+}
+.servers-section-heading p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--g-ink-dim);
+}
+.servers-section-heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 24px;
+  margin-bottom: 18px;
+}
+.servers-departments {
+  margin-top: clamp(40px, 7vh, 80px);
+  padding-top: clamp(28px, 4vh, 48px);
+  border-top: 1px solid var(--g-line);
+}
+
+/* ── the macOS layer ──
+
+   Appended, and it wins on document order rather than specificity. Surfaces get
+   material rather than colour: - Vibrancy: frosted glass (blur plus a
+   saturation boost) so the ground shows through. - Two shadows: a tight contact
+   shadow and a wide soft one for elevation. - A hairline border and a slightly
+   brighter top inside edge.
+
+   The ground is the same dot field as the landing hero, fixed rather than
+   scrolling. */
+
+/* ── ground ── */
+
+.servers-page {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Fixed: the field is the desktop under the sheets and does not scroll away. It
+   is a canvas because the dots move away from the pointer (see `DotField`). */
+/* The same field and fade as the landing page. The canvas draws its own veil (a
+   mask-image on a fixed viewport-sized layer is expensive), centred so the dots
+   reach the lower part of the screen. */
+.servers-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  --g-dot-fade: 92% 74% 50% 44% 18% 82%;
+}
+
+.servers-shell,
+.servers-page > footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── material ── */
+
+/* The glass, hairline, lift and sheen tokens are in tokens.css so every page
+   can use them. */
+
+/* Every sheet on the page gets the same material. The owner banner is not one:
+   it has an opaque fill and a rotating border. */
+.servers-error,
+.servers-join-dialog {
+  border: 1px solid var(--mac-hairline);
+  border-radius: var(--mac-radius);
+  background: var(--mac-glass);
+  backdrop-filter: var(--mac-vibrancy);
+  -webkit-backdrop-filter: var(--mac-vibrancy);
+  box-shadow: var(--mac-lift), var(--mac-inset);
+}
+
+/* ── departments ── */
+
+/* Department cards share the servers' track and a similar height: the
+   description is clamped to two lines and the menu sits in the corner. */
+.servers-departments {
+  margin-top: clamp(22px, 3vh, 36px);
+  padding-top: clamp(22px, 3vh, 36px);
+}
+.servers-hero {
+  padding-bottom: clamp(20px, 2.6vh, 34px);
+}
+
+/* The menu button goes back into the corner instead of taking a row of its own. */
+.servers-department-card > div:last-child {
+  position: absolute !important;
+  top: 13px;
+  right: 13px;
+  bottom: auto;
+  padding: 0 !important;
+  z-index: 3;
+}
+/* A sheet: a larger corner, a heavier blur and a deeper shadow. */
+.servers-join-dialog {
+  border-radius: var(--mac-radius-sheet);
+  background: var(--mac-glass-strong);
+  box-shadow: var(--mac-lift-high), var(--mac-inset);
+}
+
+/* ── headings ── */
+
+/* The rule under a section kicker marks where one band of the page ends. */
+.servers-hero-list,
+.servers-departments {
+  border-top-color: var(--mac-hairline);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .servers-department-card,
+  .servers-department-card:hover {
+    transform: none;
+  }
+}
+
+/* ── the join sheet ── */
+
+/* The code field's focus ring and the disabled submit use the current palette.
+   Three classes on purpose: the field carries inline Tailwind utilities
+   (`focus:border-…`), a utility plus a pseudo-class is two. */
+
+.servers-join-dialog .servers-code-input {
+  border: 1px solid var(--mac-hairline);
+  border-radius: 12px;
+  background: var(--g-fill-2);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.16);
+  transition:
+    border-color 160ms var(--g-ease-state),
+    box-shadow 160ms var(--g-ease-state);
+}
+
+.servers-join-dialog .servers-code-input:focus,
+.servers-join-dialog .servers-code-input:focus-visible {
+  border-color: var(--g-accent-line);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.16),
+    0 0 0 3px var(--g-accent-soft);
+  outline: none;
+}
+
+/* Too short to be a code: an attribute set by the component. The ring changes
+   with the border, so a focused invalid field is not ringed in the accent. */
+.servers-join-dialog .servers-code-input[data-invalid] {
+  border-color: var(--tone-bad-line);
+}
+.servers-join-dialog .servers-code-input[data-invalid]:focus,
+.servers-join-dialog .servers-code-input[data-invalid]:focus-visible {
+  border-color: var(--tone-bad-line);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.16),
+    0 0 0 3px var(--tone-bad-soft);
+}
+
+/* Scrim behind the sheet, scoped to this page because `.dialog-backdrop` is
+   shared with dialogs in /manage. It dims rather than blacking out; dark mode
+   uses a heavier scrim. */
+.servers-page .dialog-backdrop {
+  /* Dimmed, not frosted. */
+  background: var(--servers-scrim, rgba(0, 0, 0, 0.66));
+}
+:root[data-theme="light"] .servers-page {
+  --servers-scrim: rgba(58, 28, 40, 0.34);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .servers-page {
+    --servers-scrim: rgba(58, 28, 40, 0.34);
+  }
+}
+
+/* The menu button and the dialog's close keep only their size; the RippleButton
+   variant owns their look. */
+.servers-department-menu-button,
+.servers-dialog-close {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+}
+
+/* ── CTAs ──
+
+   These classes sit on RippleButtons, so they only position the button; its
+   look comes from the `.g-ripple` variant. `.servers-cta` is a layout hook. */
+/* A sheet's confirming action spans the sheet, as on iOS. */
+.servers-cta-wide {
+  width: 100%;
+}
+
+/* ── the iOS layer (phones) ──
+
+   Phone behaviour: sheets from the bottom edge, press states instead of hover,
+   iOS-sized rows. Tap targets are not handled here: the site-wide touch layer
+   in globals.css ("Tap targets") already floors buttons at 2.75rem, squares
+   icon-only ones and sets inputs to 16px, with `[data-tap="inline"]` as the
+   opt-out. */
+
+@media (max-width: 640px) {
+  .servers-page {
+    /* The one colour not from the palette: iOS's destructive red. */
+    --ios-danger: #ff453a;
+    --ios-row: 44px;
+  }
+
+  /* Nothing scrolls under the home indicator. */
+  .servers-shell {
+    padding-bottom: calc(clamp(48px, 8vh, 96px) + env(safe-area-inset-bottom));
+  }
+
+  /* Touch has no hover, so the press is the whole state. For the two surfaces
+     that are tappable without being controls. */
+  .servers-department-card:active {
+    opacity: 0.55;
+    transition: opacity 60ms linear;
+  }
+
+  /* ── search ── */
+
+  /* An iOS search field: a filled rounded rect on its own full-width row. The
+     16px font floor is applied site-wide; the field draws everything, the input
+     nothing. */
+  .servers-filter-field {
+    width: 100%;
+    min-height: 38px;
+    border-radius: 10px;
+    border-color: transparent;
+    background: var(--g-fill-2);
+    box-shadow: none;
+  }
+  .servers-filter-field:focus-within {
+    border-color: var(--g-accent-line);
+    box-shadow: 0 0 0 3px var(--g-accent-soft);
+  }
+
+  /* ── sheets ── */
+
+  /* Sheets rise from the bottom edge, full width, with a grab handle. */
+  .servers-page .dialog-backdrop {
+    align-items: flex-end;
+    padding: 0;
+    /* The scrim does not scroll; the sheet does. A scrollable backdrop takes a
+       scrollbar gutter and the sheet stops short of the right edge. */
+    overflow: hidden;
+  }
+  .servers-page .dialog-pop {
+    max-width: none;
+    max-height: 92dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: iosSheetUp 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+  .servers-page .dialog-pop > * {
+    border-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: 22px;
+    border-top-right-radius: 22px;
+  }
+  .servers-join-dialog {
+    position: relative;
+    /* Full width at the bottom edge (the desktop dialog's width clamp left it
+       short of the right side). */
+    width: 100%;
+    padding-bottom: env(safe-area-inset-bottom);
+    overscroll-behavior-y: contain;
+  }
+  .servers-join-dialog::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    width: 36px;
+    height: 5px;
+    transform: translateX(-50%);
+    border-radius: 3px;
+    background: var(--g-ink-faint);
+    opacity: 0.4;
+  }
+  .servers-dialog-heading {
+    padding-top: 22px;
+  }
+
+  @keyframes iosSheetUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  /* ── menus ── */
+
+  /* The department menu at finger sizes; its look is defined at the end of this
+     file. */
+  .servers-department-menu {
+    min-width: 13rem;
+  }
+  .servers-department-menu-item {
+    min-height: 38px;
+    font-size: 14px;
+  }
+  .servers-department-menu-item:active {
+    background: var(--g-fill-2);
+  }
+
+  /* ── cards ── */
+
+  /* iOS body sizes, and the department description gets a third line back. */
+  .sv-name {
+    font-size: 16px;
+  }
+  .servers-department-body h3 {
+    font-size: 17px;
+  }
+  .servers-department-body p {
+    font-size: 15px;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+  .servers-department-card {
+    min-height: 0;
+  }
+
+  /* The action row: Refresh is sized to its label rather than stretched. Its
+     colours come from its own variant; a page only positions a button. */
+  .servers-actions {
+    width: auto;
+  }
+  .servers-actions .servers-cta {
+    flex: 0 0 auto;
+    width: auto;
+  }
+}
+
+/* One width for Refresh, Refreshing and Updated, so the button does not resize
+   under the finger or push the search field. */
+.servers-actions .servers-cta [aria-live] {
+  display: inline-block;
+  /* "Refreshing" is 69.6px at the button's 14px, plus a little each side. The
+     component wraps the label in `.g-ripple-label`, hence the descendant
+     selector. */
+  min-width: 72px;
+  text-align: center;
+}
+
+/* Tablets are touch too: menu rows follow the pointer type, not the width. */
+@media (hover: none) and (pointer: coarse) {
+  .servers-department-menu-item {
+    min-height: 38px;
+  }
+}
+
+/* ── nothing stranded ──
+
+   A full-width band with a label at one edge and its button at the other is not
+   used here: each band's right side holds something related to it, and where
+   nothing fits the band is not full width. */
+
+/* ── owner banner ── */
+
+/* Sized to its content; only the owner sees it. */
+.servers-owner-banner {
+  display: inline-flex;
+  width: auto;
+  max-width: min(100%, 33rem);
+  align-items: center;
+  /* Overrides an inherited `space-between`. */
+  justify-content: flex-start;
+  gap: 13px;
+  margin-bottom: clamp(20px, 3vh, 30px);
+  padding: 11px 15px 11px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--mac-radius);
+  /* Opaque fill: a translucent padding-box layer would let the rotating conic
+     border show through as a wedge. */
+  background:
+    linear-gradient(to right, var(--g-accent-soft), transparent 62%) padding-box,
+    linear-gradient(var(--g-raise) 0 0) padding-box,
+    conic-gradient(
+        from var(--g-turn),
+        var(--g-accent),
+        var(--g-accent-line) 22%,
+        var(--mac-hairline) 42%,
+        var(--mac-hairline) 62%,
+        var(--g-accent-line) 82%,
+        var(--g-accent)
+      )
+      border-box;
+  backdrop-filter: var(--mac-vibrancy);
+  -webkit-backdrop-filter: var(--mac-vibrancy);
+  box-shadow: var(--mac-lift);
+  color: var(--g-ink);
+  text-decoration: none;
+  animation: gTurn 6s linear infinite;
+}
+
+/* The rotating border. A registered <angle> can be animated; an unregistered
+   custom property cannot. */
+@property --g-turn {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes gTurn {
+  to {
+    --g-turn: 360deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .servers-owner-banner {
+    animation: none;
+  }
+}
+
+.servers-owner-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink, var(--g-accent));
+}
+.servers-owner-say {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+.servers-owner-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--g-ink);
+}
+.servers-owner-copy {
+  display: block;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--g-ink-dim);
+}
+.servers-owner-go {
+  flex: 0 0 auto;
+  color: var(--g-ink-faint);
+  transition:
+    transform var(--g-med) var(--g-ease-out),
+    color var(--g-med) var(--g-ease-state);
+}
+.servers-owner-banner:hover .servers-owner-go {
+  transform: translateX(3px);
+  color: var(--g-accent-ink, var(--g-accent));
+}
+
+
+/* ── the tools ── */
+
+/* The filter and refresh act on the list below, so they sit beside its heading
+   and each other. */
+.servers-list-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.servers-filter-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-inline: 12px;
+  border: 1px solid var(--mac-hairline);
+  border-radius: 10px;
+  background: var(--g-fill-2);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.14);
+  color: var(--g-ink-faint);
+  transition:
+    border-color 160ms var(--g-ease-state),
+    box-shadow 160ms var(--g-ease-state);
+}
+
+/* Focus ring on the filter field at every width. */
+.servers-filter-field:focus-within {
+  border-color: var(--g-accent-line);
+  box-shadow: 0 0 0 3px var(--g-accent-soft);
+}
+.servers-filter-field:focus-within {
+  border-color: var(--g-accent-line);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.14),
+    0 0 0 3px var(--g-accent-soft);
+}
+.servers-filter-field svg {
+  flex: 0 0 auto;
+}
+/* Wide enough for a server name. */
+.servers-list-tools .servers-filter-field {
+  width: min(260px, 42vw);
+}
+.servers-list-tools .servers-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── the foot ── */
+
+
+/* ── narrow ── */
+
+@media (max-width: 900px) {
+  .servers-hero-top {
+    align-items: flex-start;
+  }
+  .servers-list-tools {
+    width: 100%;
+  }
+  /* `min-width: 0` lets the search field shrink below its min-content (about
+     223px: a glyph, a gap and an input sized for 20 characters), so the toolbar
+     fits on a phone without pushing Refresh off the edge. */
+  .servers-filter-field {
+    flex: 1;
+    min-width: 0;
+  }
+  .servers-list-tools .servers-filter-field {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* "Join with a code" sits on the departments' heading line. */
+.servers-section-heading-row {
+  gap: 14px 20px;
+}
+/* Under 640px the row becomes a column, where `align-items` is horizontal. Both
+   branches are stated here, last, because earlier rules also set this property
+   and a media query adds no weight. */
+@media (max-width: 640px) {
+  .servers-section-heading-row {
+    align-items: flex-start;
+  }
+}
+@media (min-width: 641px) {
+  .servers-section-heading-row {
+    align-items: flex-end;
+  }
+}
+
+/* ── the menu button and its menu ── */
+
+/* An inline SVG sits on the text baseline with descender space under it, which
+   pulls it off-centre in a centring box. As a block it centres. */
+.servers-owner-mark svg {
+  display: block;
+}
+
+/* The menu opens down from the corner button, right edges aligned. It needs a
+   z-index: the cards' faces are at z-index 1 inside the shell's stacking
+   context. */
+.servers-department-menu {
+  top: calc(100% + 6px);
+  bottom: auto;
+  right: 0;
+  z-index: 60;
+  width: 12rem;
+  transform-origin: top right;
+  /* Shape here, timing from styles/motion.css: this hand-rolled menu carries
+     `data-state` and `role="menu"`, so the shared `[data-state][role="menu"]`
+     rule sets its duration and curve (160ms in, 90ms out). */
+  animation: menuOpen both;
+}
+/* Closing is a state, so the menu stays in the document long enough to animate
+   out. */
+.servers-department-menu[data-state="closed"] {
+  animation-name: menuShut;
+  pointer-events: none;
+}
+.servers-department-card > div:last-child {
+  z-index: 60 !important;
+}
+
+/* Raise the card while its menu is open. The card lifts on hover, and a
+   transform creates a stacking context, so the menu's own z-index only counts
+   inside the card; without this, the next section paints over the menu. Only
+   while open, so a resting card never covers what it overlaps. */
+.servers-department-card[data-menu-open="true"] {
+  z-index: 60;
+}
+
+/* Moves 8px out of the button with a fade, without scaling (scaling resamples
+   the text every frame). */
+@keyframes menuOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes menuShut {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* `!important` to beat the motion contract's own `!important`. Not zero: the
+     menu is removed when its animation ends, so an animation that never ran
+     would never remove it. */
+  .servers-department-menu,
+  .servers-department-menu[data-state="closed"] {
+    animation-duration: 1ms !important;
+  }
+}
+
+
+
+/* The hero is one left-aligned column. */
+.servers-hero-top {
+  display: block;
+}
+
+/* ── the header ──
+
+   The right side of the page header holds only the controls for the list under
+   it. */
+
+.servers-hero-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px 32px;
+}
+
+.servers-hero-title h1 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+/* The count sits next to the heading it counts. */
+.servers-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.1rem;
+  height: 2.1rem;
+  padding-inline: 0.55rem;
+  border: 1px solid var(--mac-hairline);
+  border-radius: var(--g-r-pill);
+  background: var(--g-fill);
+  color: var(--g-ink-dim);
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* The tools sit on the heading's line, so the header is one row. */
+.servers-hero-top .servers-list-tools {
+  padding-bottom: 2px;
+}
+
+/* A page title, not a cover: small enough that the list starts near the top. */
+.servers-hero-title h1 {
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  letter-spacing: -0.03em;
+  gap: 10px;
+}
+.servers-count {
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding-inline: 0.45rem;
+  font-size: 0.78rem;
+}
+
+/* No rule or gap between the heading and the cards. */
+.servers-hero-list {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* The filter chips sit with the search and refresh, not in a band of their own. */
+.servers-hero-top {
+  align-items: center;
+  gap: 12px 24px;
+  margin-bottom: clamp(16px, 2.2vh, 24px);
+}
+.servers-hero-top .servers-list-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.servers-hero-top .servers-collection-tools {
+  margin: 0;
+}
+/* Search and refresh keep the far edge; the chips sit next to the heading. */
+.servers-hero-top .servers-list-tools {
+  margin-left: auto;
+}
+
+@media (max-width: 900px) {
+  .servers-hero-top {
+    align-items: stretch;
+  }
+  .servers-hero-top .servers-list-tools {
+    width: 100%;
+    padding-bottom: 0;
+  }
+}
+
+/* ── the menus ──
+
+   The single definition of both menus, written last so it decides. A small
+   padded sheet with rounded rows that light up under the pointer (the account
+   menu's style), and one divider between the three views and the two actions.
+   Nothing is coloured until it is about to do something irreversible. */
+
+.servers-actions-menu,
+.servers-department-menu {
+  padding: 4px;
+  border: 1px solid var(--mac-hairline, var(--g-line));
+  border-radius: 12px;
+  background: var(--g-raise-2);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
+}
+
+.servers-actions-item,
+.servers-department-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 9px;
+  border-radius: 7px;
+  color: var(--g-ink-dim);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  text-transform: none;
+  transition:
+    background-color 130ms var(--g-ease-state),
+    color 130ms var(--g-ease-state);
+}
+.servers-actions-item:hover,
+.servers-actions-item:focus,
+.servers-department-menu-item:hover,
+.servers-department-menu-item:focus {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+  outline: none;
+}
+.servers-actions-item svg,
+.servers-department-menu-item svg {
+  flex: none;
+  color: var(--g-ink-faint);
+}
+
+/* The menu's one divider (the markup's own; its inline colour was invisible on
+   the light sheet). */
+.servers-department-menu .h-px {
+  margin: 4px 9px;
+  background: var(--mac-hairline, var(--g-line));
+}
+
+/* Leaving has no undo, so it is the only row that takes a colour, and only when
+   armed. */
+.servers-department-leave:hover {
+  color: var(--tone-bad, #d0453b);
+}
+.servers-department-leave-confirm,
+.servers-department-leave-confirm:hover {
+  background: var(--tone-bad-soft, rgba(208, 69, 59, 0.12));
+  color: var(--tone-bad, #d0453b);
+  font-weight: 600;
+}
+
+
+/* ── the picker's list and its tools ── */
+
+.servers-window-grid {
+  display: grid;
+  /* Not stretched: each card is the height of its contents, so hovering one
+     does not grow its neighbours. See `.sv-actions`. */
+  align-items: start;
+  /* Four across on a wide window, two on a tablet, one on a phone (fixed
+     breakpoints rather than auto-fill). servers-content.tsx reads the same
+     breakpoints to deal the cards. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+/* One column of the picker. Cards are dealt across columns rather than grid
+   cells, so a card that grows only moves the cards below it in its own column. */
+.servers-window-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+.servers-collection-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.servers-collection-tools button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--g-ink-dim);
+  transition:
+    background-color 140ms var(--g-ease-state),
+    border-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state);
+}
+.servers-collection-tools button:hover {
+  color: var(--g-ink);
+}
+.servers-collection-tools button[aria-pressed="true"] {
+  border-color: var(--mac-hairline, var(--g-line));
+  background: var(--g-raise);
+  color: var(--g-ink);
+}
+.servers-collection-tools button span {
+  color: var(--g-ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+.servers-collection-tools button[aria-pressed="true"] span {
+  color: var(--g-accent-ink);
+}
+.servers-pin-notice {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  color: var(--g-ink-dim);
+}
+
+/* The foot: two links on one rule. */
+.servers-utility {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 30px;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--mac-hairline, var(--g-line));
+}
+.servers-utility a,
+.servers-utility button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 36px;
+  font-size: 13px;
+  color: var(--g-ink-dim);
+  transition: color 140ms var(--g-ease-state);
+}
+.servers-utility a:hover,
+.servers-utility button:hover {
+  color: var(--g-ink);
+}
+
+@media (min-width: 640px) {
+  .servers-window-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .servers-window-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Departments use the same four-column track as the servers. Base first, then
+   the breakpoints in ascending order (a media query adds no weight, so a later
+   unconditional rule would override them). */
+.servers-grid {
+  grid-template-columns: minmax(0, 1fr);
+  /* Each card is the height of its contents, like the servers' grid. */
+  align-items: start;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .servers-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .servers-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .servers-window-grid,
+  .servers-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ── the department card ──
+
+   Matches the server card: a short band at the top, the icon hanging off it
+   with a ring of the card's ground, the name, a line under it, and the menu
+   button in the band's corner. Written last so it decides. */
+
+.servers-department-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  /* Not `hidden`: the options menu is a child of the card and would be clipped.
+     Only the band needs clipping, and it rounds its own corners. */
+  overflow: visible;
+  border: 1px solid var(--mac-hairline, var(--g-line));
+  border-radius: 12px;
+  background: var(--g-raise);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  transform: none;
+  /* Hover like the server card: the edge and the surface each come up a step. */
+  transition:
+    border-color 160ms var(--g-ease-state),
+    background-color 160ms var(--g-ease-state);
+}
+.servers-department-card:hover,
+.servers-department-card:focus-within {
+  border-color: var(--g-line-strong);
+  background: var(--g-raise-2);
+}
+
+.servers-department-card > a {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  padding: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* The band: a department has no banner, so it uses its accent washed over the
+   card ground, at the same height as a server's banner. */
+.servers-department-art {
+  position: relative;
+  display: block;
+  height: var(--card-band);
+  margin: 0;
+  padding: 0;
+  /* Visible, because the icon hangs off its foot (the wash is a background,
+     which border-radius clips anyway). 11px inside the card's 1px border. */
+  overflow: visible;
+  border-radius: 11px 11px 0 0;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(
+        in srgb,
+        var(--department-accent, var(--g-accent)) 26%,
+        transparent
+      ),
+      transparent 72%
+    ),
+    var(--g-fill-2);
+}
+
+/* Which server the department belongs to, as a pill on the right of the band.
+   The left is taken by the icon tile hanging half out of the band's foot (with
+   its 3px ring), and the corner by the menu button; a long name truncates. */
+.servers-department-server {
+  position: absolute;
+  top: 9px;
+  /* Clear of the menu button: 26px button, 6px inset, 8px gap. */
+  right: 40px;
+  z-index: 1;
+  display: inline-flex;
+  width: auto;
+  /* And clear of the tile: its 40px, its inset and 10px of space. */
+  max-width: calc(100% - 40px - var(--card-tile) - var(--card-inset) - 10px);
+  align-items: center;
+  gap: 6px;
+  /* Less padding on the icon side: the icon is a 14px disc in a 22px pill. */
+  padding: 4px 9px 4px 7px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(9, 9, 9, 0.5);
+  color: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.servers-department-server > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Hangs off the band with a ring of the card's ground, at the server card's
+   tile size. */
+.servers-department-icon {
+  position: absolute;
+  /* Half of the tile below the band, as on the server card. */
+  bottom: calc(var(--card-tile) / -2);
+  left: var(--card-inset);
+  z-index: 1;
+  display: grid;
+  width: var(--card-tile);
+  height: var(--card-tile);
+  order: 0;
+  place-items: center;
+  overflow: hidden;
+  border: 0;
+  border-radius: 11px;
+  background: var(--g-fill-2);
+  box-shadow: 0 0 0 3px var(--g-raise);
+  color: var(--g-ink-dim);
+}
+.servers-department-icon img {
+  width: 100%;
+  height: 100%;
+  border-radius: 11px;
+  object-fit: cover;
+}
+
+.servers-department-body {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  /* Half the tile hangs into this box, then the same 9px gap the server card
+     leaves before the name. */
+  padding: calc(var(--card-tile) / 2 + 9px) var(--card-inset) var(--card-inset);
+  border: 0;
+  background: none;
+}
+.servers-department-body h3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: var(--g-ink);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: -0.014em;
+  overflow-wrap: anywhere;
+}
+.servers-department-body p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  max-width: 100%;
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: var(--g-ink-dim);
+  font-size: 12px;
+  line-height: 1.45;
+}
+/* The member count: a caption on its own line under the name, the same
+   distance, size and colour as the server card's line. */
+.servers-department-body .servers-department-count {
+  margin-top: 9px;
+  padding-top: 0;
+  color: var(--g-ink-faint);
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.4;
+  -webkit-line-clamp: 1;
+}
+
+/* The menu button in the band's corner, like the pin on a server card. */
+.servers-department-card > div:last-child {
+  position: absolute !important;
+  top: 6px;
+  right: 6px;
+  bottom: auto;
+  padding: 0 !important;
+}
+/* Only the size: fill, border and ink come from the button's `ghost` variant,
+   which also hides RippleButton's `::after` bevel. The small radius is for the
+   variant's hover fill. `!important` because the component sets the size per
+   `size` prop. */
+.servers-department-menu-button {
+  width: 26px !important;
+  height: 26px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .servers-department-card {
+    transition: none;
+  }
+}

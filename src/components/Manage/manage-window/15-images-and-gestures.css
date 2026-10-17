@@ -1,0 +1,672 @@
+/* Image settings, per-tab gestures, the bar's controls, the phone's floating
+   bar and message editor controls (part of manage-window.css) */
+
+/* ── an image you can set ────────────────────────────────────────────────── */
+
+.manage-root .gw-pane .gw-uploads {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--u5);
+}
+.manage-root .gw-pane .gw-upload {
+  display: flex;
+  flex-direction: column;
+  gap: var(--u3);
+}
+.manage-root .gw-pane .gw-upload-row {
+  display: flex;
+  align-items: center;
+  gap: var(--u4);
+}
+.manage-root .gw-pane .gw-upload-tile {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 144px;
+  height: 72px;
+  min-height: 0 !important;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-row);
+  background: var(--g-fill);
+  box-shadow: inset 0 0 0 1px var(--g-line);
+  color: var(--mac-label-dim);
+  cursor: pointer;
+  overflow: clip;
+  transition:
+    transform 320ms var(--gw-ease),
+    box-shadow 200ms var(--g-ease-state);
+}
+.manage-root .gw-pane .gw-upload-tile[data-shape="round"] {
+  width: 72px;
+  border-radius: 50%;
+}
+.manage-root .gw-pane .gw-upload-tile:has(.gw-upload-empty) {
+  background: transparent;
+  box-shadow: none;
+  outline: 1.5px dashed var(--g-line-strong);
+  outline-offset: -1.5px;
+}
+.manage-root .gw-pane .gw-upload-tile:active {
+  transform: scale(0.97);
+}
+/* A file held over it: the tile leans in to take it. */
+.manage-root .gw-pane .gw-upload-tile[data-over="true"] {
+  transform: scale(1.05);
+  outline-color: var(--g-accent);
+  box-shadow: 0 0 0 3px var(--g-accent-soft);
+}
+.manage-root .gw-pane .gw-upload-img {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: gw-develop 760ms var(--gw-ease) both;
+}
+@keyframes gw-develop {
+  from {
+    opacity: 0;
+    transform: scale(1.12);
+    filter: blur(12px) saturate(0.3);
+  }
+  55% {
+    opacity: 1;
+  }
+}
+.manage-root .gw-pane .gw-upload-empty {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+}
+.manage-root .gw-pane .gw-upload-veil {
+  grid-area: 1 / 1;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 180ms var(--g-ease-state);
+}
+.manage-root .gw-pane .gw-upload-tile:has(.gw-upload-empty) .gw-upload-veil {
+  display: none;
+}
+@media (hover: hover) {
+  .manage-root .gw-pane .gw-upload-tile:hover .gw-upload-veil {
+    opacity: 1;
+  }
+}
+.manage-root .gw-pane .gw-upload-tile[data-over="true"] .gw-upload-veil {
+  opacity: 1;
+}
+.manage-root .gw-pane .gw-upload-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: gw-upload-ring 900ms var(--gw-ease) both;
+}
+@keyframes gw-upload-ring {
+  from {
+    box-shadow: inset 0 0 0 2px var(--g-accent);
+  }
+  to {
+    box-shadow: inset 0 0 0 0 transparent;
+  }
+}
+/* On its way up: a band of light crossing the picture, again and again, until
+   the save comes back. */
+.manage-root .gw-pane .gw-upload-tile[data-busy="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.38) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  animation: gw-upload-sweep 1100ms var(--gw-ease) infinite;
+}
+.manage-root .gw-pane .gw-upload-tile[data-busy="true"] .gw-upload-img {
+  opacity: 0.7;
+  transition: opacity 200ms var(--g-ease-state);
+}
+@keyframes gw-upload-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+.manage-root .gw-pane .gw-upload-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u2);
+}
+.manage-root .gw-pane .gw-upload-go,
+.manage-root .gw-pane .gw-upload-reset {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  min-height: 0 !important;
+  padding: 0 14px;
+  border-radius: var(--r-control);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--g-ease-state),
+    border-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state);
+}
+.manage-root .gw-pane .gw-upload-go {
+  border: 1px solid var(--g-line);
+  background: transparent;
+  color: var(--g-ink);
+}
+.manage-root .gw-pane .gw-upload-reset {
+  border: 0;
+  background: transparent;
+  color: var(--mac-label-dim);
+}
+@media (hover: hover) {
+  .manage-root .gw-pane .gw-upload-go:hover {
+    border-color: var(--g-accent-line);
+    background: var(--g-fill);
+  }
+  .manage-root .gw-pane .gw-upload-reset:hover {
+    background: var(--g-fill);
+    color: var(--g-ink);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gw-pane :is(.gw-upload-img, .gw-upload-ring) {
+    animation: none;
+  }
+  .manage-root .gw-pane .gw-upload-tile[data-busy="true"]::after {
+    animation-duration: 3000ms;
+  }
+}
+
+/* Hand-written tabs' field panels also go two across, but only when every row
+   is a field under its name (a half-width switch row looks adrift). This is a
+   viewport query because the panel is the grid and cannot query its own width. */
+@media (min-width: 1100px) {
+  .manage-root .gw-pane :is(.grid, .schema-grid):has(> .gw-set-row):not(:has(> :not([data-field="true"]))) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .manage-root .gw-pane :is(.grid, .schema-grid):has(> .gw-set-row):not(:has(> :not([data-field="true"]))) > .gw-set-row + .gw-set-row {
+    border-top: 0;
+  }
+  /* The last of an odd number has the line to itself, rather than half of it
+     with its hover stopping in the middle of the panel. */
+  .manage-root .gw-pane :is(.grid, .schema-grid):has(> .gw-set-row):not(:has(> :not([data-field="true"]))) > .gw-set-row:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .manage-root .gw-pane :is(.grid, .schema-grid):has(> .gw-set-row):not(:has(> :not([data-field="true"]))) > .gw-set-row:nth-child(n + 3),
+  /* Both cells of the first line, when a heading is joined on above: it
+     rules the first and would leave the second a pixel higher. */
+  .manage-root .gw-pane .schema-group-header + :is(.grid, .schema-grid):not(:has(> :not([data-field="true"]))) > .gw-set-row:nth-child(2) {
+    border-top: 1px solid var(--mac-hair);
+  }
+}
+
+/* ── each tab's own gesture ──
+
+   When a tab becomes the open one, its rail icon acts out what it pictures,
+   once and in under 0.75s: the bell rings, the history rewinds, the gavel comes
+   down. Each tab sets `--gw-fx` (the keyframes) and `--gw-fx-at` (the pivot) by
+   its id. The faint glyph behind the tab's title draws itself in as the page
+   arrives. */
+.gw-row[data-current="true"] .gw-row-icon svg {
+  transform-origin: var(--gw-fx-at, 50% 50%);
+  animation: var(--gw-fx, gw-fx-bounce) 680ms var(--gw-ease) both;
+}
+
+.gw-row[data-tab="overview"],
+.gw-row[data-tab="suggestions"],
+.gw-row[data-tab="ai"] { --gw-fx: gw-fx-bounce; --gw-fx-at: 50% 100%; }
+.gw-row[data-tab="customization"] { --gw-fx: gw-fx-swirl; }
+.gw-row[data-tab="permissions"],
+.gw-row[data-tab="suspensions"] { --gw-fx: gw-fx-shake; }
+.gw-row[data-tab="logging"],
+.gw-row[data-tab="promotions"],
+.gw-row[data-tab="loa"],
+.gw-row[data-tab="activity"],
+.gw-row[data-tab="custom-commands"] { --gw-fx: gw-fx-draw; }
+.gw-row[data-tab="audit"] { --gw-fx: gw-fx-rewind; }
+.gw-row[data-tab="staff-feedback"] { --gw-fx: gw-fx-star; }
+.gw-row[data-tab="shifts"] { --gw-fx: gw-fx-tick; }
+.gw-row[data-tab="infractions"] { --gw-fx: gw-fx-gavel; --gw-fx-at: 15% 85%; }
+.gw-row[data-tab="punishments"] { --gw-fx: gw-fx-spin; }
+.gw-row[data-tab="quota"] { --gw-fx: gw-fx-thud; }
+.gw-row[data-tab="tickets"] { --gw-fx: gw-fx-stamp; }
+.gw-row[data-tab="modmail"] { --gw-fx: gw-fx-send; }
+.gw-row[data-tab="auto-response"],
+.gw-row[data-tab="workflows"] { --gw-fx: gw-fx-flicker; }
+.gw-row[data-tab="welcome"] { --gw-fx: gw-fx-pop; --gw-fx-at: 20% 80%; }
+.gw-row[data-tab="daily-questions"] { --gw-fx: gw-fx-flip; }
+.gw-row[data-tab="giveaways"] { --gw-fx: gw-fx-hop; --gw-fx-at: 50% 100%; }
+.gw-row[data-tab="reminders"] { --gw-fx: gw-fx-ring; --gw-fx-at: 50% 10%; }
+.gw-row[data-tab="connection-roles"] { --gw-fx: gw-fx-link; }
+.gw-row[data-tab="partnerships"] { --gw-fx: gw-fx-beat; }
+.gw-row[data-tab="sessions"],
+.gw-row[data-tab="prc"] { --gw-fx: gw-fx-broadcast; }
+.gw-row[data-tab="roblox"] { --gw-fx: gw-fx-globe; }
+.gw-row[data-tab="resources"],
+.gw-row[data-tab="packages"] { --gw-fx: gw-fx-drop; }
+
+@keyframes gw-fx-bounce {
+  0% { transform: scale(1, 1); }
+  25% { transform: scale(1.12, 0.84); }
+  55% { transform: translateY(-3px) scale(0.94, 1.08); }
+  100% { transform: none; }
+}
+@keyframes gw-fx-swirl {
+  0% { transform: rotate(0); }
+  45% { transform: rotate(-40deg) scale(1.08); }
+  100% { transform: none; }
+}
+@keyframes gw-fx-shake {
+  0%, 100% { transform: none; }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1.5px); }
+  80% { transform: translateX(1px); }
+}
+/* The line writes itself: the same dash trick as the header's glyph. */
+@keyframes gw-fx-draw {
+  from { stroke-dasharray: 64; stroke-dashoffset: 64; }
+  to { stroke-dasharray: 64; stroke-dashoffset: 0; }
+}
+@keyframes gw-fx-rewind {
+  from { transform: rotate(0); }
+  to { transform: rotate(-360deg); }
+}
+@keyframes gw-fx-star {
+  0% { transform: rotate(0) scale(1); }
+  50% { transform: rotate(36deg) scale(1.14); }
+  100% { transform: rotate(72deg) scale(1); }
+}
+@keyframes gw-fx-tick {
+  0% { transform: rotate(0); }
+  30% { transform: rotate(30deg); }
+  45% { transform: rotate(24deg); }
+  75% { transform: rotate(60deg); }
+  100% { transform: rotate(0); }
+}
+@keyframes gw-fx-gavel {
+  0% { transform: rotate(0); }
+  35% { transform: rotate(-28deg); }
+  55% { transform: rotate(6deg); }
+  70% { transform: rotate(-3deg); }
+  100% { transform: none; }
+}
+@keyframes gw-fx-spin {
+  from { transform: rotate(0); }
+  to { transform: rotate(180deg); }
+}
+@keyframes gw-fx-thud {
+  0% { transform: scale(1); }
+  30% { transform: scale(0.78); }
+  60% { transform: scale(1.1); }
+  100% { transform: none; }
+}
+@keyframes gw-fx-stamp {
+  0% { transform: rotate(0) scale(1); }
+  40% { transform: rotate(-14deg) scale(1.14); }
+  70% { transform: rotate(4deg) scale(0.96); }
+  100% { transform: none; }
+}
+@keyframes gw-fx-send {
+  0% { transform: none; opacity: 1; }
+  40% { transform: translate(7px, -3px); opacity: 0; }
+  41% { transform: translate(-7px, 3px); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes gw-fx-flicker {
+  0%, 100% { opacity: 1; }
+  15% { opacity: 0.2; }
+  30% { opacity: 1; }
+  45% { opacity: 0.35; }
+  60% { opacity: 1; }
+}
+@keyframes gw-fx-pop {
+  0% { transform: scale(1) rotate(0); }
+  35% { transform: scale(1.28) rotate(-12deg); }
+  100% { transform: none; }
+}
+@keyframes gw-fx-flip {
+  from { transform: perspective(60px) rotateY(0); }
+  to { transform: perspective(60px) rotateY(360deg); }
+}
+@keyframes gw-fx-hop {
+  0% { transform: none; }
+  30% { transform: scale(1.1, 0.86); }
+  55% { transform: translateY(-5px) rotate(-8deg); }
+  80% { transform: translateY(0) rotate(4deg); }
+  100% { transform: none; }
+}
+@keyframes gw-fx-ring {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(18deg); }
+  30% { transform: rotate(-16deg); }
+  45% { transform: rotate(12deg); }
+  60% { transform: rotate(-8deg); }
+  75% { transform: rotate(4deg); }
+}
+@keyframes gw-fx-link {
+  0% { transform: rotate(0); }
+  40% { transform: rotate(45deg) scale(0.9); }
+  100% { transform: none; }
+}
+@keyframes gw-fx-beat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.18); }
+  30% { transform: scale(0.96); }
+  45% { transform: scale(1.12); }
+  65% { transform: scale(1); }
+}
+@keyframes gw-fx-broadcast {
+  0% { transform: scale(1); opacity: 1; }
+  25% { transform: scale(0.82); opacity: 0.55; }
+  55% { transform: scale(1.14); opacity: 1; }
+  100% { transform: none; }
+}
+@keyframes gw-fx-globe {
+  from { transform: perspective(60px) rotateY(0); }
+  to { transform: perspective(60px) rotateY(-360deg); }
+}
+@keyframes gw-fx-drop {
+  0% { transform: translateY(-6px); opacity: 0; }
+  60% { transform: translateY(1px); opacity: 1; }
+  100% { transform: none; }
+}
+
+/* The glyph behind the title writes itself in as the page arrives. */
+.manage-root .gw-pane .gw-hero-ghost svg :is(path, circle, line, polyline, rect) {
+  stroke-dasharray: 90;
+  animation: gw-ghost-draw 1400ms var(--gw-ease) 120ms both;
+}
+@keyframes gw-ghost-draw {
+  from { stroke-dashoffset: 90; }
+  to { stroke-dashoffset: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gw-row[data-current="true"] .gw-row-icon svg,
+  .manage-root .gw-pane .gw-hero-ghost svg :is(path, circle, line, polyline, rect) {
+    animation: none;
+  }
+}
+
+/* ── the bar's controls ──
+
+   The panel control shows it is on by colour, not by sitting in a filled
+   square. */
+/* No teaching dot on the server tab; the hint still appears on hover. */
+.manage-root .gw-bar .gw-tab-coach .gw-coach-dot {
+  display: none;
+}
+.gw-icon[data-on="true"] {
+  background: transparent;
+  color: var(--g-accent-ink);
+}
+@media (hover: hover) {
+  .gw-icon[data-on="true"]:hover {
+    background: var(--g-fill-2);
+  }
+}
+
+/* A sticky box pins to its scroller's padding edge, and the pane has top
+   padding, so the editor bar pins 10px from the pane's visible top by taking
+   that padding back. On a phone the page scrolls instead, and the bar stops
+   under the floating capsule. */
+@media (min-width: 761px) {
+  .manage-root .gw-pane .gw-md-bar {
+    top: calc(10px - clamp(2rem, 3.4vw, 3.5rem));
+  }
+}
+/* A strip of page ground above the bar, so text scrolling up disappears behind
+   the bar instead of showing in the gap. */
+.manage-root .gw-pane .gw-md-bar {
+  box-shadow:
+    0 -12px 0 -1px var(--mac-pane-bg),
+    0 10px 24px -18px rgba(0, 0, 0, 0.6);
+}
+@media (min-width: 561px) and (max-width: 760px) {
+  .manage-root .gw-pane .gw-md-bar {
+    top: 76px;
+  }
+}
+
+/* ── the phone's floating bar ──
+
+   Nothing that takes up space moves while scrolling (animating top, height or
+   margins re-laid-out the page every frame and lagged under a finger). The bar
+   keeps its size; two layers behind its contents do the work: the full-width
+   ground fades out, and the inset capsule with its rim and shadow fades in from
+   slightly larger. Opacity and transform only, so it runs on the compositor. */
+@media (max-width: 760px) {
+  .manage-root .gw-bar {
+    isolation: isolate;
+    background: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .manage-root .gw-bar::after,
+  .manage-root .gw-bar::before {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+  }
+  /* The ground: the page, while the page is at its top. */
+  .manage-root .gw-bar::after {
+    inset: 0;
+    z-index: -2;
+    background: var(--mac-pane-bg);
+  }
+  /* Contents centred in the capsule: the capsule is 4px from the bar's top and
+     6px from its sides, everything inside is 8px from its wall, and its radius
+     is the inner radius plus 8. */
+  .manage-root .gw-bar .gw-zone,
+  .manage-root .gw-bar .gw-tab-coach,
+  .manage-root .gw-bar .gw-tab-coach > .relative,
+  .manage-root .gw-bar .gw-tab {
+    align-self: center;
+  }
+  .manage-root .gw-bar .gw-zone {
+    height: auto;
+  }
+  .manage-root .gw-bar {
+    padding-inline: 16px;
+  }
+  .manage-root .gw-bar::before {
+    inset: 4px 6px;
+    z-index: -1;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--mac-raise) 90%, transparent);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    box-shadow:
+      inset 0 0 0 1px var(--g-line),
+      0 14px 34px -10px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+  }
+  @supports (animation-timeline: scroll()) {
+    .manage-root .gw-bar,
+    .manage-root .gw-bar .gw-zone,
+    .manage-root .gw-bar .gw-tab {
+      animation: none;
+    }
+    /* Completes within the first 60px of scroll, so short tabs still finish the
+       morph. */
+    .manage-root .gw-bar::after {
+      animation: gw-ground-out linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 44px;
+    }
+    .manage-root .gw-bar::before {
+      animation: gw-capsule-in var(--gw-ease) both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 60px;
+    }
+  }
+}
+@keyframes gw-ground-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes gw-capsule-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04, 1.12);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gw-bar::before,
+  .manage-root .gw-bar::after {
+    animation: none !important;
+  }
+}
+
+/* ── cheaper to keep up ──
+
+   No permanent layer per chip; the add animation is short. */
+.manage-root .gw-pane .gw-chip {
+  will-change: auto;
+}
+
+/* ── message editor controls ──
+
+   The editors use the same pieces as the settings tabs: option tiles and pills
+   instead of native checkboxes, sentence-case captions, and one shape for every
+   "add" button. */
+
+/* An option as a pill: inside a block editor, where a full card per switch
+   would be three cards of air round four words. */
+.manage-root .gw-pane .gw-opt[data-size="compact"] {
+  display: inline-flex;
+  width: auto;
+  min-height: 34px;
+  gap: 8px;
+  padding: 6px 12px 6px 8px;
+  border-radius: var(--r-control);
+  font-size: 13px;
+}
+.manage-root .gw-pane .gw-opt[data-size="compact"] .gw-opt-mark {
+  width: 16px;
+  height: 16px;
+}
+.manage-root .gw-pane .gw-opt[data-size="compact"] .gw-opt-mark svg {
+  width: 12px;
+  height: 12px;
+}
+.manage-root .gw-pane .gw-opt[data-size="compact"] .gw-opt-name {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 650;
+}
+
+/* A block's kind, as a name rather than a pink label in capitals. */
+.manage-root .gw-pane .gw-md-block-type {
+  font-size: var(--t-small);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--g-ink);
+}
+.manage-root .gw-pane .gw-md-block-empty {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--g-line);
+  font-size: var(--t-micro);
+  font-weight: 650;
+  color: var(--mac-label-dim);
+}
+
+/* Sentence-case captions in the editors and anywhere in the pane. Hex codes and
+   Discord's APP tag keep their capitals. */
+.gw-md-embed-name,
+.gw-md-tpl-name,
+.gw-md-vars-group,
+.gw-set-count {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+
+/* One button for adding, choosing and acting inside an editor: the site's
+   outline button (site/ripple-button.css) at editor size. */
+.gw-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--mac-hairline, var(--g-line));
+  border-radius: var(--r-control);
+  background: var(--g-fill);
+  color: var(--g-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--g-ease-state),
+    border-color 140ms var(--g-ease-state),
+    transform 160ms var(--gw-ease);
+}
+@media (hover: hover) {
+  .gw-btn:hover:not(:disabled) {
+    border-color: var(--g-line-strong);
+    background: var(--g-fill-2);
+  }
+}
+.gw-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.gw-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.gw-btn[data-kind="accent"] {
+  border-color: var(--g-accent-line);
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+}
+
+/* Two fields side by side end on one line: each control sits at the foot of its
+   half, whether or not it has a description. */
+.manage-root .gw-pane .gw-set-row[data-field="true"] {
+  grid-template-rows: 1fr auto;
+}
+/* The slot passes its half's full height to the row inside it. */
+.manage-root .gw-pane .gw-set-slot {
+  display: grid;
+}
+
+/* On a phone every tab scrolls at least enough to float the bar and allow
+   pull-to-refresh. */
+@media (max-width: 760px) {
+  .manage-root .gw-pane {
+    min-height: calc(100dvh + 64px);
+  }
+}

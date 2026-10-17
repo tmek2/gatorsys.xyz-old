@@ -1,0 +1,1320 @@
+/* Unlayered: Tailwind v3's preflight is unlayered and beats every layered rule,
+   and Astryx's components live in `@layer astryx-base`, so anything here that
+   must outrank preflight is unlayered too. */
+
+/* ------------------------------------------------------------------- page */
+
+.g-poster {
+  position: relative;
+  background: var(--g-ground);
+}
+
+/* The hero and the distance the window travels. A full screen of runway: the
+   rise uses all of it, and at about 100px per wheel notch the window moves in
+   small enough steps to look continuous. */
+/* The runway has two resting places, enforced in smooth-scroll.tsx. Not CSS
+   scroll snapping: the wheel is eased by a loop that scrolls in steps, and the
+   browser re-snaps after every programmatic scroll. */
+/* `svh`, so the runway does not change length as a phone's address bar comes
+   and goes (see mac.css). */
+.g-page {
+  position: relative;
+  height: 200svh;
+}
+
+.g-hero-sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow: clip;
+}
+
+/* The dot field behind the hero. A canvas, because the dots move away from the
+   pointer (see `DotField`). */
+.g-hero-field {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  /* The edge fade as six numbers the canvas draws itself (the ellipse's radii,
+     centre and two stops, the arguments of a `radial-gradient`), instead of a
+     compositor mask that would re-rasterise the whole layer every frame. See
+     dot-field.tsx. */
+  /* Centred horizontally, so the field reads the same on both sides of the
+     window. */
+  --g-dot-fade: 92% 74% 50% 44% 18% 82%;
+}
+/* --------------------------------------------------------------------- nav */
+
+/* Only the gutter differs from the shared header, to line up with the hero. */
+
+.g-nav {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  /* Above the window: the header's tooltips hang about 30px below it, into the
+     band where the window's top edge is. */
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  height: 72px;
+  padding-inline: var(--g-gutter);
+  transition: opacity var(--g-med) var(--g-ease-state);
+}
+
+/* Except when the window has been sent full screen, which is the one time it
+   really does cover the header. */
+.g-page:has(.g-mac[data-full="true"]) .g-nav {
+  z-index: 3;
+}
+
+/* Everything in the header lives on this layer, so the bar can narrow, shorten
+   and round on scroll independently of the sticking. Otherwise it is a plain
+   full-width flex row. */
+.g-nav-bar {
+  position: relative;
+  /* A stacking context so the surface layer can sit behind the controls.
+     `z-index`, not `isolation`, which would also make a backdrop root and leave
+     the blur nothing to blur. */
+  z-index: 0;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Search, appearance, account: three tools, spaced as a group. */
+.g-nav-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.g-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--g-accent-display, var(--g-accent));
+  text-decoration: none;
+  flex: none;
+}
+.g-brand-word {
+  font-family: var(--font-ui);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--g-ink);
+}
+
+/* The leading slot on the About page, where the mark sits on the landing. Same
+   height, same place, so the way out is where the way home was. */
+/* The same height as the header's other controls. */
+.g-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 13px 0 10px;
+  border-radius: var(--g-r-control);
+  border: 1px solid var(--g-line-strong);
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  flex: none;
+  transition:
+    border-color var(--g-fast) var(--g-ease-state),
+    background-color var(--g-fast) var(--g-ease-state),
+    transform var(--g-fast) var(--g-ease-state);
+}
+.g-back:hover {
+  border-color: var(--room, var(--g-accent));
+  background: color-mix(in srgb, var(--room, var(--g-accent)) 12%, transparent);
+}
+.g-back:active {
+  transform: translateY(1px);
+}
+.g-back svg {
+  transition: transform var(--g-fast) var(--g-ease-out);
+}
+.g-back:hover svg {
+  transform: translateX(-2px);
+}
+
+.g-nav-links {
+  --nav-blob-ease: cubic-bezier(0.34, 1.42, 0.64, 1);
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-inline-start: 14px;
+  min-width: 0;
+}
+
+/* The travelling highlight, as on the appearance toggle. When nothing is
+   selected (two of the three links leave the site) it fades out instead of
+   springing back. */
+.g-nav-blob {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--nav-blob-w, 0);
+  height: var(--nav-blob-h, 0);
+  transform: translate(var(--nav-blob-x, 0), var(--nav-blob-y, 0));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 460ms var(--nav-blob-ease),
+    width 300ms var(--nav-blob-ease),
+    opacity 200ms var(--g-ease-state);
+}
+.g-nav-links[data-lit="true"] .g-nav-blob {
+  opacity: 1;
+}
+
+/* The skin is separate from the travel so the two transforms do not fight:
+   the outer element moves, this one squashes. */
+.g-nav-blob-skin {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--g-r-control);
+  background: var(--g-fill-2);
+  transition: transform 200ms var(--g-ease-out);
+}
+.g-nav-links[data-moving="true"] .g-nav-blob-skin {
+  transform: scaleX(1.14) scaleY(0.88);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-nav-blob,
+  .g-nav-blob-skin {
+    transition-duration: 1ms;
+  }
+  .g-nav-links[data-moving="true"] .g-nav-blob-skin {
+    transform: none;
+  }
+}
+.g-nav-link {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: var(--g-r-control);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--g-ink-dim);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color var(--g-fast) var(--g-ease-state),
+    background-color var(--g-fast) var(--g-ease-state);
+}
+/* No background of its own: the blob behind it is the fill now, and two of
+   them stacked made the hovered link a shade darker than the blob it sat on. */
+.g-nav-link:hover,
+.g-nav-link[aria-current="page"] {
+  color: var(--g-ink);
+}
+.g-nav-link:active {
+  transform: translateY(1px);
+}
+.g-nav-link svg {
+  opacity: 0.75;
+}
+
+.g-nav-spacer {
+  flex: 1 1 auto;
+}
+
+/* Fixed width by design: the old chip grew leftward on hover and shoved the
+   whole nav sideways every time the pointer crossed it. */
+/* The profile chip: the face only, the same square as its neighbours. The name
+   is visually hidden but kept for screen readers. */
+.g-profile {
+  /* The name inside is taken out of the flow rather than deleted, so it needs
+     something to be out of the flow against. */
+  position: relative;
+  display: grid;
+  place-items: center;
+  /* 35px so the round chip looks the same size as the 32px rounded-square
+     controls beside it: 35px is the circle with the same area as a 32px square
+     with 9px corners. `box-sizing` is stated because this element would
+     otherwise be content-box. */
+  box-sizing: border-box;
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  /* Round, like the picture inside it. */
+  border-radius: 50%;
+  border: 1px solid var(--g-line);
+  background: var(--g-fill);
+  color: var(--g-ink);
+  text-decoration: none;
+  flex: none;
+  transition:
+    border-color var(--g-fast) var(--g-ease-state),
+    background-color var(--g-fast) var(--g-ease-state);
+}
+.g-profile:hover {
+  border-color: var(--g-line-strong);
+  background: var(--g-fill-2);
+}
+.g-profile:active {
+  transform: translateY(1px);
+}
+/* Sign in and the profile chip use the same rules as the back button, so they
+   follow this site's palette in both themes. */
+.g-signin {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--g-r-control);
+  border: 1px solid var(--g-line-strong);
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  transition:
+    border-color var(--g-fast) var(--g-ease-state),
+    background-color var(--g-fast) var(--g-ease-state);
+}
+.g-signin:hover {
+  border-color: var(--g-accent-line);
+  background: var(--g-accent-soft);
+}
+
+/* As big as the ring can hold, which is the ring's own size less its border
+   and the hairline of inset that makes it read as a ring at all. */
+.g-profile-face {
+  width: 31px;
+  height: 31px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
+  background: var(--g-raise-2);
+}
+.g-profile-mono {
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--g-ink-dim);
+}
+
+/* Said, not shown. */
+.g-profile-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* `g-nav-solid`: the header in normal flow, for pages with a document
+   underneath (everywhere but the landing, where it floats over the poster). */
+.g-nav-solid {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: color-mix(in srgb, var(--g-ground) 84%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--g-line);
+}
+
+/* ------------------------------------------------- the header, on the move */
+
+/* With `float`, the header becomes a floating pill as the page scrolls: it
+   pulls in from the gutters, shortens, rounds and gains a shadow, while the
+   wordmark, links and tools stay put. Driven by the scroll timeline rather than
+   a class flipped at a threshold, so it tracks the scroll exactly in both
+   directions and runs off the main thread. Off on the landing, where the header
+   sits over the poster. */
+
+/* Registered as a <length> so it can be animated. */
+@property --g-inset {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 20px;
+}
+
+.g-nav[data-float="true"] {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  --g-inset: var(--g-gutter);
+  padding-inline: var(--g-inset);
+  /* The sticky box keeps a fixed height and is contained, so the morph only
+     affects the header (a shrinking sticky box re-laid-out the page every
+     frame). */
+  height: 72px;
+  contain: layout style;
+}
+@media (max-width: 900px) {
+  .g-nav[data-float="true"] {
+    height: 64px;
+  }
+}
+
+.g-nav[data-float="true"] .g-nav-bar {
+  /* Explicit lengths rather than `100%` and `0`, so the keyframes below have
+     something to interpolate from. A percentage and a pixel do not animate. */
+  height: 72px;
+  margin-inline: auto;
+  padding-inline: 0;
+  border-radius: 0;
+}
+
+/* The surface is a separate layer so it can fade in while the shape changes.
+   Fading `background-color` from `transparent` fades from transparent black,
+   which greys the pill in the light theme. */
+.g-nav[data-float="true"] .g-nav-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 1px solid var(--g-line);
+  border-radius: inherit;
+  /* The raised surface at 95%, nearly opaque, so the bar stays readable over
+     the page. */
+  background: color-mix(in srgb, var(--g-raise) 95%, transparent);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.34);
+  opacity: 0;
+}
+
+:root[data-theme="light"] .g-nav[data-float="true"] .g-nav-bar::before {
+  box-shadow: 0 12px 30px rgba(80, 35, 50, 0.14);
+}
+/* Written out again rather than grouped, so an explicit light choice on a dark
+   device still wins over the device's own preference. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .g-nav[data-float="true"] .g-nav-bar::before {
+    box-shadow: 0 12px 30px rgba(80, 35, 50, 0.14);
+  }
+}
+
+/* 1200px is the page shell minus its gutter, so the pill lines up with the
+   content and still holds the wordmark, three links and three tools. */
+@keyframes g-nav-draw-in {
+  to {
+    --g-inset: max(14px, calc((100vw - 1200px) / 2));
+  }
+}
+@keyframes g-nav-pill {
+  to {
+    height: 54px;
+    padding-inline: 14px;
+    /* A bar, not a capsule. */
+    border-radius: var(--g-r-bar);
+  }
+}
+@keyframes g-nav-surface {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Guarded: without a scroll timeline, a duration-less animation would jump
+   straight to the pill. Those browsers keep the plain header. */
+/* Range and curve: the morph runs over 300px of scroll (about a third of a
+   screen, so it visibly travels rather than finishing within one wheel notch),
+   eased with the site's sheet curve: quick to leave, slow to arrive, no
+   overshoot. */
+@supports (animation-timeline: scroll()) {
+  .g-nav[data-float="true"] {
+    animation: g-nav-draw-in var(--g-ease-sheet) both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 300px;
+  }
+  .g-nav[data-float="true"] .g-nav-bar {
+    animation: g-nav-pill var(--g-ease-sheet) both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 300px;
+  }
+  .g-nav[data-float="true"] .g-nav-bar::before {
+    animation: g-nav-surface var(--g-ease-state) both;
+    animation-timeline: scroll(root block);
+    /* Ahead of the geometry: the surface should be there by the time the bar
+       has visibly left the edges, not arrive after it. */
+    animation-range: 0 190px;
+  }
+}
+
+@media (max-width: 900px) {
+  .g-nav[data-float="true"] .g-nav-bar {
+    height: 64px;
+  }
+  /* Redeclared rather than parameterised: a keyframe cannot read a custom
+     property for a value it is animating to. */
+  /* 36px controls in a 52px capsule: 8px from the top and 8px from the ends. */
+  @keyframes g-nav-pill {
+    to {
+      height: 52px;
+      padding-inline: 8px;
+      border-radius: var(--g-r-bar);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------- hero */
+
+/* One column, with the headline large enough to fill the width. */
+.g-hero {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(28px, 5vh, 56px);
+  padding-inline: var(--g-gutter);
+  /* The window's title bar is parked at the bottom of this screen, so the
+     hero's own content stops short of it rather than sitting behind it. */
+  padding-bottom: clamp(126px, 17vh, 168px);
+}
+
+.g-hero-h1 {
+  margin: 0;
+  font-family: var(--font-ui);
+  /* Sized off the viewport rather than off a scale: on this page the headline
+     is the layout, so it has to grow with the window it is filling. */
+  font-size: clamp(2.4rem, 7.4vw, 6.6rem);
+  font-weight: 700;
+  /* A hair over solid, so the second line's capitals clear the first line's
+     descenders. */
+  line-height: 1.03;
+  /* Letter spacing tuned for Rethink Sans at display size (tighter values run
+     letters together). */
+  letter-spacing: -0.018em;
+  color: var(--g-ink);
+  text-wrap: balance;
+}
+
+/* The explanation and the two actions share the width under the headline; the
+   grid keeps the actions on the right, centred against the copy. */
+.g-hero-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 52ch) auto;
+  align-items: center;
+  gap: clamp(22px, 4vw, 56px);
+}
+.g-hero-say {
+  max-width: 52ch;
+}
+
+/* Sized relative to the headline, so it reads as the second half of the same
+   statement. */
+.g-hero-lede {
+  margin: 0;
+  max-width: 52ch;
+  font-size: clamp(16px, 1.35vw, 20px);
+  line-height: 1.5;
+  color: var(--g-ink-dim);
+  text-wrap: pretty;
+}
+
+.g-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* The secondary action: same size as the primary, on the page's ground. Both
+   use the same proportions as the picker and account page buttons (8px corner,
+   24×12 padding, 14px/600). The hairline inside the top edge and the accent on
+   hover are intentional; keep them. */
+.g-open {
+  gap: 9px;
+  padding: 12px 24px;
+  border: 1px solid var(--g-line-strong);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 var(--g-line);
+}
+@media (hover: hover) {
+  .g-open:hover {
+    border-color: var(--g-accent-line);
+    background: color-mix(in srgb, var(--g-ink) 11%, var(--g-fill-2));
+  }
+  .g-open:hover .g-open-icon {
+    color: var(--g-accent-display);
+  }
+}
+.g-open:focus-visible {
+  outline: 2px solid var(--g-accent);
+  outline-offset: 2px;
+}
+.g-open-icon {
+  color: var(--g-ink-dim);
+  transition: color var(--g-fast) var(--g-ease-state);
+}
+
+/* The one word on the page that is unambiguously good news gets the accent,
+   and gets to celebrate itself when you point at it. */
+/* The accent deepened to the 3:1 contrast a large mark needs (the plain accent
+   is 2.04:1 on this ground). */
+/* The claim phrase in the brand colour. */
+.g-hero-free {
+  color: var(--g-accent-display, var(--g-accent));
+  cursor: default;
+}
+
+/* ------------------------------------------------------------ add gator */
+
+/* One filled control on the page. Everything else is text, which is what
+   makes this one read as the thing to press. */
+.g-add {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  overflow: hidden;
+  /* Transparent border, so this matches the height of `.g-open`, which has a
+     real one. */
+  padding: 12px 24px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--g-accent);
+  color: var(--g-on-accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  /* One specular hairline along the top edge and no shadow; `.g-ripple` handles
+     the hover. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+/* The ripple layer is defined only in ripple-button.css; a second copy here
+   would make the result depend on stylesheet order. */
+
+/* ------------------------------------------------------- underlined link */
+
+/* A text link; the underline is a background so it can animate and sit where a
+   rule should. */
+
+
+/* --------------------------------------------------------------- confetti */
+
+.g-confetti-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------- the handle */
+
+/* The parked window's button lives with the window: see `.g-mac-grip` in
+   mac.css. */
+
+/* Sits just above the window's title bar and says what the window is. It goes
+   when the window arrives, because by then the window says so itself. */
+.g-raise {
+  position: absolute;
+  right: var(--g-gutter);
+  bottom: calc(var(--mac-peek) + 20px);
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--g-line-strong);
+  background: var(--g-fill-2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--g-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    opacity var(--g-med) var(--g-ease-state),
+    border-color var(--g-fast) var(--g-ease-state),
+    transform var(--g-fast) var(--g-ease-state);
+}
+.g-raise::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-1px) rotate(45deg);
+}
+.g-raise:hover {
+  border-color: var(--g-accent-line);
+  transform: translateY(-1px);
+}
+.g-poster[data-open="true"] .g-raise {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------- footline */
+
+/* The legal links, on the same line as the About handle just above the window's
+   title bar (policies left, handle right), reachable without scrolling. */
+.g-footline {
+  position: absolute;
+  left: var(--g-gutter);
+  bottom: calc(var(--mac-peek) + 26px);
+  z-index: 4;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--g-ink-faint);
+  transition: opacity var(--g-med) var(--g-ease-state);
+}
+.g-footline-links {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.g-footline .g-foot-link {
+  font-size: 12px;
+  color: var(--g-ink-faint);
+  text-decoration: none;
+  transition: color var(--g-fast) var(--g-ease-state);
+}
+.g-footline .g-foot-link:hover {
+  color: var(--g-accent-ink);
+}
+.g-poster[data-open="true"] .g-footline {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* With the window up, the hero behind it stops taking pointer events and leaves
+   the tab order. The header stays, since the window does not cover it unless
+   full screen. */
+.g-poster[data-open="true"] .g-hero {
+  pointer-events: none;
+}
+
+/* These fade out with the window's rise rather than snapping at one scroll
+   position. */
+.g-hero,
+.g-raise,
+.g-footline {
+  opacity: 1;
+  transition: opacity var(--g-med) var(--g-ease-state);
+}
+.g-poster[data-open="true"] .g-hero,
+.g-poster[data-open="true"] .g-raise,
+.g-poster[data-open="true"] .g-footline {
+  opacity: 0;
+}
+
+@supports (animation-timeline: scroll()) {
+  .g-hero,
+  .g-raise,
+  .g-footline,
+  .g-poster[data-open="true"] .g-hero,
+  .g-poster[data-open="true"] .g-raise,
+  .g-poster[data-open="true"] .g-footline {
+    opacity: 1;
+    transition: none;
+    animation: g-hero-clear linear both;
+    animation-timeline: scroll(root block);
+    /* Gone by two thirds of the way up, so the last third of the rise is the
+       window arriving on a clear ground rather than through a fading page. */
+    animation-range: 24% 66%;
+  }
+  @keyframes g-hero-clear {
+    to {
+      opacity: 0;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------- narrow */
+
+/* The header's own responsive rules, carried over with it: the links go when
+   there is no room for them, and the profile chip drops to its avatar. */
+@media (max-width: 900px) {
+  .g-nav-links {
+    display: none;
+  }
+  .g-nav {
+    height: 64px;
+  }
+}
+
+@media (max-width: 560px) {
+  .g-profile-name {
+    display: none;
+  }
+  .g-profile {
+    padding: 5px;
+  }
+}
+
+
+@media (max-width: 700px) {
+  .g-break-wide {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  /* Below this the sentence and the actions stop fitting on one line, so they
+     stack and both go to the left edge. */
+  .g-hero-foot {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: 24px;
+  }
+  .g-hero-say {
+    max-width: 100%;
+  }
+  .g-hero-actions {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .g-hero {
+    gap: 24px;
+    padding-bottom: clamp(128px, 20vh, 170px);
+  }
+  .g-hero-actions {
+    gap: 18px;
+  }
+  /* The band above the parked window, as one stack from the gutter: the handle
+     directly above the window it opens, the policies on the line above it. (Two
+     independently anchored lines overlapped when they wrapped on narrow
+     phones.) */
+  .g-raise {
+    left: var(--g-gutter);
+    right: auto;
+    bottom: calc(var(--mac-peek) + 14px);
+  }
+  .g-footline {
+    right: var(--g-gutter);
+    bottom: calc(var(--mac-peek) + 72px);
+    gap: 6px 14px;
+    font-size: 11.5px;
+  }
+  .g-footline-links {
+    gap: 6px 14px;
+  }
+}
+
+/* ------------------------------------------------------------- the phone */
+
+/* Touch sizes for the landing: controls sized for a thumb (44pt targets). */
+
+@media (pointer: coarse) and (max-width: 900px) {
+  /* The header's controls drawn at 36px with a 44px target reaching 4px past
+     each edge. */
+  .g-find,
+  .g-theme-block {
+    position: relative;
+    width: 36px;
+    height: 36px;
+  }
+  .g-find::after,
+  .g-theme-block::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+  }
+  /* The search trigger is a square with no label at every width, so this only
+     sets the size a finger needs. */
+  .g-signin {
+    min-height: 36px;
+    padding-inline: 14px;
+    font-size: 14px;
+  }
+  .g-brand {
+    min-height: 36px;
+  }
+  .g-back {
+    min-height: 36px;
+    padding: 0 14px 0 10px;
+    font-size: 14px;
+  }
+  .g-profile {
+    min-height: 36px;
+    padding: 2px 4px;
+  }
+
+  /* The second action beside the filled one. It is a button now and carries
+     its own height, so all it needs is the floor a thumb wants. */
+  .g-open {
+    min-height: 42px;
+  }
+
+  /* The policy links, with a usable target. */
+  .g-foot-link,
+  .g-footline-links a {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+  }
+}
+
+/* The hero's own rhythm, which is spacing rather than target size and so is
+   about the width and not the pointer. */
+@media (max-width: 640px) {
+  .g-hero-actions {
+    /* Stacked and full width on a phone. */
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    /* The row above stacks at 900px with `align-items: flex-start`, so this
+       stretches the buttons to fill it. */
+    align-self: stretch;
+    width: 100%;
+  }
+  .g-hero-actions .g-add,
+  .g-hero-actions .g-open {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* On a phone the hero reads from the top down instead of being centred. */
+  .g-hero {
+    justify-content: flex-start;
+    gap: 20px;
+    padding-top: clamp(76px, 10vh, 88px);
+    padding-bottom: clamp(96px, 14vh, 128px);
+  }
+  .g-hero-h1 {
+    font-size: clamp(2.75rem, 11.25vw, 3.2rem);
+    line-height: 1.02;
+  }
+  .g-hero-lede {
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  /* No offset here: the phone's spare height goes to the window preview (see
+     `--mac-peek` in mac.css), and the rules above keep the handle directly over
+     the window with the policies above it. */
+}
+
+/* ------------------------------------------------------ a phone on its side */
+
+/* ── a phone on its side ──
+
+   A landscape phone is about 844×390, wide enough to get the desktop width
+   rules but far too short for the desktop hero (the headline, buttons, policy
+   links and parked window overlapped). This height rule comes last so it wins
+   over the width rules (at 568×320 both apply). The sentence and actions share
+   a line again, the headline gets its own scale, and the window keeps a preview
+   sized off the height. */
+@media (orientation: landscape) and (max-height: 540px) {
+  /* The preview height for this case is set in mac.css, which owns `--mac-peek`
+     and is imported last. */
+  .g-hero {
+    justify-content: flex-start;
+    gap: 14px;
+    padding-top: 68px;
+    /* The preview, the cluster over it, and air on both sides of the cluster. */
+    padding-bottom: calc(var(--mac-peek) + 84px);
+  }
+  .g-hero-h1 {
+    font-size: clamp(1.6rem, 4.4vw, 2.6rem);
+    line-height: 1.02;
+  }
+  .g-hero-lede {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  /* Sentence and actions on one line: the screen has width to spare and no
+     height. */
+  .g-hero-foot {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 24px;
+  }
+  .g-hero-actions {
+    flex-direction: row;
+    align-items: center;
+    justify-self: end;
+    width: auto;
+    gap: 10px;
+  }
+  .g-hero-actions .g-add,
+  .g-hero-actions .g-open {
+    width: auto;
+  }
+
+  /* Both halves of the cluster on the one line the base rules already put them
+     on, and tight to the window they sit over. */
+  .g-raise {
+    left: auto;
+    right: var(--g-gutter);
+    bottom: calc(var(--mac-peek) + 14px);
+  }
+  .g-footline {
+    left: var(--g-gutter);
+    right: auto;
+    bottom: calc(var(--mac-peek) + 20px);
+  }
+}
+
+/* --------------------------------------------------------- the phone menu */
+
+/* The menu button replaces the header's three links below 900px (where they are
+   hidden), and exists only there. */
+.g-burger {
+  display: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  /* The same shell as its two neighbours. */
+  /* The mark, bare: a tile appears under the pointer, not round the icon at
+     rest. Icons in squares are the one look this site keeps out. */
+  border: 1px solid transparent;
+  border-radius: var(--g-r-control);
+  background: transparent;
+  color: var(--g-ink-dim);
+  cursor: pointer;
+  transition:
+    border-color var(--g-fast) var(--g-ease-state),
+    background-color var(--g-fast) var(--g-ease-state),
+    color var(--g-fast) var(--g-ease-state);
+}
+/* Hover only on devices that really hover; touch screens keep `:hover` after a
+   tap. */
+@media (hover: hover) {
+  .g-burger:hover {
+    background: var(--g-fill);
+    color: var(--g-ink);
+  }
+}
+.g-burger[aria-expanded="true"] {
+  border-color: var(--g-accent-line);
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink, var(--g-accent));
+}
+
+@media (max-width: 900px) {
+  .g-burger {
+    display: grid;
+  }
+  /* On a phone the header keeps search and the menu button; appearance and the
+     account move into the sheet the menu opens. The wrappers are hidden, not
+     just the controls inside, or each empty wrapper would still cost the row a
+     gap. */
+  .g-nav-tools > .g-theme,
+  .g-nav-tools > .g-tip-host {
+    display: none;
+  }
+  /* Two controls, so they can breathe. */
+  .g-nav-tools {
+    gap: 10px;
+  }
+}
+/* A thumb needs 44, and the header has the room for it. The same pass that
+   grew the search and appearance controls grows this one. */
+@media (pointer: coarse) and (max-width: 900px) {
+  .g-burger {
+    position: relative;
+    width: 36px;
+    height: 36px;
+  }
+  .g-burger::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+  }
+}
+
+/* ------------------------------------------------------- the action sheet */
+
+.g-sheet-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  /* Nothing behind the sheet scrolls: page scroll raises the landing window, so
+     a stray swipe would open it underneath. */
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+/* The scrim is the labelled way out, so it is a button — and a button with no
+   text needs its own reset, since the site's floors and paddings assume one. */
+.g-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.42);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  cursor: default;
+  animation: g-sheet-fade 240ms linear both;
+}
+@keyframes g-sheet-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Closing is a little faster than opening. Separate keyframes rather than the
+   entrance in `reverse`: changing only `animation-direction` continues the
+   running animation, so no new `animationend` fires and the component would
+   never unmount the sheet. */
+.g-sheet-layer[data-closing="true"] .g-sheet-scrim {
+  animation: g-scrim-out 220ms linear both;
+}
+@keyframes g-scrim-out {
+  to {
+    opacity: 0;
+  }
+}
+.g-sheet-layer[data-closing="true"] .g-action-sheet {
+  animation: g-sheet-fall 260ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes g-sheet-fall {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* An iOS action sheet: the group, then the dismiss action as a separate
+   full-width capsule below, with screen margins and home-indicator space. */
+.g-action-sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  outline: none;
+  animation: g-sheet-rise 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes g-sheet-rise {
+  from {
+    transform: translateY(100%);
+  }
+}
+.g-sheet-grab {
+  width: 36px;
+  height: 5px;
+  margin: 0 auto 6px;
+  border-radius: 2.5px;
+  /* The grabber sits on the scrim, which is dark in both themes, hence a fixed
+     light value. */
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.g-action-group {
+  border-radius: 14px;
+  /* Opaque ground, so the dimmed page does not show through. */
+  background: var(--g-sheet-ground);
+  box-shadow: 0 0 0 0.5px var(--g-line), 0 18px 44px rgba(0, 0, 0, 0.34);
+  overflow: hidden;
+}
+.g-action-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 10px 18px;
+  color: var(--g-ink);
+  text-decoration: none;
+}
+/* The separator starts where the text does, which is what makes a group read
+   as rows of one thing rather than as stripes. */
+.g-action-row + .g-action-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 54px;
+  right: 0;
+  height: 0.5px;
+  background: var(--g-line);
+}
+.g-action-row:active {
+  background: var(--g-fill-2);
+}
+.g-action-glyph {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  color: var(--g-accent-ink, var(--g-accent));
+}
+.g-action-text {
+  min-width: 0;
+}
+.g-action-label {
+  display: block;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.022em;
+  color: var(--g-ink);
+}
+.g-action-detail {
+  display: block;
+  margin-top: 1px;
+  font-size: 13px;
+  color: var(--g-ink-faint);
+}
+.g-action-chev {
+  color: var(--g-ink-faint);
+  opacity: 0.7;
+}
+
+/* The account row's face: the photo, or a person glyph. Never initials. */
+.g-action-face {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 19px;
+  overflow: hidden;
+  background: var(--g-fill-2);
+  box-shadow: inset 0 0 0 0.5px var(--g-line);
+  color: var(--g-ink-faint);
+}
+.g-action-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* The face is wider than a glyph, so its row's separator starts further in. */
+.g-action-group:has(.g-action-face) .g-action-row + .g-action-row::before {
+  left: 70px;
+}
+
+/* ------------------------------------------------------------- appearance */
+
+.g-action-appearance {
+  /* Even padding on all sides. */
+  padding: 16px;
+}
+/* In the margin above the card, at the same inset as the rows inside the cards
+   either side of it, so one leading edge runs down the whole sheet. */
+.g-action-cap {
+  display: block;
+  margin: 0 0 7px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--g-ink-faint);
+}
+/* iOS's three-way segmented control at 32pt. The selected pill is a separate
+   element so it can slide between segments. */
+.g-action-seg {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  height: 40px;
+  padding: 2px;
+  border-radius: 11px;
+  background: var(--g-fill-2);
+  isolation: isolate;
+}
+.g-action-seg-pill {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  z-index: -1;
+  width: calc(33.333% - 1.33px);
+  border-radius: 9px;
+  background: var(--g-lifted);
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.05),
+    0 3px 8px rgba(0, 0, 0, 0.16);
+  transition: translate 260ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.g-action-seg[data-at="1"] .g-action-seg-pill {
+  translate: 100% 0;
+}
+.g-action-seg[data-at="2"] .g-action-seg-pill {
+  translate: 200% 0;
+}
+/* Opts out of the 44px tap floor (stretching a segment would push its label out
+   of the pill) and gets its target from a pseudo-element: `inset: -2px 0` on a
+   40px button makes 44. */
+.g-action-seg button {
+  position: relative;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--g-ink-dim);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: color 160ms linear;
+}
+.g-action-seg button::after {
+  content: "";
+  position: absolute;
+  /* 40px track less its 2px padding is a 36px button; -4 either side is 44. */
+  inset: -4px 0;
+}
+.g-action-seg button[data-on="true"] {
+  color: var(--g-ink);
+  /* The selected segment is semibold, so the track uses equal columns and
+     nothing shifts when the selection moves. */
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-action-sheet,
+  .g-sheet-scrim,
+  .g-sheet-layer[data-closing="true"] .g-action-sheet,
+  .g-sheet-layer[data-closing="true"] .g-sheet-scrim {
+    animation: none;
+  }
+}
+
+/* The headline and the line after it are one statement, so the gap is small. */
+.g-hero {
+  gap: clamp(16px, 2.6vh, 28px);
+}
+@media (max-width: 900px) {
+  .g-hero {
+    gap: 14px;
+  }
+}

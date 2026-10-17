@@ -1,0 +1,506 @@
+/* Scrollbars, touch-only details and the phone dock (part of manage-window.css) */
+
+/* ── scrollbars ──
+
+   One scrollbar for every scroller in the window: the page, the rail, lists
+   and menus. A thin rounded thumb with no track or arrows, always there (a
+   scrollbar that appears only while moving was gone by the time anyone looked
+   for it).
+
+   Since Chrome 121 a `scrollbar-width`/`scrollbar-color` that is not `auto`
+   overrides the `::-webkit-scrollbar` rules, and on Windows the standard
+   scrollbar is a thick bar with a gutter and arrows. So Chromium and Safari
+   get only the webkit rules; the standard properties are for Firefox. The
+   `:root` on the single-class selectors is for specificity: globals.css sets a
+   light-mode `scrollbar-color` and thumb on `:root[data-theme="light"] *`,
+   which otherwise wins and brings the thick bar back. */
+.manage-root .gw-pane,
+.manage-root .gw-pane :is(textarea, .overflow-y-auto, .overflow-auto),
+:root .gw-nav,
+:root .gw-health-list,
+:root .gw-sheet-list,
+:root .gw-pick-list,
+:root .gw-menu-list,
+:root .gw-vac-list,
+:root .gw-ins-list,
+.gator-overlay :is(.overflow-y-auto, .overflow-auto) {
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
+.manage-root .gw-pane::-webkit-scrollbar,
+.manage-root .gw-pane :is(textarea, .overflow-y-auto, .overflow-auto)::-webkit-scrollbar,
+:root .gw-nav::-webkit-scrollbar,
+:root .gw-health-list::-webkit-scrollbar,
+:root .gw-sheet-list::-webkit-scrollbar,
+:root .gw-pick-list::-webkit-scrollbar,
+:root .gw-menu-list::-webkit-scrollbar,
+:root .gw-vac-list::-webkit-scrollbar,
+:root .gw-ins-list::-webkit-scrollbar,
+.gator-overlay :is(.overflow-y-auto, .overflow-auto)::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+  background: transparent;
+}
+.manage-root .gw-pane::-webkit-scrollbar-button,
+.manage-root .gw-pane :is(textarea, .overflow-y-auto, .overflow-auto)::-webkit-scrollbar-button,
+:root .gw-nav::-webkit-scrollbar-button,
+:root .gw-health-list::-webkit-scrollbar-button,
+:root .gw-sheet-list::-webkit-scrollbar-button,
+:root .gw-pick-list::-webkit-scrollbar-button,
+:root .gw-menu-list::-webkit-scrollbar-button,
+:root .gw-vac-list::-webkit-scrollbar-button,
+:root .gw-ins-list::-webkit-scrollbar-button,
+.gator-overlay :is(.overflow-y-auto, .overflow-auto)::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.manage-root .gw-pane::-webkit-scrollbar-track,
+.manage-root .gw-pane :is(textarea, .overflow-y-auto, .overflow-auto)::-webkit-scrollbar-track,
+:root .gw-nav::-webkit-scrollbar-track,
+:root .gw-health-list::-webkit-scrollbar-track,
+:root .gw-sheet-list::-webkit-scrollbar-track,
+:root .gw-pick-list::-webkit-scrollbar-track,
+:root .gw-menu-list::-webkit-scrollbar-track,
+:root .gw-vac-list::-webkit-scrollbar-track,
+:root .gw-ins-list::-webkit-scrollbar-track,
+.gator-overlay :is(.overflow-y-auto, .overflow-auto)::-webkit-scrollbar-track,
+.manage-root .gw-pane::-webkit-scrollbar-corner,
+.manage-root .gw-pane :is(textarea, .overflow-y-auto, .overflow-auto)::-webkit-scrollbar-corner,
+:root .gw-nav::-webkit-scrollbar-corner,
+:root .gw-health-list::-webkit-scrollbar-corner,
+:root .gw-sheet-list::-webkit-scrollbar-corner,
+:root .gw-pick-list::-webkit-scrollbar-corner,
+:root .gw-menu-list::-webkit-scrollbar-corner,
+:root .gw-vac-list::-webkit-scrollbar-corner,
+:root .gw-ins-list::-webkit-scrollbar-corner,
+.gator-overlay :is(.overflow-y-auto, .overflow-auto)::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.manage-root .gw-pane::-webkit-scrollbar-thumb,
+.manage-root .gw-pane :is(textarea, .overflow-y-auto, .overflow-auto)::-webkit-scrollbar-thumb,
+:root .gw-nav::-webkit-scrollbar-thumb,
+:root .gw-health-list::-webkit-scrollbar-thumb,
+:root .gw-sheet-list::-webkit-scrollbar-thumb,
+:root .gw-pick-list::-webkit-scrollbar-thumb,
+:root .gw-menu-list::-webkit-scrollbar-thumb,
+:root .gw-vac-list::-webkit-scrollbar-thumb,
+:root .gw-ins-list::-webkit-scrollbar-thumb,
+.gator-overlay :is(.overflow-y-auto, .overflow-auto)::-webkit-scrollbar-thumb {
+  min-height: 32px;
+  border: 4px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+  background-color: var(--g-line);
+}
+.manage-root .gw-pane:hover::-webkit-scrollbar-thumb,
+.manage-root .gw-pane :is(textarea, .overflow-y-auto, .overflow-auto):hover::-webkit-scrollbar-thumb,
+:root .gw-nav:hover::-webkit-scrollbar-thumb,
+:root .gw-health-list:hover::-webkit-scrollbar-thumb,
+:root .gw-sheet-list:hover::-webkit-scrollbar-thumb,
+:root .gw-pick-list:hover::-webkit-scrollbar-thumb,
+:root .gw-menu-list:hover::-webkit-scrollbar-thumb,
+:root .gw-vac-list:hover::-webkit-scrollbar-thumb,
+:root .gw-ins-list:hover::-webkit-scrollbar-thumb,
+.gator-overlay :is(.overflow-y-auto, .overflow-auto):hover::-webkit-scrollbar-thumb {
+  background-color: var(--g-line-strong);
+}
+@supports not selector(::-webkit-scrollbar) {
+  .manage-root .gw-pane,
+  .manage-root .gw-pane :is(textarea, .overflow-y-auto, .overflow-auto),
+  :root .gw-nav,
+  :root .gw-health-list,
+  :root .gw-sheet-list,
+  :root .gw-pick-list,
+  :root .gw-menu-list,
+  :root .gw-vac-list,
+  :root .gw-ins-list,
+  .gator-overlay :is(.overflow-y-auto, .overflow-auto) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--g-line-strong) transparent;
+  }
+}
+
+@keyframes gw-gate-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gw-pane .gw-gate { animation: none; }
+  .gw-health-panel { transition-duration: 1ms; }
+}
+
+/* "Click" under a pointer, "Tap" under a finger. */
+.gw-say-tap { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .gw-say-click { display: none; }
+  .gw-say-tap { display: inline; }
+}
+
+/* ── touch-only details ──────────────────────────────────────────────────── */
+
+@media (hover: none) and (pointer: coarse) {
+  /* ↑↓ and ⏎ describe a keyboard a phone does not have. */
+  .gw-pick-keys {
+    display: none;
+  }
+}
+
+/* The refresh and clear buttons inside a dropdown trigger are `role="button"`;
+   the touch rule that makes such elements 44px would stretch them. They stay
+   centred at their own size everywhere (touch laptops included); the trigger is
+   their hit area. */
+.manage-root .gw-picker-refresh,
+.manage-root .gw-picker-clear {
+  display: inline-grid;
+  place-items: center;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  align-self: center;
+}
+/* The × on a chosen role's chip is part of the chip. */
+.manage-root .gw-chip-x {
+  display: inline-grid;
+  place-items: center;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+@media (pointer: coarse) {
+  .manage-root .gw-picker-refresh,
+  .manage-root .gw-picker-clear {
+    width: 32px;
+    height: 32px;
+  }
+  .manage-root .gw-chip-x {
+    width: 20px;
+    height: 20px;
+    margin-right: -4px;
+  }
+}
+
+
+/* Five pages in the width of an open subject on a phone: the labels keep
+   their words and give up their padding. */
+@media (max-width: 760px) {
+  .manage-root .gw-pane .gw-tk-pages .gw-segs-opt {
+    padding: 0 6px;
+  }
+}
+
+/* ── the dock on a phone ──
+
+   A raised bar of four marks floating above the bottom edge. It grows upward
+   into a panel (the tab list, or what needs fixing) and the mark that opened it
+   stretches into a labelled pill. Everything moving is a transition rather than
+   a keyframe, so pressing again mid-animation reverses from where it is. */
+.gw-dock,
+.gw-dock-scrim {
+  display: none;
+}
+@media (max-width: 760px) {
+  .gw-dock {
+    position: fixed;
+    /* Centred by its margins, not a transform: a pull writes the transform. */
+    left: 0;
+    right: 0;
+    margin-inline: auto;
+    bottom: max(var(--u3), env(safe-area-inset-bottom));
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    width: min(340px, calc(100vw - var(--u6)));
+    border: 1px solid color-mix(in srgb, var(--g-ink) 12%, transparent);
+    border-radius: 22px;
+    background: color-mix(in srgb, var(--mac-raise) 78%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    backdrop-filter: blur(22px) saturate(1.5);
+    box-shadow:
+      0 18px 50px -12px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent);
+    font-family: var(--gw-chrome);
+    transition:
+      width 420ms var(--gw-ease),
+      border-radius 420ms var(--gw-ease),
+      background-color 300ms var(--g-ease-state),
+      transform 380ms var(--gw-ease),
+      opacity 240ms var(--g-ease-state);
+  }
+  /* Off the bottom edge while a field is being typed into, while there are
+     changes to save, and while the save prompt is saying "Saved" (it sits
+     where the dock does). */
+  .gw-dock[data-away="true"],
+  :root:has(.gw-save[data-saved="true"]) .gw-dock:not([data-open="true"]) {
+    transform: translate3d(0, calc(100% + 32px), 0);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .gw-dock[data-open="true"] {
+    width: min(420px, calc(100vw - var(--u4)));
+    border-radius: 24px;
+    background: color-mix(in srgb, var(--mac-raise) 90%, transparent);
+  }
+  /* The page dims under an open dock, so the panel reads as on top of it. */
+  .gw-dock-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 59;
+    display: block;
+    background: color-mix(in srgb, var(--g-ground) 45%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 320ms var(--g-ease-state);
+  }
+  .gw-dock-scrim[data-on="true"] {
+    opacity: 1;
+  }
+  /* Bottom padding so the last control clears the dock and the save prompt
+     above it. `!important` because the phone layout sets the pane's padding as
+     a shorthand. */
+  .manage-root .gw-pane {
+    padding-bottom: calc(120px + env(safe-area-inset-bottom)) !important;
+  }
+  .manage-root:has([aria-label="Unsaved changes"]) .gw-pane {
+    padding-bottom: calc(120px + env(safe-area-inset-bottom)) !important;
+  }
+}
+.gw-dock-panel {
+  overflow: hidden;
+  transition: height 420ms var(--gw-ease);
+}
+.gw-dock-content {
+  display: flex;
+  flex-direction: column;
+}
+.gw-dock-pull {
+  display: flex;
+  justify-content: center;
+  padding: var(--u2) 0 var(--u1);
+  touch-action: none;
+}
+.gw-dock-list {
+  max-height: min(58dvh, 460px);
+  padding: 0 var(--u2) var(--u2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  animation: gw-dock-list-in 320ms var(--gw-ease);
+}
+.gw-dock-list::-webkit-scrollbar {
+  display: none;
+}
+@keyframes gw-dock-list-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.gw-dock-group + .gw-dock-group {
+  margin-top: var(--u3);
+}
+.gw-dock-caption {
+  margin: 0;
+  padding: var(--u1) var(--u3) var(--u1);
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mac-label-dim);
+}
+.gw-dock-row {
+  display: flex;
+  align-items: center;
+  gap: var(--u3);
+  width: 100%;
+  min-height: 52px;
+  padding: 6px var(--u2);
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--g-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 160ms var(--g-ease-state);
+}
+.gw-dock-row:active {
+  background: var(--g-fill-2);
+}
+.gw-dock-row[data-current="true"] {
+  background: var(--g-fill-2);
+}
+.gw-dock-row[data-off="true"] .gw-dock-name,
+.gw-dock-row[data-off="true"] .gw-dock-tile {
+  opacity: 0.5;
+}
+/* The reference's squares: a tile per row, the row's mark in it. */
+.gw-dock-tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--g-fill-2);
+  box-shadow: inset 0 0 0 1px var(--mac-hair);
+  color: var(--mac-label);
+}
+.gw-dock-row[data-current="true"] .gw-dock-tile {
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+}
+.gw-dock-tile[data-tone="warn"] {
+  background: var(--tone-warn-wash);
+  color: var(--tone-warn);
+}
+.gw-dock-copy {
+  flex: 1;
+  min-width: 0;
+}
+.gw-dock-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: 600;
+}
+.gw-dock-copy .gw-dock-name {
+  display: block;
+}
+.gw-dock-say {
+  display: block;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+.gw-dock-meta {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--t-micro);
+  font-weight: 700;
+  color: var(--mac-label-dim);
+  font-variant-numeric: tabular-nums;
+}
+.gw-dock-meta[data-tone="accent"] {
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+}
+.gw-dock-meta[data-tone="warn"] {
+  background: var(--tone-warn-wash);
+  color: var(--tone-warn);
+}
+.gw-dock-go {
+  flex: none;
+  color: var(--mac-label-dim);
+}
+.gw-dock-empty {
+  margin: 0;
+  padding: var(--u3) var(--u3) var(--u4);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--mac-label-dim);
+}
+
+/* The bar. Four marks; the lit one grows into a pill with its name, and the
+   others make room for it by the same transition. */
+.gw-dock-bar {
+  display: flex;
+  gap: var(--u1);
+  padding: 6px;
+}
+.gw-dock[data-open="true"] .gw-dock-bar {
+  box-shadow: inset 0 1px 0 var(--mac-hair);
+}
+.gw-dock-item {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-width: 0;
+  height: 46px;
+  min-height: 0 !important;
+  padding: 0 var(--u2);
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--mac-label-dim);
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    flex-grow 420ms var(--gw-ease),
+    background-color 260ms var(--g-ease-state),
+    color 260ms var(--g-ease-state),
+    gap 420ms var(--gw-ease);
+}
+.gw-dock-item[data-on="true"] {
+  flex-grow: 2;
+  gap: var(--u2);
+  background: color-mix(in srgb, var(--g-ink) 9%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--g-ink) 8%, transparent);
+  color: var(--g-ink);
+}
+.gw-dock-item:active {
+  transform: scale(0.96);
+}
+.gw-dock-icon {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.gw-dock-dot {
+  position: absolute;
+  top: -6px;
+  right: -9px;
+  display: grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--tone-warn);
+  color: #1b1405;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--mac-raise);
+}
+.gw-dock-label {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  font-size: var(--t-small);
+  font-weight: 650;
+  transition:
+    max-width 420ms var(--gw-ease),
+    opacity 240ms var(--g-ease-state);
+}
+.gw-dock-item[data-on="true"] .gw-dock-label {
+  max-width: 7em;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-dock,
+  .gw-dock-panel,
+  .gw-dock-item,
+  .gw-dock-label {
+    transition-duration: 1ms;
+  }
+  .gw-dock-list {
+    animation: none;
+  }
+}
+/* The save prompt stands where the dock was: the dock steps down out of the
+   way while there are changes, so the prompt takes the dock's own place. */
+@media (max-width: 760px) {
+  .manage-root [aria-label="Unsaved changes"] {
+    --safe-bottom-gap: 12px !important;
+  }
+}

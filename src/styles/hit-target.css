@@ -1,0 +1,138 @@
+/* ── larger hit targets ──
+
+   Controls drawn smaller than a fingertip get an invisible `::before` margin,
+   so a press that misses by a few pixels still counts. Nothing moves or changes
+   size.
+
+   - Stacked rows may only expand by half the gap between them, or targets
+     overlap (footer links are 19px tall with 14px between, so they get 6px).
+   - A control with `overflow: hidden` clips its own pseudo-element, so its
+     wrapper carries the target instead (the department menu button).
+
+   Sides with a neighbour immediately next to them do not gain area; the other
+   sides do. */
+
+.sv-pin,
+.sv-go,
+.g-legal-permalink,
+.g-tab-new,
+.g-window-options,
+.g-tab-x,
+.g-foot-icon,
+.g-foot-link,
+.g-theme-block,
+.g-profile,
+.g-find,
+.g-back,
+.g-signin,
+.g-mac-steps button,
+.g-sheet-go,
+.owner-back,
+.servers-department-card > div:last-child {
+  /* Only where the element does not already establish a containing block (an
+     absolutely positioned control would lose it). */
+  position: relative;
+}
+.sv-pin {
+  /* Already absolute, and absolute is a containing block. */
+  position: absolute;
+}
+
+.sv-pin::before,
+.sv-go::before,
+.g-legal-permalink::before,
+.g-tab-new::before,
+.g-window-options::before,
+.g-tab-x::before,
+.g-foot-icon::before,
+.g-foot-link::before,
+.g-theme-block::before,
+.g-profile::before,
+.g-find::before,
+.g-back::before,
+.g-signin::before,
+.g-mac-steps button::before,
+.g-sheet-go::before,
+.owner-back::before,
+.servers-department-card > div:last-child::before {
+  content: "";
+  position: absolute;
+  /* The default. Overridden below for the ones that need more or less. */
+  inset: -6px;
+  /* Nothing to see and nothing to paint over: this is a target, not a shape. */
+  pointer-events: auto;
+}
+
+/* Thirty becomes forty-four, which is the size a finger is usually quoted at
+   and the size a mouse hand aims at without thinking. */
+.g-tab-new::before,
+.g-window-options::before,
+.g-foot-icon::before,
+.g-mac-steps button::before {
+  inset: -7px;
+}
+.g-profile::before {
+  inset: -5px;
+}
+/* 8px, the margin it keeps from the heading beside it, so the target stops
+   before the heading's last letter. */
+.g-legal-permalink::before {
+  inset: -8px;
+}
+/* Half the gap between two footer links, less a pixel, so two targets never
+   meet. */
+.g-foot-link::before {
+  inset: -6px -8px;
+}
+/* The close mark shares its row with the tab it closes, so it takes the gap
+   between them and no more. */
+.g-tab-x::before {
+  inset: -4px;
+}
+
+/* The bar's right-hand cluster (search, appearance, avatar) sits on 8px gaps,
+   so each target grows at most 4px sideways (more made one control's target
+   overlap its neighbour) and 6px vertically. Three of them grow on three sides
+   only: each is wrapped (a positioned box, a tooltip host), and a later wrapper
+   paints over the previous control's pseudo-element on the side facing it. That
+   is the side where a miss is ambiguous anyway. */
+.g-find::before,
+.g-theme-block::before,
+.g-profile::before {
+  inset: -6px -4px;
+}
+
+/* A target is not a surface: anything the control draws has to stay on top of
+   it, or the pseudo-element covers the label. */
+.sv-pin > *,
+.sv-go > *,
+.g-tab-new > *,
+.g-window-options > *,
+.g-foot-icon > *,
+.g-theme-block > *,
+.g-find > *,
+.g-back > *,
+.g-signin > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── figures that line up ──
+
+   Tabular figures (`tnum`, not a monospace face) wherever a number is one of
+   several in a column: member counts, department counts, ids. Proportional
+   figures stay in prose. */
+.sv-sub,
+.servers-department-count,
+.servers-count,
+.account-who-id,
+.account-row-name,
+/* The owner panel: rows of counts and dates, and cards with stacked 17-digit
+   ids, which can only be compared with tabular figures. */
+.owner-meta,
+.owner-fact-val,
+.owner-id,
+.owner-mods-cap,
+.owner-say {
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,571 @@
+/* Message editors (part of manage-window.css) */
+
+/* ── message editors ──
+
+   Both message editors (embed and container) are drawn as one bar, lists of
+   rows and hairlines rather than nested boxes. Not scoped to the pane, because
+   the editor also opens inside dialogs portalled out of it. */
+.gw-md {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gw-md-bar {
+  position: sticky;
+  top: 10px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px;
+  border: 1px solid var(--mac-hair);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mac-raise) 94%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 10px 24px -18px rgba(0, 0, 0, 0.6);
+}
+.gw-md-format {
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap !important;
+  gap: 2px !important;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.gw-md-format::-webkit-scrollbar {
+  display: none;
+}
+.gw-md-format > button {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  color: var(--mac-label-dim) !important;
+  transition:
+    background-color 120ms var(--g-ease-state),
+    color 120ms var(--g-ease-state),
+    transform 160ms var(--g-ease-out) !important;
+}
+.gw-md-format > button:hover {
+  background: var(--g-fill-2) !important;
+  color: var(--g-ink) !important;
+}
+.gw-md-format > button:active {
+  transform: scale(0.92);
+}
+
+/* On a phone the bar is two rows (type, then formatting) and scrolls with the
+   page rather than sticking over the field being typed in. */
+@media (max-width: 560px) {
+  .gw-md-bar {
+    position: static;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .gw-md-bar > .gw-seg {
+    order: -1;
+    flex: 1 1 100%;
+  }
+  .gw-md-format {
+    flex: 1 1 100%;
+  }
+}
+
+/* Two options and a thumb that slides between them. */
+.gw-seg {
+  position: relative;
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--g-fill-2);
+  box-shadow: inset 0 0 0 1px var(--mac-hair);
+}
+.gw-seg-opt {
+  position: relative;
+  z-index: 1;
+  height: 28px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--mac-label-dim);
+  font: inherit;
+  font-family: var(--gw-chrome);
+  font-size: var(--t-small);
+  font-weight: 650;
+  cursor: pointer;
+  transition: color 200ms var(--g-ease-state);
+}
+.gw-seg-opt:hover,
+.gw-seg-opt[data-on="true"] {
+  color: var(--g-ink);
+}
+
+.gw-md > .gw-md-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.gw-md-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.gw-md-tools > * {
+  margin: 0 !important;
+}
+.gw-md-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.gw-md-preview > * {
+  margin: 0 !important;
+}
+/* Wide panes: editor and preview side by side, the preview sticky under the
+   bar. */
+@media (min-width: 1180px) {
+  .gw-md > .gw-md-grid {
+    grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
+  }
+  .gw-md > .gw-md-grid > .gw-md-preview {
+    position: sticky;
+    top: 68px;
+    max-height: calc(100dvh - var(--gw-bar) - var(--gw-foot) - 110px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  .gw-md > .gw-md-grid > .gw-md-preview::-webkit-scrollbar {
+    display: none;
+  }
+}
+@media (max-width: 1179px) {
+  .gw-md > .gw-md-grid > .designer-preview {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* The embed's parts, one list. */
+.gw-md-embed-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  margin-bottom: 8px;
+}
+.gw-md-embed-name {
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mac-label-dim);
+}
+.gw-md-embed-count {
+  font-size: var(--t-micro);
+  font-weight: 600;
+  color: var(--mac-label-dim);
+  font-variant-numeric: tabular-nums;
+}
+.gw-md-embed-act {
+  margin-left: auto;
+}
+.gw-md-embed-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--g-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mac-label);
+  font: inherit;
+  font-size: var(--t-small);
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--g-ease-state),
+    border-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state);
+}
+.gw-md-embed-add:hover:not(:disabled) {
+  border-color: var(--g-line-strong);
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+.gw-md-embed-add:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.gw-md-embed-empty {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--mac-hair);
+  border-radius: 12px;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+.gw-md-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gw-md-parts {
+  border: 1px solid var(--mac-hair);
+  border-radius: 12px;
+  overflow: clip;
+}
+.gw-md-part + .gw-md-part {
+  border-top: 1px solid var(--mac-hair);
+}
+.gw-md-part-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms var(--g-ease-state);
+}
+@media (hover: hover) {
+  .gw-md-part-head:hover {
+    background: var(--g-fill);
+  }
+}
+.gw-md-part-name {
+  flex: none;
+  font-size: var(--t-body);
+  font-weight: 650;
+  color: var(--g-ink);
+}
+.gw-md-part-say {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--t-small);
+  color: var(--mac-label-dim);
+}
+.gw-md-part-chev {
+  flex: none;
+  color: var(--mac-label-dim);
+  transition: transform 320ms var(--gw-ease);
+}
+.gw-md-part[data-open="true"] .gw-md-part-chev {
+  transform: rotate(90deg);
+}
+.gw-md-part-roll {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 380ms var(--gw-ease);
+}
+.gw-md-part[data-open="true"] > .gw-md-part-roll {
+  grid-template-rows: 1fr;
+}
+.gw-md-part-clip {
+  min-height: 0;
+  overflow: clip;
+  overflow-clip-margin: 4px;
+  opacity: 0;
+  transition: opacity 140ms var(--g-ease-state);
+}
+.gw-md-part[data-open="true"] .gw-md-part-clip {
+  opacity: 1;
+  transition: opacity 240ms var(--g-ease-state) 70ms;
+}
+.gw-md-part-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 14px 16px;
+}
+.gw-md-part-body > * {
+  margin: 0 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-md-part-roll,
+  .gw-md-part-clip,
+  .gw-md-part-chev {
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* Variables: the search set into the panel's top edge, one row per
+   variable, the token in the accent and what it becomes beside it. */
+.gw-md-vars {
+  border: 1px solid var(--mac-hair);
+  border-radius: 12px;
+  background: var(--mac-raise);
+  overflow: hidden;
+}
+.gw-md-vars-find {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 42px;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid var(--mac-hair);
+  color: var(--mac-label-dim);
+  transition: color 140ms ease;
+}
+.gw-md-vars-find:focus-within {
+  color: var(--g-ink);
+}
+.gw-md-vars-find input {
+  flex: 1;
+  min-width: 0;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--g-ink) !important;
+  font: inherit;
+  font-size: var(--t-small);
+  caret-color: var(--g-accent);
+}
+.gw-md-vars-find input::placeholder {
+  color: var(--mac-label-dim);
+}
+.gw-md-vars-more {
+  flex: none;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--mac-label-dim);
+  font: inherit;
+  font-size: var(--t-micro);
+  font-weight: 650;
+  cursor: pointer;
+}
+.gw-md-vars-more:hover {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+.gw-md-vars-say {
+  margin: 0 !important;
+  padding: 10px 14px 0;
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  color: var(--mac-label-dim);
+}
+.gw-md-vars-list {
+  max-height: 232px;
+  padding: 4px 6px 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: max-height 320ms var(--gw-ease);
+}
+.gw-md-vars-list[data-expanded="true"] {
+  max-height: 440px;
+}
+.gw-md-vars-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 8px 4px !important;
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mac-label-dim);
+}
+.gw-md-vars-scope {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.gw-md-vars-rows {
+  display: flex;
+  flex-direction: column;
+}
+.gw-md-var {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 110ms var(--g-ease-state);
+}
+.gw-md-var:hover {
+  background: var(--g-accent-soft);
+}
+.gw-md-var-key {
+  flex: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--g-accent-ink);
+}
+.gw-md-var-say {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--mac-label-dim);
+}
+.gw-md-vars-none {
+  margin: 0 !important;
+  padding: 12px 8px;
+  font-size: var(--t-small);
+  color: var(--mac-label-dim);
+}
+
+/* Templates: a labelled row at the foot of the preview column. */
+.gw-md-tpl-name {
+  margin: 0 0 8px !important;
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mac-label-dim);
+}
+.gw-md-tpl-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.gw-md-tpl-field-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.gw-md-tpl-field {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-control);
+  background: var(--mac-raise-2);
+  color: var(--g-ink);
+  font: inherit;
+  font-size: var(--t-small);
+  outline: none;
+  caret-color: var(--g-accent);
+  transition: border-color 140ms var(--g-ease-state);
+}
+.gw-md-tpl-field:focus {
+  border-color: var(--g-line-strong);
+  box-shadow: none !important;
+}
+.gw-md-tpl-field::placeholder {
+  color: var(--mac-label-dim);
+}
+.gw-md-tpl-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--mac-label);
+  font: inherit;
+  font-size: var(--t-small);
+  font-weight: 650;
+  list-style: none;
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--g-ease-state),
+    border-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state);
+}
+.gw-md-tpl-btn::-webkit-details-marker {
+  display: none;
+}
+.gw-md-tpl-btn:hover:not(:disabled),
+.gw-md-tpl-load[open] > .gw-md-tpl-btn {
+  border-color: var(--g-line-strong);
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+.gw-md-tpl-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.gw-md-tpl-load {
+  position: relative;
+}
+.gw-md-tpl-pop {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  width: max(100%, 240px);
+  transform-origin: bottom center;
+  animation: gw-menu-in-up 200ms var(--gw-ease) both;
+}
+.gw-md-tpl-pop[data-align="end"] {
+  left: auto;
+  right: 0;
+  width: 260px;
+}
+
+/* ── a ticket button's subjects and questions (button-editor.tsx) ── */
+
+.manage-root .gw-pane .gw-tk-fields {
+  display: grid;
+  gap: var(--u2);
+  width: 100%;
+}
+.manage-root .gw-pane .gw-tk-fields .gw-set-roll-clip > .gw-caption {
+  margin: var(--u2) 0;
+}
+/* Compact cards: as wide as their name, not a quarter of the pane each. */
+.manage-root .gw-pane .gw-tk-fields .gw-opts {
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+}
+.manage-root .gw-pane .gw-tk-fields .gw-caption {
+  margin-left: 0;
+}
+/* A rolled list wraps each card, and a <button> does not stretch on its own. */
+.manage-root .gw-pane .gw-tk-fields .g-li .gw-opt {
+  width: 100%;
+}
+/* In a canvas part's tools the panel is already the box: a button editor
+   inside it sits flush rather than drawing a second border. */
+.manage-root .gw-pane .gw-cv-tools > .editor-block {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}

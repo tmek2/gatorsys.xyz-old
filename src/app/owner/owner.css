@@ -1,0 +1,587 @@
+/* The owner panel.
+
+   Unlayered, like the rest of the restyle: Tailwind v3's preflight is unlayered
+   and beats every layered rule.
+
+   Each server row is the control: it opens to show the facts and the four
+   actions, in words. */
+
+.owner-page {
+  position: relative;
+  min-height: 100dvh;
+  overflow-x: clip;
+  background: var(--g-ground);
+  color: var(--g-ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fixed, so it stays put while the page scrolls over it. */
+/* The same dot field and fade as the other pages. */
+.owner-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  --g-dot-fade: 92% 74% 50% 44% 18% 82%;
+}
+
+.owner-shell {
+  position: relative;
+  z-index: 1;
+}
+
+/* The picker's measure, to the pixel. */
+.owner-wrap {
+  width: min(76rem, calc(100% - 2rem));
+  margin-inline: auto;
+  padding-top: clamp(96px, 14vh, 148px);
+  padding-bottom: clamp(40px, 7vh, 88px);
+}
+
+/* ------------------------------------------------------------------ head */
+
+.owner-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.owner-title {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: clamp(30px, 4vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--g-ink);
+}
+
+.owner-say {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--g-ink-dim);
+}
+
+.owner-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ---------------------------------------------------------------- notice */
+
+.owner-notice {
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border: 1px solid var(--g-accent-line);
+  border-radius: 14px;
+  background: var(--g-accent-soft);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--g-ink);
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ tabs */
+
+/* The two views use the dashboard's switcher (styles/segments.css). */
+.owner-segs {
+  display: inline-grid;
+  margin-bottom: 16px;
+}
+
+/* A view arrives from the side of its tab: Servers from the left, AI context
+   from the right. Opacity and transform only. */
+.owner-view {
+  animation: owner-view-in 320ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.owner-view[data-from="right"] {
+  --owner-from: 14px;
+}
+.owner-view[data-from="left"] {
+  --owner-from: -14px;
+}
+@keyframes owner-view-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--owner-from, 0));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .owner-view {
+    animation-duration: 1ms;
+  }
+}
+
+/* ---------------------------------------------------------------- search */
+
+.owner-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-inline: 14px;
+  border: 1px solid var(--mac-hairline, var(--g-line));
+  /* A field, not a capsule: the dashboard's field corner. */
+  border-radius: 10px;
+  background: var(--g-fill-2);
+  color: var(--g-ink-faint);
+  transition:
+    border-color 160ms var(--g-ease-state),
+    box-shadow 160ms var(--g-ease-state);
+}
+.owner-search:focus-within {
+  border-color: var(--g-accent-line);
+  box-shadow: 0 0 0 3px var(--g-accent-soft);
+}
+.owner-search input {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  border: 0;
+  background: none;
+  color: var(--g-ink);
+  font-size: 14.5px;
+  outline: none;
+}
+.owner-search input::placeholder {
+  color: var(--g-ink-faint);
+}
+
+/* ----------------------------------------------------------------- cards */
+
+.owner-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.owner-card {
+  border: 1px solid var(--mac-hairline, var(--g-line));
+  border-radius: var(--g-r-container, 18px);
+  background: var(--g-raise);
+  box-shadow: var(--mac-lift), var(--mac-inset);
+  overflow: hidden;
+  transition: border-color var(--g-fast) var(--g-ease-state);
+}
+.owner-card[data-open="true"] {
+  border-color: var(--g-accent-line);
+}
+
+/* The whole row is the control that opens the server. */
+.owner-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms linear;
+}
+@media (hover: hover) and (pointer: fine) {
+  .owner-row:hover {
+    background: var(--g-fill);
+  }
+}
+.owner-row:focus-visible {
+  outline: 2px solid var(--g-accent);
+  outline-offset: -3px;
+}
+
+.owner-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: var(--g-fill-2);
+  color: var(--g-accent-ink);
+  object-fit: cover;
+  overflow: hidden;
+}
+
+.owner-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--g-ink);
+}
+.owner-name > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owner-meta {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--g-ink-faint);
+}
+
+.owner-row-text {
+  min-width: 0;
+  flex: 1;
+}
+
+/* Blacklisted is a state, not an action, so it reads as a label. */
+.owner-flag {
+  flex: none;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: var(--tone-bad-wash);
+  color: var(--tone-bad);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The only mark left on the row, and it says what the row does. */
+.owner-caret {
+  flex: none;
+  color: var(--g-ink-faint);
+  transition: transform 260ms var(--g-ease-sheet);
+}
+.owner-card[data-open="true"] .owner-caret {
+  transform: rotate(90deg);
+}
+
+/* -------------------------------------------------------------- the body */
+
+/* `grid-template-rows: 0fr` to `1fr` transitions to an unmeasured height. The
+   card is in normal flow, so opening one pushes the ones below down. */
+.owner-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms var(--g-ease-sheet);
+}
+.owner-card[data-open="true"] .owner-body {
+  grid-template-rows: 1fr;
+}
+.owner-body > div {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.owner-body-inner {
+  padding: 4px 16px 16px;
+  border-top: 1px solid var(--g-line);
+  margin-top: 2px;
+}
+
+/* The facts, two or four to a line depending on the room. */
+.owner-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 14px 20px;
+  padding-top: 14px;
+}
+
+.owner-fact-cap {
+  margin: 0 0 4px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--g-ink-faint);
+}
+.owner-fact-val {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--g-ink);
+  overflow-wrap: anywhere;
+}
+/* An id is a thing you copy. Selecting the whole of one in a tap beats a
+   button, and it leaves the card free of them. */
+.owner-id {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+.owner-mods-cap {
+  margin: 18px 0 8px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--g-ink-faint);
+}
+.owner-mods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.owner-mod {
+  padding: 4px 9px;
+  border: 1px solid var(--g-line);
+  border-radius: 8px;
+  background: var(--g-fill);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--g-ink-dim);
+}
+.owner-mods-none {
+  margin: 0;
+  font-size: 13px;
+  color: var(--g-ink-faint);
+}
+
+/* The four actions, in words, right-aligned at the end of what they act on. */
+.owner-acts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--g-line);
+}
+
+/* ------------------------------------------------------------- the rest */
+
+.owner-skeleton {
+  height: 74px;
+  border: 1px solid var(--mac-hairline, var(--g-line));
+  border-radius: var(--g-r-container, 18px);
+  background: var(--g-raise);
+  animation: owner-breathe 1600ms ease-in-out infinite;
+}
+@keyframes owner-breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.owner-empty {
+  padding: 44px 0;
+  margin: 0;
+  font-size: 14px;
+  text-align: center;
+  color: var(--g-ink-faint);
+}
+
+/* The gate, for somebody who is signed in and still not allowed in here. */
+.owner-gate {
+  display: flex;
+  min-height: 60vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+}
+.owner-gate h1 {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--g-ink);
+}
+.owner-gate p {
+  margin: 0;
+  max-width: 30rem;
+  font-size: 14px;
+  color: var(--g-ink-dim);
+}
+
+/* --------------------------------------------------------------- narrow */
+
+@media (max-width: 640px) {
+  .owner-head {
+    align-items: stretch;
+  }
+  .owner-head-actions {
+    width: 100%;
+  }
+  .owner-head-actions > * {
+    flex: 1;
+  }
+  /* The actions go full width at the foot of the card, where a thumb is,
+     rather than four pills crowding the right edge of a 390px screen. */
+  .owner-acts {
+    justify-content: stretch;
+  }
+  .owner-acts > * {
+    flex: 1 1 calc(50% - 4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .owner-body,
+  .owner-caret {
+    transition: none;
+  }
+  .owner-skeleton {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------ AI context */
+
+/* Notices for every server's GatorAI (owner-context.tsx): the same cards,
+   labels and fields as the rest of the page. */
+.owner-ctx {
+  display: grid;
+  gap: 16px;
+}
+.owner-ctx-form {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+.owner-ctx-title {
+  margin: 0;
+  color: var(--g-ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+.owner-ctx-say {
+  max-width: 62ch;
+  margin: -10px 0 0;
+  color: var(--g-ink-dim);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.owner-ctx-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.owner-ctx-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.owner-ctx-field > .gw-segs {
+  justify-self: start;
+}
+.owner-ctx-label {
+  color: var(--g-ink);
+  font-size: 13px;
+  font-weight: 650;
+}
+.owner-ctx-hint {
+  margin: 0;
+  color: var(--g-ink-faint);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.owner-ctx-input {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--mac-hairline, var(--g-line));
+  border-radius: 10px;
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  outline: none;
+  transition:
+    border-color 160ms var(--g-ease-state),
+    box-shadow 160ms var(--g-ease-state);
+}
+textarea.owner-ctx-input {
+  resize: vertical;
+}
+.owner-ctx-input::placeholder {
+  color: var(--g-ink-faint);
+}
+.owner-ctx-input:focus {
+  border-color: var(--g-accent-line);
+  box-shadow: 0 0 0 3px var(--g-accent-soft);
+}
+.owner-ctx-error {
+  margin: 0;
+  color: var(--tone-bad);
+  font-size: 13px;
+  font-weight: 600;
+}
+.owner-ctx-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.owner-ctx-list {
+  display: grid;
+  gap: 10px;
+}
+.owner-ctx-notice {
+  padding: 14px 16px 16px;
+  transition:
+    opacity 200ms var(--g-ease-state),
+    border-color var(--g-fast) var(--g-ease-state);
+}
+.owner-ctx-notice[data-live="false"] {
+  opacity: 0.62;
+}
+.owner-ctx-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  min-height: 32px;
+  font-size: 12.5px;
+}
+/* The status in its tone, as words: no pill. */
+.owner-ctx-kind {
+  font-weight: 750;
+}
+.owner-ctx-kind[data-tone="bad"] {
+  color: var(--tone-bad);
+}
+.owner-ctx-kind[data-tone="warn"] {
+  color: var(--tone-warn);
+}
+.owner-ctx-kind[data-tone="info"] {
+  color: var(--tone-info);
+}
+.owner-ctx-kind[data-tone="idle"] {
+  color: var(--g-ink-dim);
+}
+.owner-ctx-topic {
+  color: var(--g-ink);
+  font-weight: 600;
+}
+.owner-ctx-state {
+  color: var(--g-ink-faint);
+  font-weight: 600;
+}
+.owner-ctx-state[data-live="true"] {
+  color: var(--tone-ok);
+}
+.owner-ctx-tools {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+}
+@media (hover: hover) and (pointer: fine) {
+  .owner-ctx-delete:hover:not(:disabled) {
+    color: var(--tone-bad) !important;
+  }
+}
+.owner-ctx-body {
+  margin: 10px 0 4px;
+  color: var(--g-ink);
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}

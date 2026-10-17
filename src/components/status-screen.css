@@ -1,0 +1,178 @@
+/* ── a page with one thing to say (status-screen.tsx) ──
+
+   The landing's dotted ground, one card, and the mark at its top. Pressing the
+   mark makes it swim and, where the page has lines, say the next one. */
+.gs-status {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100svh;
+  padding: 24px 16px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.gs-status::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--g-ink) 16%, transparent) 1px,
+    transparent 1.4px
+  );
+  background-size: 21px 21px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 78%);
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 78%);
+  opacity: 0.8;
+}
+.gs-status-card {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(100%, 420px);
+  padding: 30px 28px 26px;
+  border: 1px solid var(--g-line);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--g-ground) 82%, var(--g-ink) 3%);
+  box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.7);
+  text-align: center;
+  animation: gs-status-in 520ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes gs-status-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.985);
+  }
+}
+.gs-status-mark {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--g-accent-display, var(--g-accent));
+  cursor: pointer;
+  transition: transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.gs-status-mark:hover {
+  transform: rotate(-6deg) scale(1.04);
+}
+.gs-status-mark[data-swim="a"] svg {
+  animation: gs-swim-a 900ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.gs-status-mark[data-swim="b"] svg {
+  animation: gs-swim-b 900ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes gs-swim-a {
+  30% {
+    transform: translateX(-14px) rotate(-10deg);
+  }
+  60% {
+    transform: translateX(10px) rotate(8deg);
+  }
+}
+@keyframes gs-swim-b {
+  30% {
+    transform: translateX(14px) rotate(10deg) scaleX(-1);
+  }
+  60% {
+    transform: translateX(-10px) rotate(-8deg) scaleX(-1);
+  }
+}
+.gs-status-label {
+  margin: 0;
+  color: var(--g-accent-display, var(--g-accent));
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.gs-status-title {
+  margin: 0;
+  color: var(--g-ink);
+  font-size: clamp(22px, 5vw, 26px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+.gs-status-aside {
+  margin: 0;
+  color: var(--g-accent-display, var(--g-accent));
+  font-size: 14px;
+  font-weight: 600;
+  animation: gs-status-aside 360ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes gs-status-aside {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translate3d(0, 4px, 0);
+  }
+}
+.gs-status-body {
+  color: var(--g-ink-dim);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.gs-status-body p {
+  margin: 0;
+}
+.gs-status-acts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+/* The actions are the site's ripple buttons; here they only share the row. */
+.gs-status-btn {
+  min-width: 132px;
+}
+.gs-status-mark:focus-visible {
+  outline: 2px solid var(--g-accent);
+  outline-offset: 3px;
+}
+.gs-status-avatar {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--g-fill);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gs-status-card,
+  .gs-status-aside,
+  .gs-status-mark svg {
+    animation: none !important;
+  }
+}
+
+/* A form in the card (the Discord hand-off): its button is the action row. */
+.gs-status-form {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+.gs-status-note {
+  margin: 0;
+  color: var(--g-ink-faint);
+  font-size: 12.5px;
+}
+.gs-status-spin {
+  width: 15px;
+  height: 15px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: gs-spin 700ms linear infinite;
+}
+@keyframes gs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,684 @@
+/* Option tiles, switches and dropdowns (part of manage-window.css) */
+
+/* ── options: the tile is the switch ─────────────────────────────────────── */
+
+/* A run of on/off settings, side by side. Two across at a laptop's pane, one
+   across a phone, three across a wide screen, from one minimum width. */
+.manage-root .gw-pane .gw-set-slot[data-options="true"] {
+  padding: var(--u3);
+}
+.manage-root .gw-pane .gw-opts {
+  display: grid;
+  /* Fit, not fill: two options share the row between them instead of taking
+     two of four reserved columns and leaving the other half empty. */
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--u2);
+}
+
+.manage-root .gw-pane .gw-opt {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--u3);
+  min-width: 0;
+  min-height: 56px;
+  padding: var(--u3) var(--u4) var(--u3) var(--u3);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-row);
+  background: var(--mac-raise-2);
+  color: var(--g-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: clip;
+  transition:
+    border-color 420ms var(--gw-ease),
+    transform 200ms var(--gw-ease);
+}
+.manage-root .gw-pane .gw-opt[data-wide="true"] {
+  grid-column: 1 / -1;
+}
+.manage-root .gw-pane .gw-opt[data-on="true"] {
+  border-color: var(--g-accent-line);
+}
+@media (hover: hover) {
+  .manage-root .gw-pane .gw-opt:hover {
+    border-color: var(--g-accent-line);
+  }
+}
+.manage-root .gw-pane .gw-opt:active {
+  transform: scale(0.985);
+  transition-duration: 90ms;
+}
+
+/* The same sweep as the module wall, lighter: a tile is a setting, not a
+   feature, so it gets a wash rather than a flood. */
+.manage-root .gw-pane .gw-opt-fill {
+  --gw-fill: 0%;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to right,
+      transparent calc(var(--gw-fill) * 1.3 - 40%),
+      color-mix(
+          in srgb,
+          var(--g-accent) calc((100% - var(--gw-fill)) * 0.45),
+          transparent
+        )
+        calc(var(--gw-fill) * 1.3 - 18%),
+      transparent calc(var(--gw-fill) * 1.3)
+    ),
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--g-accent) 18%, transparent),
+      color-mix(in srgb, var(--g-accent-soft) 70%, transparent)
+    );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 calc(var(--gw-fill) * 1.3 - 30%),
+    transparent calc(var(--gw-fill) * 1.3)
+  );
+  mask-image: linear-gradient(
+    to right,
+    #000 calc(var(--gw-fill) * 1.3 - 30%),
+    transparent calc(var(--gw-fill) * 1.3)
+  );
+  transition: --gw-fill 560ms var(--gw-ease);
+}
+.manage-root .gw-pane .gw-opt[data-on="true"] .gw-opt-fill {
+  --gw-fill: 100%;
+}
+@media (hover: hover) {
+  .manage-root .gw-pane .gw-opt[data-on="false"]:hover .gw-opt-fill {
+    --gw-fill: 14%;
+    transition-duration: 320ms;
+  }
+}
+
+/* The option mark: a ring when off, a filled disc with a check when on. The
+   check draws itself (14 is the path's length). */
+.manage-root .gw-pane .gw-opt-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--mac-label-dim);
+  background: transparent;
+  transition:
+    background-color 260ms var(--gw-ease),
+    box-shadow 260ms var(--gw-ease),
+    transform 320ms var(--gw-ease);
+}
+.manage-root .gw-pane .gw-opt-mark svg {
+  fill: none;
+  stroke: var(--g-on-accent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.manage-root .gw-pane .gw-opt-mark path {
+  stroke-dasharray: 14;
+  stroke-dashoffset: 14;
+  transition: stroke-dashoffset 300ms var(--gw-ease) 60ms;
+}
+.manage-root .gw-pane .gw-opt[data-on="true"] .gw-opt-mark {
+  background: var(--g-accent);
+  box-shadow: 0 0 0 3px var(--g-accent-soft);
+  transform: scale(1.04);
+}
+.manage-root .gw-pane .gw-opt[data-on="true"] .gw-opt-mark path {
+  stroke-dashoffset: 0;
+}
+
+.manage-root .gw-pane .gw-opt-copy {
+  display: block;
+  min-width: 0;
+}
+.manage-root .gw-pane .gw-opt-name {
+  display: block;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--g-ink);
+}
+.manage-root .gw-pane .gw-opt-say {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gw-pane :is(.gw-opt, .gw-opt-fill, .gw-opt-mark, .gw-opt-mark path) {
+    transition-duration: 1ms;
+    transition-delay: 0ms;
+  }
+}
+
+/* A settings tab's header takes the same width as its settings, so its action
+   sits over the column's right edge. ER:LC is exempt (rail plus column, full
+   width). */
+.manage-root .gw-pane > .gw-place > :not(:has(.prc-settings, .overview-page, .gw-mods)) > .tab-page-header {
+  max-width: var(--set-max);
+}
+
+/* ── the switch that is left ─────────────────────────────────────────────── */
+
+/* `Toggle`, used by the hand-written tabs (schema tabs use option tiles). The
+   knob moves on a spring with a slight overshoot and stretches while pressed;
+   when on, the track gets the same accent ring as the option marks. */
+.manage-root .gator-switch {
+  border-color: var(--g-line) !important;
+  background: var(--mac-raise-2) !important;
+  transition:
+    background-color 260ms var(--gw-ease),
+    border-color 260ms var(--gw-ease),
+    box-shadow 260ms var(--gw-ease);
+}
+.manage-root .gator-switch[data-state="on"] {
+  border-color: var(--g-accent) !important;
+  background: var(--g-accent) !important;
+  box-shadow: 0 0 0 3px var(--g-accent-soft);
+}
+.manage-root .gator-switch .gator-switch-knob {
+  background: var(--g-ink) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateX(0) !important;
+  transition:
+    transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    width 180ms var(--gw-ease),
+    background-color 200ms var(--g-ease-state) !important;
+}
+.manage-root .gator-switch[data-state="on"] .gator-switch-knob {
+  background: var(--g-on-accent) !important;
+  transform: translateX(20px) !important;
+}
+.manage-root .gator-switch:active:not(:disabled) .gator-switch-knob {
+  width: 25px !important;
+}
+.manage-root .gator-switch[data-state="on"]:active:not(:disabled) .gator-switch-knob {
+  transform: translateX(15px) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gator-switch,
+  .manage-root .gator-switch .gator-switch-knob {
+    transition-duration: 1ms !important;
+  }
+}
+
+/* Inside the window the older "editorial" face (ITC Garamond italic) points at
+   the body face, so labels written against it follow. */
+.manage-root {
+  --font-editorial: var(--gw-chrome);
+}
+
+/* ── dropdowns ───────────────────────────────────────────────────────────── */
+
+/* Channel, role and select dropdowns (one shared component). On a desktop: a
+   raised panel that unfurls from its field, a search pill at the top,
+   categories as sticky headings with a guide down their channels, one
+   highlight that glides from row to row (the rail's, in miniature), and a
+   foot with the keys and the count. Portalled, so written outside
+   `.manage-root`. On a phone the same parts sit in a sheet (below).
+
+   The entrance does not fill: the clip that unfurls it would otherwise stay
+   on and cut off the panel's shadow. */
+.gw-menu {
+  transform-origin: top center;
+  animation: gw-menu-in 260ms var(--gw-ease) backwards;
+}
+.gw-menu[data-dir="up"] {
+  transform-origin: bottom center;
+  animation-name: gw-menu-in-up;
+}
+@keyframes gw-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+    clip-path: inset(0 0 65% 0 round 14px);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 14px);
+  }
+}
+@keyframes gw-menu-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+    clip-path: inset(65% 0 0 0 round 14px);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 14px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-menu { animation: none; }
+}
+
+/* Nested radii: 14 on the panel, 6 in, 8 on the row and the pill. */
+.gw-menu-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--g-line);
+  border-radius: 14px;
+  background: var(--mac-raise);
+  box-shadow: var(--mac-shadow);
+  color: var(--g-ink);
+  font-family: var(--gw-chrome);
+}
+/* The search is a pill inset in the panel; it rings in pink while typed in,
+   and says how many it found. */
+.gw-menu-find {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  margin: 6px 6px 0;
+  padding-inline: 11px;
+  border-radius: 9px;
+  background: var(--g-fill);
+  box-shadow: inset 0 0 0 1px transparent;
+  color: var(--mac-label-dim);
+  cursor: text;
+  transition:
+    background-color 140ms ease,
+    box-shadow 140ms ease,
+    color 140ms ease;
+}
+.gw-menu-find[data-edge="bottom"] {
+  margin: 0 6px 6px;
+}
+.gw-menu-find:focus-within {
+  background: var(--g-fill-2);
+  box-shadow: inset 0 0 0 1px var(--g-accent-line);
+  color: var(--g-ink);
+}
+.gw-menu-find input {
+  flex: 1;
+  min-width: 0;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--g-ink) !important;
+  font: inherit;
+  font-size: var(--t-body);
+  caret-color: var(--g-accent);
+}
+.gw-menu-find input::placeholder {
+  color: var(--mac-label-dim) !important;
+}
+.gw-menu-found {
+  flex: none;
+  color: var(--mac-label-dim);
+  font-size: var(--t-micro);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+/* Re-reading the server's channels and roles, beside the search it affects. */
+.gw-menu-find .gw-picker-refresh {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-right: -6px;
+  border-radius: 7px;
+  color: var(--mac-label-dim);
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state);
+}
+.gw-menu-find .gw-picker-refresh:hover:not([aria-disabled="true"]) {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+.gw-menu-find .gw-picker-refresh[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.gw-menu-list {
+  position: relative;
+  max-height: 300px;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* The highlight: under the rows, gliding on the window's curve. */
+.gw-menu-lit {
+  position: absolute;
+  top: 0;
+  left: 6px;
+  right: 6px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--g-fill-2);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 170ms var(--gw-ease),
+    height 170ms var(--gw-ease),
+    background-color 140ms ease,
+    opacity 120ms ease;
+}
+.gw-menu-lit[data-selected="true"] {
+  background: var(--g-accent-soft);
+}
+
+/* ── a dropdown, on a phone ──────────────────────────────────────────────── */
+
+/* On a phone a dropdown is a bottom sheet, the same parts as the tab sheet.
+   `--kb` is the on-screen keyboard height, set by the menu, so the sheet sits
+   above the keyboard. */
+.gw-menu-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  font-family: var(--gw-chrome);
+}
+.gw-menu-scrim {
+  position: absolute;
+  inset: 0;
+  min-height: 0 !important;
+  border: 0;
+  background: color-mix(in srgb, var(--g-ground) 62%, transparent);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  touch-action: none;
+  animation: gw-fade-in 240ms var(--g-ease-state) both;
+}
+.gw-menu-sheet-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: min(78dvh, calc(100dvh - var(--kb, 0px) - 72px));
+  margin: var(--u2);
+  margin-bottom: calc(var(--kb, 0px) + max(var(--u2), env(safe-area-inset-bottom)));
+  border: 1px solid var(--mac-hair);
+  border-radius: var(--r-panel);
+  background: var(--mac-raise);
+  box-shadow: 0 -20px 60px -20px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  /* No fill: once it has arrived the animation lets go of `transform`, which
+     the pull writes while a finger is on it. */
+  animation: gw-sheet-up 320ms var(--gw-ease);
+  transition: margin-bottom 200ms var(--gw-ease);
+}
+/* The copy left behind to play the exit must not play the entrance first. */
+.gw-menu-sheet[inert] .gw-menu-scrim,
+.gw-menu-sheet[inert] .gw-menu-sheet-body {
+  animation: none;
+}
+/* One surface: the panel inside is the sheet's content, not a box in a box. */
+.gw-menu-sheet-body > .gw-menu-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.gw-menu-sheet-body .gw-menu-find {
+  height: 44px;
+  margin: 0 var(--u2);
+}
+.gw-menu-sheet-body .gw-menu-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  padding: var(--u2);
+}
+.gw-menu-sheet-body .gw-menu-row {
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: 14px;
+  font-size: var(--t-lead);
+}
+.gw-menu-sheet-body .gw-menu-run[data-grouped="true"] .gw-menu-row {
+  padding-left: 28px;
+}
+.gw-menu-sheet-body .gw-menu-run[data-grouped="true"]::before {
+  top: 40px;
+  left: 19px;
+}
+.gw-menu-sheet-body .gw-menu-group {
+  top: calc(var(--u2) * -1);
+}
+/* A sheet is touched, not pointed at: no gliding highlight, the row lights
+   itself. */
+.gw-menu-sheet-body .gw-menu-lit {
+  display: none;
+}
+.gw-menu-sheet-body .gw-menu-row[data-active="true"] {
+  background: var(--g-fill-2);
+}
+.gw-menu-sheet-body .gw-menu-row[data-selected="true"][data-active="true"] {
+  background: var(--g-accent-soft);
+}
+@keyframes gw-sheet-up {
+  from { transform: translate3d(0, 100%, 0); }
+}
+@keyframes gw-fade-in {
+  from { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-menu-sheet-body,
+  .gw-menu-scrim {
+    animation: none;
+  }
+}
+.gw-menu-empty {
+  margin: 0;
+  padding: var(--u5) var(--u3);
+  text-align: center;
+  font-size: var(--t-small);
+  color: var(--mac-label-dim);
+}
+.gw-menu-run {
+  position: relative;
+}
+.gw-menu-run + .gw-menu-run {
+  margin-top: 6px;
+}
+/* A category: its name, a hairline across, and how many are in it. Sticky,
+   so it stays in view while scrolling through a long one. */
+.gw-menu-group {
+  position: sticky;
+  top: -6px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 9px 5px;
+  background: var(--mac-raise);
+}
+.gw-menu-group-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gw-menu-group-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--mac-hair);
+}
+.gw-menu-group-count {
+  flex: none;
+  font-size: var(--t-micro);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+/* Its channels hang from it on a hairline, as in a file tree. */
+.gw-menu-run[data-grouped="true"]::before {
+  content: "";
+  position: absolute;
+  top: 34px;
+  bottom: 10px;
+  left: 16px;
+  width: 1px;
+  background: var(--mac-hair);
+}
+.gw-menu-run[data-grouped="true"] .gw-menu-row {
+  padding-left: 24px;
+}
+/* The rows arrive in a quick cascade, the first dozen a beat apart. */
+.gw-menu-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mac-label);
+  font: inherit;
+  font-size: var(--t-body);
+  text-align: left;
+  cursor: pointer;
+  transition: color 110ms var(--g-ease-state);
+  animation: gw-menu-row-in 260ms var(--gw-ease) backwards;
+  animation-delay: calc(var(--i, 0) * 14ms + 40ms);
+}
+@keyframes gw-menu-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+/* One lit row, whether the pointer or the arrow keys put it there. */
+.gw-menu-row[data-active="true"] {
+  color: var(--g-ink);
+}
+.gw-menu-row[data-selected="true"] {
+  color: var(--g-accent-ink);
+  font-weight: 650;
+}
+/* A role's colour, with a halo of itself. */
+.gw-menu-swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dot, currentColor) 22%, transparent);
+}
+.gw-menu-glyph {
+  flex: none;
+  display: inline-flex;
+  color: var(--mac-label-dim);
+  opacity: 0.8;
+}
+.gw-menu-row[data-selected="true"] .gw-menu-glyph {
+  color: currentColor;
+  opacity: 1;
+}
+.gw-menu-label {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* What was typed, picked out in each name. */
+.gw-menu-match {
+  background: none;
+  color: var(--g-accent-ink);
+  font-weight: 750;
+}
+.gw-menu-hint {
+  flex: none;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--t-small);
+  color: var(--mac-label-dim);
+}
+/* The tick is always there, so the row does not reflow when it is chosen; it
+   scales in rather than appearing. */
+.gw-menu-check {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  color: var(--g-accent-ink);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 140ms var(--g-ease-state),
+    transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.gw-menu-row[data-selected="true"] .gw-menu-check {
+  opacity: 1;
+  transform: none;
+}
+/* The foot: the keys it answers to, and how many there are. */
+.gw-menu-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 32px;
+  padding: 0 12px;
+  border-top: 1px solid var(--mac-hair);
+  color: var(--mac-label-dim);
+  font-size: var(--t-micro);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.gw-menu-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.gw-menu-keys kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin-right: 2px;
+  padding: 0 4px;
+  border-radius: 5px;
+  background: var(--g-fill-2);
+  box-shadow: inset 0 -1px 0 var(--g-line);
+  color: var(--mac-label);
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.gw-menu-total {
+  font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-menu-row {
+    animation: none;
+  }
+  .gw-menu-lit {
+    transition: opacity 120ms ease;
+  }
+}

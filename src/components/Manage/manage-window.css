@@ -1,0 +1,33 @@
+/* The dashboard window (/manage).
+
+   Built from the landing's parts: the bar holds the landing's own mark, search,
+   appearance toggle and profile chip, and the chrome uses the shared `--mac-*`
+   / `--g-*` tokens from site/tokens.css. The window fills the viewport and
+   does not scroll; the rail and the pane scroll inside it.
+
+   Imported last by manage-shell, after manage-restyle.css and
+   manage-elevate.css, which style the controls inside the pane.
+
+   The rules live in ./manage-window/, imported below in cascade order. A
+   later part can override an earlier one, so keep the order, and add a rule
+   to the part it belongs to rather than at the end. */
+
+@import "./manage-window/01-tokens.css";
+@import "./manage-window/02-window.css";
+@import "./manage-window/03-server-picker.css";
+@import "./manage-window/04-module-wall.css";
+@import "./manage-window/05-tab.css";
+@import "./manage-window/06-details.css";
+@import "./manage-window/07-feedback.css";
+@import "./manage-window/08-options-and-dropdowns.css";
+@import "./manage-window/09-tickets.css";
+@import "./manage-window/10-message-editors.css";
+@import "./manage-window/11-scrollbars-and-touch.css";
+@import "./manage-window/12-audit-log.css";
+@import "./manage-window/13-fields-and-bar.css";
+@import "./manage-window/14-lists-and-disclosure.css";
+@import "./manage-window/15-images-and-gestures.css";
+@import "./manage-window/16-variables.css";
+@import "./manage-window/17-module-off-and-motion.css";
+@import "./manage-window/18-departments.css";
+@import "./manage-window/19-gator-ai.css";

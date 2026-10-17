@@ -1,0 +1,515 @@
+/* The command palette and its trigger.
+
+   Unlayered, like the rest of the restyle: Tailwind v3's preflight is unlayered
+   and beats every layered rule.
+
+   Spotlight's proportions: a sheet near the top of the window (where the eye
+   already is), 640px wide so a title, a sentence and a tag fit on one line. */
+
+/* ------------------------------------------------------------ the trigger */
+
+/* The same square as the appearance button beside it: a click target that opens
+   a sheet, not something shaped like a text field. */
+.g-find {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  /* The mark, bare: a tile appears under the pointer, not round the icon at
+     rest. Icons in squares are the one look this site keeps out. */
+  border: 1px solid transparent;
+  border-radius: var(--g-r-control);
+  background: transparent;
+  color: var(--g-ink-dim);
+  font: inherit;
+  cursor: pointer;
+  flex: none;
+  transition:
+    border-color var(--g-fast) var(--g-ease-state),
+    background-color var(--g-fast) var(--g-ease-state),
+    color var(--g-fast) var(--g-ease-state),
+    transform 160ms var(--g-ease-out);
+}
+/* Guarded, like the appearance block's: an unguarded `:hover` sticks on a
+   touch device until something else is tapped. */
+@media (hover: hover) {
+  .g-find:hover {
+    background: var(--g-fill);
+    color: var(--g-ink);
+  }
+}
+.g-find:active {
+  background: var(--g-fill-2);
+  transform: scale(0.94);
+}
+.g-find svg {
+  display: block;
+  flex: none;
+}
+
+/* ---------------------------------------------------------------- the sheet */
+
+.g-cmd-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  /* Below the header's own height on a laptop, and it stays put rather than
+     centring, so the sheet grows downward as results arrive. */
+  padding: clamp(56px, 12vh, 132px) 20px 20px;
+  /* No backdrop blur: a viewport-sized backdrop filter re-filters every frame
+     while the sheet moves, which halved the frame rate of the entrance (14
+     frames in 600ms with it, 30 without). The page dims more instead. */
+  background: color-mix(in srgb, var(--g-ground) 72%, transparent);
+  opacity: 0;
+  /* The scrim's fade is shorter than the sheet's arrival: re-blending a
+     viewport-sized layer each frame costs something, so it finishes sooner. */
+  transition: opacity 170ms var(--g-ease-state);
+}
+.g-cmd-scrim[data-state="to"] {
+  opacity: 1;
+}
+
+.g-cmd {
+  display: flex;
+  width: min(640px, 100%);
+  max-height: min(560px, 72vh);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--g-line-strong);
+  border-radius: 18px;
+  /* Opaque. A translucent sheet over a blurred scrim reads as fog, and the
+     nested `backdrop-filter` would not blur its own ancestor anyway. */
+  background: var(--g-raise);
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.32);
+  /* Drops 18px from just above where it lands, with no scale: a scaled layer of
+     text is re-rasterised and soft during the entrance (the same reason as the
+     window's rise in mac.css). */
+  transform: translateY(-18px);
+  transform-origin: 50% 0;
+  opacity: 0;
+  /* One curve for both the movement and the fade. */
+  /* 250ms: a utility opened many times a day should be quick. The phone has its
+     own longer duration, since the panel travels its full height there. */
+  transition:
+    transform 250ms var(--g-ease-sheet),
+    opacity 250ms var(--g-ease-sheet);
+}
+.g-cmd-scrim[data-state="to"] .g-cmd {
+  transform: none;
+  opacity: 1;
+}
+
+/* Closing is faster than opening. `usePresence` keeps the sheet mounted 200ms
+   after `open` goes false, so the exit must fit in that. */
+.g-cmd-scrim[data-state="from"] {
+  transition-duration: 180ms;
+}
+.g-cmd-scrim[data-state="from"] .g-cmd {
+  transition-duration: 180ms, 160ms;
+}
+
+:root[data-theme="light"] .g-cmd {
+  box-shadow:
+    0 32px 80px rgba(80, 35, 50, 0.2),
+    0 2px 8px rgba(80, 35, 50, 0.1);
+}
+/* Written out again rather than grouped, so an explicit light choice on a dark
+   device still wins over the device's own preference. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .g-cmd {
+    box-shadow:
+      0 32px 80px rgba(80, 35, 50, 0.2),
+      0 2px 8px rgba(80, 35, 50, 0.1);
+  }
+}
+
+/* ---------------------------------------------------------------- the field */
+
+.g-cmd-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--g-line);
+  color: var(--g-ink-faint);
+  flex: none;
+}
+.g-cmd-field svg {
+  display: block;
+  flex: none;
+}
+.g-cmd-field input {
+  width: 100%;
+  height: 52px;
+  border: 0;
+  background: transparent;
+  color: var(--g-ink);
+  font: inherit;
+  font-size: 15.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+  caret-color: var(--g-accent);
+  outline: none;
+}
+.g-cmd-field input::placeholder {
+  color: var(--g-ink-faint);
+}
+.g-cmd-esc {
+  padding: 3px 7px;
+  border: 1px solid var(--g-line);
+  border-radius: 6px;
+  background: var(--g-fill-2);
+  color: var(--g-ink-faint);
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex: none;
+}
+
+/* The way out for something with no Escape key. It is the phone's control, so
+   it is not drawn at all where the hint beside it is the truth. */
+.g-cmd-close {
+  display: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-inline-end: -8px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--g-ink-faint);
+  flex: none;
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state);
+}
+.g-cmd-close:hover {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+.g-cmd-close:active {
+  background: var(--g-fill-2);
+}
+.g-cmd-close svg {
+  display: block;
+}
+
+/* ---------------------------------------------------------------- the list */
+
+.g-cmd-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px;
+  overscroll-behavior: contain;
+}
+
+.g-cmd-section + .g-cmd-section {
+  margin-top: 6px;
+}
+
+.g-cmd-heading {
+  margin: 0;
+  padding: 8px 10px 5px;
+  color: var(--g-ink-faint);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.g-cmd-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--g-ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  /* No transition on the background: the cursor moves with the arrow keys and
+     a fade means two rows look half-selected between presses. */
+}
+.g-cmd-row[data-cursor="true"] {
+  background: var(--g-fill-2);
+}
+
+.g-cmd-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--g-line);
+  border-radius: 9px;
+  background: var(--g-fill);
+  color: var(--g-ink-dim);
+  flex: none;
+}
+.g-cmd-row[data-cursor="true"] .g-cmd-icon {
+  border-color: var(--g-accent-line);
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink, var(--g-accent));
+}
+.g-cmd-icon svg {
+  display: block;
+}
+
+.g-cmd-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+}
+.g-cmd-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.008em;
+}
+.g-cmd-note {
+  overflow: hidden;
+  color: var(--g-ink-faint);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.g-cmd-tag {
+  padding: 3px 8px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-r-control);
+  color: var(--g-ink-faint);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: -0.002em;
+  white-space: nowrap;
+  flex: none;
+}
+
+.g-cmd-go {
+  display: grid;
+  place-items: center;
+  color: var(--g-ink-faint);
+  opacity: 0;
+  flex: none;
+  transition: opacity var(--g-fast) var(--g-ease-state);
+}
+.g-cmd-row[data-cursor="true"] .g-cmd-go {
+  opacity: 1;
+}
+.g-cmd-go svg {
+  display: block;
+}
+
+.g-cmd-empty {
+  margin: 0;
+  padding: 34px 16px 38px;
+  color: var(--g-ink-faint);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: center;
+}
+.g-cmd-empty strong {
+  color: var(--g-ink);
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------- the foot */
+
+.g-cmd-foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--g-line);
+  background: var(--g-fill);
+  color: var(--g-ink-faint);
+  font-size: 11.5px;
+  font-weight: 600;
+  flex: none;
+}
+.g-cmd-foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.g-cmd-foot kbd {
+  display: inline-grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  padding: 0 4px;
+  border: 1px solid var(--g-line);
+  border-radius: 5px;
+  background: var(--g-fill-2);
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+}
+.g-cmd-foot kbd svg {
+  display: block;
+}
+.g-cmd-foot-count {
+  margin-inline-start: auto;
+}
+
+/* ---------------------------------------------------------------- narrow */
+
+/* ---------------------------------------------------------------- narrow */
+
+/* Phone: the sheet is sized to its contents near the top edge, where the thumb
+   that pressed search already is and above where the keyboard will appear. The
+   scrim below it is one large area to tap to close (there is no Escape key). It
+   enters from beyond the edge. The final shape is set at the end of this file. */
+@media (max-width: 760px) {
+  .g-cmd-scrim {
+    padding: 0;
+    align-items: flex-start;
+  }
+  .g-cmd {
+    width: 100%;
+    /* Tall enough for the field and six or seven rows, short enough to leave
+       a third of the screen as something to press. */
+    max-height: min(66dvh, 560px);
+    /* Cut where it ends, square where it meets the edge. */
+    border-radius: 0 0 20px 20px;
+    /* The side and top edges are the screen's edges; a hairline along them is
+       a line nobody can see the far side of. */
+    border-block-start: 0;
+    border-inline: 0;
+    /* Clear of the notch, and off the very top pixel where there is none. */
+    padding-top: max(8px, env(safe-area-inset-top));
+    transform: translateY(-100%);
+  }
+  .g-cmd-field {
+    padding-inline: 14px 10px;
+  }
+  .g-cmd-field input {
+    /* Anything under 16px makes iOS Safari zoom the page on focus. */
+    height: 52px;
+    font-size: 16px;
+  }
+  /* The hint names a key this device does not have. */
+  .g-cmd-esc {
+    display: none;
+  }
+  .g-cmd-close {
+    display: grid;
+  }
+  .g-cmd-foot {
+    display: none;
+  }
+  .g-cmd-row {
+    padding: 10px;
+    /* A row is something you hit with a thumb here, not something you point
+       at: Apple's floor, and it is a floor rather than a preference. */
+    min-height: 44px;
+  }
+  .g-cmd-list {
+    padding: 6px;
+  }
+  /* A mask on the list fades its bottom edge (the sheet has no footer on a
+     phone, and its rounded corner would cut a row in half). A mask applies to
+     the scroller's own box, so the fade stays on the sheet's edge; the list's
+     bottom padding matches the fade so the last row can scroll clear of it. */
+  .g-cmd-list {
+    padding-bottom: 44px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), transparent);
+  }
+  /* A longer entrance on the phone (the panel travels its full height); the
+     exit stays quick. */
+  .g-cmd-scrim[data-state="to"] .g-cmd {
+    transition-duration: 380ms, 260ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-cmd-scrim,
+  .g-cmd {
+    transition-duration: 1ms;
+  }
+  .g-cmd,
+  .g-cmd-scrim[data-state="from"] .g-cmd {
+    transform: none;
+  }
+}
+
+/* ── the search, refined ──
+
+   Sentence-case headings, and each row's mark drawn bare in the row's colour
+   (no tile). */
+.g-cmd-heading {
+  padding: 10px 10px 5px;
+  color: var(--g-ink-faint);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.g-cmd-icon {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--g-ink-dim);
+  transition: color 120ms ease;
+}
+.g-cmd-row[data-cursor="true"] .g-cmd-icon {
+  border: 0;
+  background: transparent;
+  color: var(--g-accent-ink, var(--g-accent));
+}
+.g-cmd-row {
+  gap: 12px;
+  border-radius: 12px;
+}
+
+/* Phone: a card floating under the top edge with room on every side and all
+   corners round. It drops in from above on a spring with a slight overshoot. */
+@media (max-width: 760px) {
+  .g-cmd-scrim {
+    padding: max(10px, env(safe-area-inset-top)) 12px 12px;
+  }
+  .g-cmd {
+    width: 100%;
+    max-height: min(62dvh, 540px);
+    border: 1px solid var(--g-line-strong);
+    border-radius: 24px;
+    padding-top: 2px;
+    transform: translateY(-28px) scale(0.965);
+    transform-origin: 50% 0;
+  }
+  .g-cmd-scrim[data-state="to"] .g-cmd {
+    transition:
+      transform 460ms cubic-bezier(0.34, 1.2, 0.64, 1),
+      opacity 220ms ease;
+  }
+  .g-cmd-scrim[data-state="from"] .g-cmd {
+    transform: translateY(-16px) scale(0.975);
+  }
+  .g-cmd-row {
+    border-radius: 14px;
+  }
+  .g-cmd-list {
+    padding: 6px 6px 40px;
+  }
+}

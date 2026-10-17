@@ -1,0 +1,592 @@
+/* The grouped list (the module sheet in the landing window).
+
+   Apple's detail-view grammar on both platforms: a small caption, a rounded
+   container, and rows separated by hairlines that start where the row's text
+   starts. Apple's measurements: 10pt container radius, 44pt minimum rows (also
+   the tap floor), 16pt leading inset.
+
+   Unlayered, like the rest of the landing: Tailwind v3's preflight is unlayered
+   and beats every layered rule. */
+
+.g-sheet {
+  /* Apple's grouped background is a step up from the page in dark and a step
+     down in light, so this token is resolved per theme in tokens.css. */
+  --sheet-box: var(--g-fill);
+  --sheet-sep: var(--mac-hair);
+  /* Where a row's text, and therefore its separator, begins: the inset plus the
+     29pt icon well (Settings' size). Every row's leading element is that well's
+     width whatever it holds, and the lead is computed from these two numbers so
+     text and separators always line up. */
+  --sheet-inset: 18px;
+  --sheet-well: 29px;
+  --sheet-gap: 14px;
+  --sheet-lead: calc(var(--sheet-inset) + var(--sheet-well) + var(--sheet-gap));
+
+  max-width: 780px;
+  padding-bottom: 8px;
+}
+
+/* ------------------------------------------------------------------ head */
+
+/* The head: the folder icon (96px) beside the kicker, title and pitch, closed
+   by a full-width hairline that makes the icon's indent read as a margin. It
+   stacks below 860px, where a title beside the icon would wrap to a few words a
+   line. */
+.g-sheet-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  column-gap: 13px;
+  padding-bottom: clamp(18px, 2.4vh, 24px);
+  border-bottom: 1px solid var(--sheet-sep);
+  margin-bottom: clamp(22px, 3vh, 30px);
+}
+/* The rule closes the whole pane; the words inside it stay in a column you can
+   read across without losing the line. */
+.g-sheet-say > * {
+  max-width: 64ch;
+}
+
+/* The action and what it costs, on one line, closing the sheet: the invitation
+   comes after the reasons. */
+.g-sheet-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-top: clamp(18px, 2.6vh, 28px);
+  padding-top: 15px;
+  border-top: 1px solid var(--mac-hair);
+}
+
+/* A plain glyph in the folder's colour. The nudge is optical: the mark sits
+   high next to a display cap that does not fill its line box. */
+.g-sheet-mark {
+  display: inline-flex;
+  flex: none;
+  margin-top: 4px;
+  color: var(--hue);
+}
+
+.g-sheet-say {
+  min-width: 0;
+}
+
+/* The module's group as a sentence-case caption over the title. */
+.g-sheet-kicker {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0 0.28em 0.7em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--hue) 16%, transparent);
+  color: color-mix(in srgb, var(--hue) 78%, var(--g-ink));
+  font-family: var(--mac-chrome);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Apple sets a display title tight and negative-tracked, and lets it be the
+   only large thing on the screen. */
+/* The display face, a size smaller than a page title. */
+.g-sheet-title {
+  margin: 0 0 8px;
+  font-family: var(--font-ui);
+  font-size: clamp(1.5rem, 2.3vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.028em;
+  line-height: 1.08;
+  color: var(--g-ink);
+}
+
+.g-sheet-pitch {
+  margin: 0;
+  max-width: 64ch;
+  font-size: clamp(14.5px, 1.15vw, 16px);
+  line-height: 1.5;
+  color: var(--g-ink-dim);
+}
+
+/* ----------------------------------------------------------------- group */
+
+.g-group {
+  margin-bottom: clamp(28px, 3.6vh, 40px);
+}
+.g-group:last-child {
+  margin-bottom: 0;
+}
+
+/* System Settings' section header: small, semibold, uppercase, open tracking,
+   and sitting in the margin above the container rather than inside it. */
+.g-group-cap {
+  margin: 0 0 11px var(--sheet-inset);
+  font-family: var(--mac-chrome);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+  color: var(--mac-label-dim);
+}
+
+/* A container like every other panel on the site: a near-black fill one step
+   above the ground with a hairline. */
+.g-group-box {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--mac-hair);
+  border-radius: var(--g-r-container);
+  background: var(--mac-raise);
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------------- row */
+
+.g-row {
+  position: relative;
+  display: grid;
+  /* A fixed lead column, so all lists start their text in the same place. */
+  grid-template-columns: var(--sheet-well) minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--sheet-gap);
+  width: 100%;
+  min-height: 52px;
+  margin: 0;
+  padding: 16px var(--sheet-inset);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+/* The separator starts where the text starts. Drawn on the row rather than as a
+   border, so the first row has none without a `:last-child` override. */
+.g-row + .g-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--sheet-lead);
+  right: 0;
+  height: 0.5px;
+  background: var(--sheet-sep);
+}
+
+.g-row-text {
+  display: block;
+  min-width: 0;
+}
+.g-row-body {
+  display: block;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--g-ink-dim);
+}
+
+/* ------------------------------------------------------------ difference */
+
+.g-row-tick {
+  color: color-mix(in srgb, var(--hue) 72%, var(--g-accent-ink, var(--g-accent)));
+}
+
+
+/* ------------------------------------------------------------ what you get */
+
+/* What you get: a tick in the folder's colour (the items have no order, so no
+   numbers). */
+.g-gets .g-row {
+  align-items: center;
+  /* Rows light under the pointer as a reading aid, like Settings, even though
+     they cannot be pressed. */
+  transition: background-color 110ms linear;
+}
+@media (hover: hover) and (pointer: fine) {
+  .g-gets .g-row:hover {
+    background: var(--g-fill-2);
+  }
+}
+.g-gets .g-row-tick {
+  display: grid;
+  place-items: center;
+  /* The same well as every other row's leading element, so its text lines up
+     with the other lists. */
+  width: var(--sheet-well);
+  height: var(--sheet-well);
+  /* Lifted toward white: the raw folder colours are 2.5:1 to 4.4:1 on this
+     ground. */
+  color: color-mix(in srgb, var(--hue) 82%, #fff);
+}
+
+/* ------------------------------------------------------------- turn it on */
+
+/* One control and one short line, without a card around them. */
+/* Text you click, in the folder's colour, with an arrow that says where it
+   goes. The arrow moves rather than the label, so nothing reflows. */
+.g-sheet-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+  color: var(--hue);
+  font-family: var(--mac-chrome);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  cursor: pointer;
+}
+.g-sheet-go svg {
+  transition: transform 200ms var(--g-ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.g-sheet-go:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.g-sheet-go:hover svg {
+  transform: translateX(3px);
+}
+.g-sheet-go:focus-visible {
+  outline: 2px solid var(--g-accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.g-act-say {
+  font-size: 12.5px;
+  color: var(--mac-label-dim);
+}
+
+/* -------------------------------------------------------------- next door */
+
+.g-near {
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 110ms linear;
+}
+.g-near:hover,
+.g-near:focus-visible {
+  background: var(--g-fill-2);
+}
+
+
+.g-near:active {
+  background: var(--g-fill-2);
+}
+/* Where to go next: two buttons under the list. */
+.g-sheet-near {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.g-near {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 10px 10px 10px 12px;
+  border: 1px solid var(--mac-hair);
+  border-radius: 10px;
+  background: var(--mac-raise);
+  color: var(--mac-label);
+  font: inherit;
+  font-family: var(--mac-chrome);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+.g-near:hover,
+.g-near:focus-visible {
+  background: var(--mac-raise-2);
+  border-color: color-mix(in srgb, var(--hue) 32%, var(--mac-hair));
+  color: var(--g-ink);
+}
+.g-near:active {
+  transform: scale(0.99);
+}
+
+/* Naked, in the folder's own colour, like the crumb at the top of the sheet. */
+.g-near-glyph {
+  flex: none;
+  color: var(--hue);
+}
+.g-near-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* A button that can be pressed says so by moving its chevron. */
+.g-near-chev {
+  flex: none;
+  margin-left: auto;
+  color: var(--mac-label-dim);
+  transition: transform 180ms var(--g-ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+    color 140ms ease;
+}
+.g-near:hover .g-near-chev {
+  transform: translateX(2px);
+  color: var(--mac-label);
+}
+
+/* ---------------------------------------------------------------- narrow */
+
+/* Phone: same structure, wider relative to the screen, taller rows, no ring on
+   the container. */
+@media (max-width: 860px) {
+  .g-sheet {
+    --sheet-inset: 16px;
+    max-width: none;
+  }
+  /* One column everywhere, so there is nothing to restack here — only the
+     spacing to tighten. */
+  .g-sheet-head {
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+  }
+  .g-sheet-title {
+    font-size: clamp(1.7rem, 8vw, 2.15rem);
+  }
+  .g-row {
+    min-height: 48px;
+    padding-block: 14px;
+  }
+}
+
+/* ------------------------------------------------------------------ wide */
+
+/* Wide windows: two columns for the sections; the head stays full width above
+   them. */
+@media (min-width: 1250px) {
+  .g-sheet {
+    max-width: 1180px;
+  }
+  /* A grid rather than CSS columns, so each section has a set place: the
+     comparison picture down the left, the list and the action stacked on the
+     right, the neighbours across the bottom. */
+  .g-sheet-groups {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    column-gap: clamp(30px, 3.4vw, 46px);
+    row-gap: clamp(28px, 3.6vh, 40px);
+    align-items: start;
+  }
+  .g-sheet-groups .g-group {
+    margin: 0;
+  }
+  /* The comparison takes the wider column and the full height of the body.
+     Across both columns its aspect ratio would make it too tall to fit the
+     sheet on one screen. */
+  .g-group-wide {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .g-group-gets {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  /* The first section in the second column has no caption, so that column
+     starts about 24px higher. This is intentional: the columns are a reading
+     order, not a table. Do not level them. */
+  .g-sheet-groups .g-group + .g-group {
+    margin-top: clamp(22px, 3vh, 32px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The arrow stops sliding; the underline and the colour still answer. */
+  .g-sheet-go svg {
+    transition: none;
+  }
+  .g-sheet-go:hover svg {
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------- the before/after */
+
+.g-shot {
+  overflow: hidden;
+  padding: 0;
+}
+
+.g-cmp {
+  position: relative;
+  display: block;
+  width: 100%;
+  /* A fixed aspect ratio (640x420 for drawings, the capture shape for
+     screenshots), shared by both halves so the seam stays on the same part of
+     the picture at every width. */
+  aspect-ratio: var(--shot-ratio, 640 / 420);
+  overflow: hidden;
+  cursor: ew-resize;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.g-cmp:focus-visible {
+  outline: 2px solid var(--g-accent);
+  outline-offset: -2px;
+}
+
+.g-cmp-layer {
+  position: absolute;
+  inset: 0;
+}
+.g-shot-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Only does anything if a pair is ever uploaded at a shape the frame was not
+     told about, and then it crops rather than leaving two bands of nothing. */
+  object-fit: cover;
+  /* Stops native image dragging, which would steal the gesture from the slider. */
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* `display: contents` on the `<picture>` wrapper (needed for the reduced-motion
+   `<source>`), so it adds no box of its own. */
+.g-shot-pic {
+  display: contents;
+}
+
+/* "Before" is clipped over "after", so the seam is a single clip edge. No
+   transition: it tracks the pointer. */
+.g-cmp-before {
+  clip-path: inset(0 calc(100% - var(--at)) 0 0);
+}
+
+/* The invitation: one sweep out and back on the entrance curve, then still
+   (nothing on the landing runs on a timer). The attribute is removed at the
+   first touch, handing the seam to the pointer mid-sweep. */
+.g-cmp[data-invite] .g-cmp-before {
+  animation: g-cmp-invite 2600ms var(--g-ease-state) 520ms 1 both;
+}
+.g-cmp[data-invite] .g-cmp-seam {
+  animation: g-cmp-invite-seam 2600ms var(--g-ease-state) 520ms 1 both;
+}
+@keyframes g-cmp-invite {
+  0% { clip-path: inset(0 calc(100% - var(--at)) 0 0); }
+  42% { clip-path: inset(0 82% 0 0); }
+  100% { clip-path: inset(0 calc(100% - var(--at)) 0 0); }
+}
+@keyframes g-cmp-invite-seam {
+  0% { left: var(--at); }
+  42% { left: 18%; }
+  100% { left: var(--at); }
+}
+
+/* The seam: one hairline in the accent, no glow. */
+.g-cmp-seam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--at);
+  width: 1px;
+  background: var(--g-accent);
+  transform: translateX(-0.5px);
+  pointer-events: none;
+}
+.g-cmp-grip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--g-accent);
+  background: var(--g-sheet-ground, #272727);
+  color: var(--g-accent);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  transition: transform 160ms var(--g-ease-out);
+}
+.g-cmp-held .g-cmp-grip,
+.g-cmp:hover .g-cmp-grip {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+/* Labels for each side, at the foot (the top of each drawing has its own
+   banner). */
+/* Small and quiet: sentence case, 11px, 6px corner, no rim. */
+.g-cmp-tag {
+  position: absolute;
+  bottom: 8px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-family: var(--mac-chrome);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  pointer-events: none;
+  /* Opaque with no backdrop blur: legible over real screenshots, and a blur
+     would re-rasterise the animated GIF behind it every frame. The chips sit on
+     dark art in both themes, so one dark colour works for both. */
+}
+.g-cmp-tag-before {
+  left: 8px;
+  background: color-mix(in srgb, #ed4245 26%, #0e0e0e);
+  color: #ffa9ad;
+  /* Fades out as the seam passes it, so the label never sits over the half it
+     is not describing. */
+  opacity: clamp(0, calc((var(--at) - 18%) / 12%), 1);
+}
+.g-cmp-tag-after {
+  right: 8px;
+  background: color-mix(in srgb, #5fd08a 24%, #0e0e0e);
+  color: #7fdca4;
+  opacity: clamp(0, calc((82% - var(--at)) / 12%), 1);
+}
+
+/* The module in plain words, at reading size: the one paragraph on the sheet
+   people read. */
+.g-shot-say {
+  margin: 16px 2px 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.62;
+  color: var(--mac-label, rgba(255, 255, 255, 0.88));
+}
+
+/* ------------------------------------------------------------------ touch */
+
+/* Touch: no hover, so the sweep is the only self-moving part, and dragging
+   still works (pointer events). The grip is enlarged from its 30px mouse size. */
+@media (pointer: coarse) {
+  .g-cmp-grip {
+    width: 38px;
+    height: 38px;
+  }
+  .g-cmp-tag {
+    font-size: 10.5px;
+    padding: 3px 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-cmp-grip {
+    transition: none;
+  }
+  /* No demonstration. Somebody who has turned motion down can still drag it,
+     which is the whole control. */
+  .g-cmp[data-invite] .g-cmp-before,
+  .g-cmp[data-invite] .g-cmp-seam {
+    animation: none;
+  }
+}

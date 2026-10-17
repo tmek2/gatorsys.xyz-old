@@ -1,0 +1,239 @@
+.gator-user-menu {
+  max-width: calc(100vw - 1rem);
+  /* No `overflow: hidden`, which clipped the rows while the panel scaled up;
+     the panel's own border-radius handles the corners. */
+  opacity: 0;
+  visibility: hidden;
+  /* The panel mounts in this state and opens on the next frame, so there is
+     always a starting frame. A small scale gap and one matched duration. */
+  transform: translateY(-0.75rem) scale(0.97);
+  transform-origin: top right;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transition:
+    opacity 190ms ease,
+    visibility 0s linear 300ms,
+    transform 300ms cubic-bezier(0.22, 1.15, 0.36, 1);
+}
+
+.gator-user-menu[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  transition:
+    opacity 190ms ease,
+    visibility 0s,
+    transform 300ms cubic-bezier(0.22, 1.15, 0.36, 1);
+}
+
+@media (max-width: 640px), (pointer: coarse) {
+  /* On touch the trigger stays a circle: the identity and caret are hover
+     affordances and are not shown (the grid's fixed caret column would
+     otherwise overflow the circle). */
+  .user-menu-trigger,
+  .tg-nav-links:hover .user-menu-trigger,
+  .tg-nav-links:focus-within .user-menu-trigger,
+  .user-menu-trigger:hover,
+  .user-menu-trigger:focus-visible,
+  .user-menu-trigger[data-open="true"] {
+    grid-template-columns: 2.35rem;
+    max-width: 2.65rem;
+    height: 2.65rem;
+    overflow: hidden;
+  }
+
+  .user-menu-identity,
+  .user-menu-caret {
+    display: none;
+  }
+
+  .gator-user-menu {
+    width: min(20rem, calc(100vw - 1rem)) !important;
+    border-radius: 1.15rem;
+    padding: 0.45rem;
+  }
+
+  .gator-user-menu a,
+  .gator-user-menu button {
+    min-height: 2.85rem;
+  }
+}
+
+/* Bounded to the space below the trigger and scrolled internally, so the last
+   item is reachable on a landscape phone. */
+.gator-user-menu {
+  max-height: calc(100dvh - var(--user-menu-top, 4rem) - 0.75rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gator-user-menu {
+    transition-duration: 1ms;
+  }
+}
+
+/* One row style for the account menu. */
+.gator-user-menu-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: var(--gs-radius-control, 0.65rem);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.68));
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition:
+    background 220ms var(--gs-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+    color 220ms var(--gs-ease, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.gator-user-menu-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.gator-user-menu-danger {
+  color: rgba(248, 180, 180, 0.85);
+}
+
+.gator-user-menu-danger:hover {
+  background: rgba(248, 113, 113, 0.1);
+  color: #fecaca;
+}
+
+/* The trigger at rest is a circle; hovering the nav widens it to show the
+   identity (below). */
+.user-menu-trigger {
+  display: inline-flex;
+  /* An explicit size: its content is an <img> with no intrinsic box, so without
+     one the button collapses. */
+  height: 2.35rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  /* A hover transition long enough to read as movement. */
+  transition:
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The avatar only, not the identity or caret spans. */
+.user-menu-trigger img,
+.user-menu-face > * {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+/* No scale on hover: it would run alongside the widening and wobble. The ring
+   is enough. */
+.user-menu-trigger:hover,
+.user-menu-trigger:focus-visible,
+.user-menu-trigger[data-open="true"] {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-peach, #f7a8c4) 55%, transparent);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .user-menu-trigger {
+    transition: none;
+  }
+}
+
+
+/* ── the trigger, opening into an identity ──
+
+   A circle that widens on hover to show who you are signed in as, and opens the
+   panel when clicked. The trigger sits inside `.tg-nav-links`, a pill that also
+   widens on hover; animating `width` on both fought for space. A grid track
+   from `0fr` to `1fr` resolves against content already measured, so the outer
+   pill sees one clean size change. */
+.user-menu-trigger {
+  display: inline-grid;
+  grid-template-columns: 2.35rem 0fr 0fr;
+  transition:
+    grid-template-columns 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 300ms ease,
+    box-shadow 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Hovering anywhere on the nav bar opens the identity (the same gesture that
+   opens the nav's link tray). `:focus-within` on the container so tabbing to it
+   expands it too. */
+.tg-nav-links:hover .user-menu-trigger,
+.tg-nav-links:focus-within .user-menu-trigger,
+.user-menu-trigger:hover,
+.user-menu-trigger:focus-visible,
+.user-menu-trigger[data-open="true"] {
+  grid-template-columns: 2.35rem 1fr 1.2rem;
+  background: var(--gs-surface, rgba(255, 255, 255, 0.06));
+}
+
+.user-menu-face {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+/* `min-width: 0` on both, or the grid track refuses to go below the text's
+   intrinsic width and the collapse never happens. */
+.user-menu-identity,
+.user-menu-caret {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.user-menu-identity-inner {
+  display: block;
+  padding: 0 0.1rem 0 0.55rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.user-menu-identity-name {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.2;
+  color: var(--gs-text, #f5f2f2);
+}
+
+.user-menu-identity-handle {
+  display: block;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.5));
+}
+
+.user-menu-caret {
+  display: grid;
+  place-items: center;
+  color: var(--gs-text-muted, rgba(245, 242, 242, 0.45));
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.user-menu-trigger[data-open="true"] .user-menu-caret {
+  transform: rotate(180deg);
+}
+
+/* Touch has no hover, so no identity (a tap that both expands and opens would
+   be a double-tap trap); the panel shows the name and handle. */
+@media (hover: none) {
+  .user-menu-trigger,
+  .user-menu-trigger:hover,
+  .user-menu-trigger[data-open="true"] {
+    grid-template-columns: 2.35rem 0fr 0fr;
+  }
+}

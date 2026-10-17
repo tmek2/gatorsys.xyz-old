@@ -1,0 +1,828 @@
+/* List items, variables, the window's greys, the picker's blur and the editor's
+   side column (part of manage-window.css) */
+
+/* ── an item in a list you build ─────────────────────────────────────────── */
+
+/* One shape for a row you added yourself -- a punishment type, a role quota,
+   an embed field -- instead of each editor's own box of typed-in colours. */
+.manage-root .gw-item {
+  padding: 12px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-row);
+  background: var(--mac-raise-2);
+}
+/* Removing one: a bare mark that turns red under the pointer. */
+.manage-root .gw-remove {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  min-height: 0 !important;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--mac-label-dim);
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state);
+}
+@media (hover: hover) {
+  .manage-root .gw-remove:hover {
+    background: var(--tone-bad-soft);
+    color: var(--tone-bad);
+  }
+}
+.manage-root .gw-remove:active {
+  background: var(--tone-bad-soft);
+  color: var(--tone-bad);
+}
+
+/* A connection: the role that triggers it, an arrow, the role it grants. */
+.manage-root .gw-link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--u3);
+  padding-block: 8px;
+}
+.manage-root .gw-link-pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--u2);
+  min-width: 0;
+  margin: 0;
+  font-size: var(--t-body);
+}
+.manage-root .gw-link-role {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+  font-weight: 650;
+}
+.manage-root .gw-link-role[data-granted="true"] {
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+}
+.manage-root .gw-link-arrow {
+  color: var(--mac-label-dim);
+}
+
+/* A block added to a message unrolls into place. */
+.manage-root .editor-block[data-arrived="true"] {
+  animation: gw-block-in 380ms var(--gw-ease) both;
+}
+@keyframes gw-block-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .editor-block[data-arrived="true"] {
+    animation: none;
+  }
+}
+
+/* ER:LC's sections as a scrolling row on narrow screens. The row fades at its
+   end to show there is more, and scrolls far enough for the last section to
+   clear the fade. */
+@media (max-width: 1099px) {
+  .manage-root .prc-rail {
+    padding-right: 40px;
+    scroll-snap-type: x proximity;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  }
+  .manage-root .prc-rail-item {
+    scroll-snap-align: start;
+  }
+}
+
+/* ── `{`: variables where they are typed ─────────────────────────────────── */
+
+/* The list, on top of the bracket that opened it. */
+.gw-vac {
+  position: fixed;
+  z-index: 95;
+  width: min(360px, calc(100vw - 16px));
+  padding: 4px;
+  border: 1px solid var(--g-line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mac-raise) 96%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow:
+    0 18px 40px -14px rgba(0, 0, 0, 0.6),
+    0 2px 6px rgba(0, 0, 0, 0.2);
+  color: var(--g-ink);
+  font-family: var(--font-ui);
+  transform-origin: 12px 100%;
+  animation: gw-vac-in 170ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.gw-vac[data-side="above"] {
+  translate: 0 -100%;
+}
+.gw-vac[data-side="below"] {
+  transform-origin: 12px 0;
+}
+@keyframes gw-vac-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+.gw-vac-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 260px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* One line a variable: the name, what it is beside it, dimmer. */
+.gw-vac-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 10px;
+  min-height: 0 !important;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 90ms ease;
+}
+.gw-vac-row[data-on="true"] {
+  background: var(--g-fill-2);
+}
+.gw-vac-key {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", monospace;
+  font-size: 12.5px;
+  color: var(--g-accent-ink);
+}
+/* What you have typed of it, in the ink; what the name adds, in the accent. */
+.gw-vac-typed {
+  color: var(--g-ink);
+  font-weight: 700;
+}
+.gw-vac-say {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--mac-label-dim);
+}
+.gw-vac-none {
+  margin: 0;
+  padding: 8px;
+  font-size: 12.5px;
+  color: var(--mac-label-dim);
+}
+.gw-vac-keys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding: 6px 8px 4px;
+  border-top: 1px solid var(--mac-hair);
+  font-size: 11px;
+  color: var(--mac-label-dim);
+}
+.gw-vac-keys kbd {
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 650;
+}
+/* A phone has no Tab key and no arrows to speak of: the hint goes. */
+@media (pointer: coarse) {
+  .gw-vac-keys {
+    display: none;
+  }
+}
+
+/* The rest of the best match, written ahead of the caret in grey, as Chrome's
+   address bar does: Tab or → takes it. */
+.gw-vac-ghost {
+  position: fixed;
+  z-index: 94;
+  overflow: hidden;
+  white-space: pre;
+  opacity: 0.42;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-vac {
+    animation: none;
+  }
+}
+
+/* Focused fields scroll into view clear of the floating bar and editor toolbar
+   at the top and the dock or save prompt at the bottom. */
+.manage-root .gw-pane {
+  scroll-padding-block: 76px 96px;
+}
+@media (max-width: 760px) {
+  html:has(.manage-root) {
+    scroll-padding-top: 132px;
+    scroll-padding-bottom: 110px;
+  }
+}
+
+/* ── the window's greys ──
+
+   Neutral greys from the shared window tokens in tokens.css (#0e0e0e, #131313,
+   warm type). Declared on :root so portalled dropdowns, tooltips and sheets
+   match, as does the landing's copy of this window. `--gw-ground` names the
+   window colour for layers tinted with it (the picker's veil, the editing
+   sheet). */
+:root:not([data-theme="light"]):has(.manage-root),
+:root:not([data-theme="light"]):has(.manage-root) body {
+  background: #0a0a0a;
+}
+:root:has(.manage-root) {
+  --gw-ground: var(--mac-bar);
+}
+
+/* Whether an AI knowledge item is sent on every ticket (tickets.tsx). */
+.manage-root .gw-always {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px !important;
+  padding: 0 10px;
+  border: 1px solid var(--g-line);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--mac-label-dim);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--g-ease-state),
+    border-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state);
+}
+.manage-root .gw-always[data-on="true"] {
+  border-color: var(--g-accent-line);
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+}
+.manage-root .gw-always-auto {
+  opacity: 0.6;
+  font-weight: 600;
+}
+@media (hover: hover) {
+  .manage-root .gw-always:not([data-on="true"]):hover {
+    background: var(--g-fill);
+    color: var(--g-ink);
+  }
+}
+.manage-root .gw-always:active {
+  transform: scale(0.97);
+}
+
+/* ── the picker's blur ──
+
+   Nothing about the blurred layer animates on the compositor: browsers do not
+   keep a backdrop blur live on a layer whose transform is animating, and draw a
+   cheaper blur while its opacity animates, so the real blur would snap in at
+   the end. The blur is at full strength from the first frame and only the box's
+   height grows, down from the bar on the sheet curve. It is one absolutely
+   positioned box measured to cover the page (on a phone, everything under the
+   bar). */
+.gw-pick-scrim {
+  inset: auto;
+  min-height: 0 !important;
+  /* Square under the bar, the window's own curve at the foot. */
+  border-radius: 0 0 var(--gw-veil-r, 0px) var(--gw-veil-r, 0px);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--gw-ground, #0e0e0e) 18%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  backdrop-filter: blur(10px) saturate(1.1);
+  transform: none;
+  opacity: 1;
+  will-change: auto;
+}
+.gw-pick-layer[data-open="true"] .gw-pick-scrim {
+  animation: gw-blur-pour 420ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.gw-pick-layer[data-open="false"] .gw-pick-scrim {
+  animation: gw-blur-lift 220ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+@keyframes gw-blur-pour {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--gw-veil-h, 100%);
+  }
+}
+@keyframes gw-blur-lift {
+  from {
+    height: var(--gw-veil-h, 100%);
+  }
+  to {
+    height: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-pick-layer .gw-pick-scrim {
+    animation-duration: 1ms;
+  }
+}
+
+/* Controls with a sliding thumb: the options paint no background of their own
+   when on; the thumb is under them. */
+.manage-root .gw-filter {
+  position: relative;
+}
+.manage-root .gw-filter > .g-jelly {
+  --jelly-r: 8px;
+}
+.manage-root .gw-filter-seg {
+  z-index: 1;
+}
+.manage-root .gw-filter-seg[data-on="true"] {
+  background: transparent;
+}
+.gw-seg > .g-jelly {
+  --jelly-r: 7px;
+}
+
+/* ── the editor's side column: variables, templates, JSON ──
+
+   Three panels of one kind: a hairline card with its control set into it. Focus
+   is shown by the card, not by a ring round a field inside it. */
+.gw-btn[data-kind="ghost"] {
+  border-color: transparent;
+  color: var(--mac-label);
+}
+@media (hover: hover) {
+  .gw-btn[data-kind="ghost"]:hover:not(:disabled) {
+    border-color: transparent;
+    background: var(--g-fill-2);
+    color: var(--g-ink);
+  }
+}
+.gw-md-vars,
+.gw-md-tpl-row,
+.gw-md-json {
+  transition: border-color 160ms var(--g-ease-state);
+}
+.gw-md-vars:focus-within,
+.gw-md-tpl-row:focus-within {
+  border-color: var(--g-line-strong);
+}
+
+.manage-root .gw-md-tpl-name {
+  margin: 0 0 6px !important;
+  color: var(--mac-label-dim);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+.gw-md-tpl-row {
+  gap: 0;
+  padding: 3px;
+  border: 1px solid var(--mac-hair);
+  border-radius: 12px;
+  background: var(--mac-raise);
+}
+.gw-md-tpl-field-wrap {
+  margin-right: 3px;
+  box-shadow: 1px 0 0 var(--mac-hair);
+}
+.manage-root .gw-md-tpl-field {
+  height: 34px;
+  padding: 0 10px;
+  border: 0 !important;
+  border-radius: 9px;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.gw-md-tpl-btn {
+  height: 34px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--mac-label-dim);
+}
+.gw-md-tpl-btn:hover:not(:disabled),
+.gw-md-tpl-load[open] > .gw-md-tpl-btn {
+  border-color: transparent;
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+
+.gw-md-json {
+  border: 1px solid var(--mac-hair);
+  border-radius: 12px;
+  background: var(--mac-raise);
+  overflow: hidden;
+}
+.gw-md-json-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--mac-label);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+.gw-md-json-head > svg {
+  flex: none;
+  color: var(--mac-label-dim);
+}
+@media (hover: hover) {
+  .gw-md-json-head:hover {
+    background: var(--g-fill);
+    color: var(--g-ink);
+  }
+}
+.gw-md-json-say {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--mac-label-dim);
+  font-size: 12px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gw-md-json-tag {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+  font-size: 11px;
+  font-weight: 650;
+}
+.gw-md-json-body {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--mac-hair);
+  animation: gw-cv-in 240ms var(--gw-ease) both;
+}
+.manage-root .gw-md-json-note {
+  margin: 0;
+  color: var(--mac-label-dim);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.gw-md-json-error {
+  margin: 0;
+  color: var(--tone-bad, #f87171);
+  font-size: 12px;
+  font-weight: 600;
+}
+.gw-md-json-acts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.gw-md-json-revert {
+  margin-right: auto;
+}
+@keyframes gw-cv-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.985);
+  }
+}
+
+/* ── `{` variable list ──
+
+   Lists every match in a scrolling list that follows the arrow keys, grouped by
+   kind (this module's, shared, available in every message). A row is the name
+   and what it gives. Names are in the dashboard face with faint braces.
+   Concentric corners: 14 outside, 9 on a row 5px in. */
+.gw-vac {
+  width: min(380px, calc(100vw - 16px));
+  padding: 5px;
+  border-radius: 14px;
+  border-color: var(--g-line);
+  background: color-mix(in srgb, var(--mac-raise-2, #191919) 94%, transparent);
+  box-shadow:
+    0 24px 48px -16px rgba(0, 0, 0, 0.65),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+}
+.gw-vac-list {
+  gap: 0;
+  max-height: 292px;
+  padding-bottom: 2px;
+  scroll-padding-block: 26px 4px;
+}
+.gw-vac-group {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 8px 9px 4px;
+  background: color-mix(in srgb, var(--mac-raise-2, #191919) 94%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--mac-label-dim);
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 16px;
+}
+.gw-vac-group:not(:first-child) {
+  margin-top: 4px;
+}
+.gw-vac-row {
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 12px;
+  min-height: 34px !important;
+  padding: 7px 9px;
+  border-radius: 9px;
+}
+.gw-vac-row[data-on="true"] {
+  background: var(--g-fill-2);
+}
+.gw-vac-key {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--g-ink);
+}
+.gw-vac-brace {
+  color: var(--mac-label-dim);
+  font-weight: 500;
+  opacity: 0.6;
+}
+.gw-vac-typed {
+  color: var(--g-accent-ink);
+  font-weight: 700;
+}
+.gw-vac-say {
+  font-size: 12px;
+  text-align: right;
+}
+.gw-vac-row[data-on="true"] .gw-vac-say {
+  color: var(--mac-label);
+}
+.gw-vac-keys {
+  gap: 12px;
+  margin: 3px 0 0;
+  padding: 7px 9px 3px;
+  font-size: 11px;
+}
+.gw-vac-keys > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.gw-vac-keys kbd {
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  text-align: center;
+}
+.gw-vac-n {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── inserting a mention, a time, an emoji ──
+
+   Same panel as the `{` list, with the three kinds on the segmented control. */
+.gw-ins {
+  width: 320px;
+  max-width: calc(100vw - 16px);
+  padding: 5px;
+  overflow: hidden;
+  border: 1px solid var(--g-line);
+  border-radius: 14px;
+  background: var(--mac-raise-2, #191919);
+  box-shadow:
+    0 24px 48px -16px rgba(0, 0, 0, 0.65),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+  color: var(--g-ink);
+  font-family: var(--font-ui);
+}
+.gw-ins-tabs.gw-segs {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 5px;
+  border-radius: 10px;
+}
+.gw-ins-tabs .gw-segs-opt {
+  height: 30px;
+}
+.gw-ins-body {
+  animation: gw-ins-swap 240ms var(--gw-ease) both;
+}
+@keyframes gw-ins-swap {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.gw-ins-pane {
+  display: grid;
+  gap: 4px;
+}
+.gw-ins-find {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 38px;
+  padding: 0 9px;
+  border-radius: 9px;
+  background: var(--g-fill);
+  color: var(--mac-label-dim);
+}
+.gw-ins-find:focus-within {
+  color: var(--g-ink);
+}
+.gw-ins-find input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--g-ink);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  caret-color: var(--g-accent);
+}
+.gw-ins-find input::placeholder {
+  color: var(--mac-label-dim);
+}
+.gw-ins-list {
+  display: grid;
+  max-height: 260px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.gw-ins-group {
+  margin: 0;
+  padding: 8px 9px 4px;
+  color: var(--mac-label-dim);
+  font-size: 11.5px;
+  font-weight: 650;
+}
+.gw-ins-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px !important;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--mac-label);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 100ms ease,
+    color 100ms ease;
+}
+@media (hover: hover) {
+  .gw-ins-row:hover {
+    background: var(--g-fill-2);
+    color: var(--g-ink);
+  }
+}
+.gw-ins-glyph {
+  flex: none;
+  color: var(--mac-label-dim);
+}
+.gw-ins-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin: 0 2px;
+  border-radius: 50%;
+}
+.gw-ins-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gw-ins-note {
+  flex: none;
+  color: var(--mac-label-dim);
+  font-size: 12px;
+}
+.gw-ins-none {
+  margin: 0;
+  padding: 18px 9px;
+  color: var(--mac-label-dim);
+  font-size: 12.5px;
+  text-align: center;
+}
+.gw-ins-time {
+  gap: 6px;
+  padding: 4px 0 2px;
+}
+.gw-ins-label {
+  padding: 0 2px;
+  color: var(--mac-label-dim);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.gw-ins-time .gw-ins-list {
+  margin: 2px 0 0;
+}
+.gw-ins-check {
+  flex: none;
+  color: var(--g-accent-ink);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 140ms ease,
+    transform 220ms var(--gw-ease);
+}
+.gw-ins-row[data-on="true"] {
+  color: var(--g-ink);
+}
+.gw-ins-row[data-on="true"] .gw-ins-check {
+  opacity: 1;
+  transform: none;
+}
+.gw-ins-go {
+  width: 100%;
+  margin-top: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-ins-body {
+    animation: none;
+  }
+}
+
+/* The insert menu, on the editor's bar after the formatting, set apart from
+   it by a hairline: those change what is written, this adds something. */
+.gw-md-insert {
+  flex: none;
+  display: flex;
+  padding-left: 6px;
+  box-shadow: -1px 0 0 var(--mac-hair);
+}
+.gw-md-insert .gw-insert-trigger {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.gw-ins {
+  width: 100%;
+}
+.gw-ins-field {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--g-line);
+  border-radius: 9px;
+  background: var(--g-fill);
+  color: var(--g-ink);
+  color-scheme: dark;
+  font: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  transition: border-color 140ms ease;
+}
+:root[data-theme="light"] .gw-ins-field {
+  color-scheme: light;
+}
+.gw-ins-field:focus {
+  border-color: var(--g-line-strong);
+}

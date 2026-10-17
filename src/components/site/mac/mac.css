@@ -1,0 +1,1624 @@
+/* The landing's window (the product preview that rises from the foot of the
+   hero).
+
+   Unlayered, like the rest of the landing: Tailwind v3's preflight is unlayered
+   and beats every layered rule.
+
+   A window you scroll up into, laid out as a file browser of everything Gator
+   does. The chrome is Gator's own rather than macOS's: a shallow left-aligned
+   top bar, plain icon buttons that get a soft squircle on hover, window
+   controls as a quiet cluster at the trailing end, a compact channel-list
+   sidebar, and one charcoal ladder from navigation (dark) to content (light).
+   Chrome uses a neutral sans; the content uses the site's faces. */
+
+.g-poster {
+  --mac-peek: 150px;
+  --mac-top: 84px;
+  /* The window's edge on the page's grid, so it lines up with the header. */
+  --mac-side: var(--g-gutter);
+  --mac-bottom: clamp(12px, 3vh, 40px);
+
+  --mac-chrome: var(--font-ui);
+
+  /* An input's fill: recessed, a step below the bar it sits in rather than a
+     step above it, which is what tonal-and-embedded means. */
+  --mac-recess: var(--mac-raise-2);
+  --mac-recess-on: var(--mac-raise-2);
+
+  /* The one semantic colour the chrome uses, and it is used on one control:
+     the button that closes the window. */
+  --mac-danger: #f23f43;
+
+  /* Fast out of the gate, long settle, no bounce. */
+  --mac-ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Light: a recessed input is a warm shade. Written twice so a device preference
+   cannot override an explicit choice. */
+:root[data-theme="light"] .g-poster {
+  --mac-recess: var(--mac-raise);
+  --mac-recess-on: #fff;
+  --mac-danger: #c4282c;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .g-poster {
+    --mac-recess: var(--mac-raise);
+    --mac-recess-on: #fff;
+    --mac-danger: #c4282c;
+  }
+}
+
+/* Lengths here use `svh`, not `dvh`: a phone's address bar collapses and comes
+   back while the page scrolls, and `dvh` follows it, which re-lays out the
+   rising window mid-gesture (a visible jump). `svh` holds still; on a desktop
+   the two are the same.
+
+   How much of the window shows before scrolling. On a phone the hero's content
+   is sized by width and ends about 440px down, so the window takes the
+   remaining height (up to 320px) and the "Explore Gator" handle stays just
+   above it on every phone size. The floor still gives way on short phones so
+   the preview never covers a control. */
+@media (max-width: 640px) {
+  .g-poster {
+    --mac-peek: clamp(72px, calc(100svh - 590px), 320px);
+  }
+}
+
+/* A phone on its side: sized off the height (56px at the shortest, 96px at
+   396px tall) so it never grows into the content above. The rest of this layout
+   is in landing.css under the same query. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .g-poster {
+    --mac-peek: clamp(56px, calc(100svh - 300px), 96px);
+  }
+}
+
+/* ------------------------------------------------------------------ frame */
+
+/* Laid out where it ends up and pushed down to where it starts, so one
+   transform does the whole journey and nothing inside reflows. The grip (the
+   window's shape as a button, see finder.tsx) is positioned from here too so
+   the two never drift apart. */
+.g-mac,
+.g-mac-grip {
+  position: fixed;
+  top: var(--mac-top);
+  left: var(--mac-side);
+  right: var(--mac-side);
+  bottom: var(--mac-bottom);
+  border-radius: 10px;
+  transform-origin: 50% 0;
+  transform: translateY(calc(100svh - var(--mac-peek) - var(--mac-top)))
+    scale(0.965);
+  transition: transform 620ms var(--mac-ease);
+  will-change: transform;
+}
+.g-mac {
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--mac-pane-bg);
+  box-shadow: var(--mac-shadow);
+  font-family: var(--mac-chrome);
+}
+.g-mac[data-open="true"],
+.g-mac-grip[data-open="true"] {
+  transform: none;
+  /* Drops the compositing layer once arrived, so the text renders crisply. */
+  will-change: auto;
+}
+
+/* Above the window, because the window is inert while this is live; gone the
+   moment it is not, so it never stands between a reader and the real thing. */
+.g-mac-grip {
+  z-index: 7;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.g-mac-grip[data-open="true"] {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* With scroll timelines the scroll drives the rise on the compositor, with no
+   JavaScript reading scroll positions. The two-state transition above is the
+   fallback. */
+@supports (animation-timeline: scroll()) {
+  .g-mac,
+  .g-mac[data-open="true"],
+  .g-mac-grip,
+  .g-mac-grip[data-open="true"] {
+    transition: none;
+    transform: translateY(calc(100svh - var(--mac-peek) - var(--mac-top)))
+      scale(0.965);
+    animation: g-mac-rise linear both;
+    animation-timeline: scroll(root block);
+    /* Ends at 85% of the scroll, so the window reaches exactly `transform:
+       none` before the end of the page. Under a fractional scale its text
+       rasterises blurry, and the last pixel of a scroll is not a reliable place
+       to stop. */
+    animation-range: 0% 85%;
+  }
+  @keyframes g-mac-rise {
+    to {
+      transform: none;
+    }
+  }
+}
+
+/* The Mac tree. Everything above the phone breakpoint; nothing below it, where
+   ios.css hides this outright and shows a different component in its place. */
+.g-mac-desktop {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+/* Green light: the window takes the screen, menu bar and all, which is what
+   full screen means on a Mac. */
+.g-mac[data-full="true"] {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0;
+}
+
+/* ------------------------------------------------------------- the shade */
+
+/* Dims the window while it is parked and not yet usable, as desktops dim
+   inactive windows. Uses the page ground colour so it works in both themes.
+   Half strength keeps it recognisable as a window without reading as live. */
+.g-mac-shade {
+  position: absolute;
+  inset: 0;
+  /* Over the window's content, which sits at single-digit z-indexes. */
+  z-index: 9;
+  border-radius: inherit;
+  background: var(--g-ground);
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity 620ms var(--mac-ease);
+}
+.g-mac[data-open="true"] .g-mac-shade {
+  opacity: 0;
+}
+
+/* With scroll timelines the shade clears over the same range the hero fades out
+   (24% to 66%, in landing.css), so the two cross as one dissolve, finishing
+   before the rise does. */
+@supports (animation-timeline: scroll()) {
+  .g-mac-shade,
+  .g-mac[data-open="true"] .g-mac-shade {
+    opacity: 0.5;
+    transition: none;
+    animation: g-mac-arrive linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 24% 66%;
+  }
+  @keyframes g-mac-arrive {
+    to {
+      opacity: 0;
+    }
+  }
+}
+
+/* Nobody who has turned motion down is being told a story about a window
+   arriving from somewhere. */
+@media (prefers-reduced-motion: reduce) {
+  .g-mac-shade {
+    display: none;
+  }
+}
+
+/* The mark on the runway that says the window has arrived. */
+.g-mac-trip {
+  position: absolute;
+  top: 100svh;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------ the chrome */
+
+/* The title bar: one band divided into zones. Every control is 28px tall and
+   the tabs take the remaining width. */
+.g-win-bar {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0;
+  background: var(--mac-bar);
+  box-shadow: inset 0 -1px 0 var(--mac-seam, var(--mac-hair));
+  user-select: none;
+}
+
+.g-bar-zone {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  height: 100%;
+  padding-inline: 10px;
+}
+/* No dividers between zones; spacing groups them. The only boundary is the tab
+   strip's change of surface. */
+
+/* ------------------------------------------------------------- the tabs */
+
+/* Open places, as tabs. They take the room the other three zones do not, which
+   is what stops the row having a hole in the middle of it. */
+/* The tab strip is one continuous surface with the bar. The active tab is found
+   by its outline, which is about 11 L* points clear of the surface around it. */
+.g-tab-strip {
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+  align-items: flex-end;
+  padding-inline: 9px 10px;
+}
+
+.g-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 190px;
+  /* Tabs stand on the bottom of the strip (the edge they join), 40px of the
+     48px band. */
+  height: 40px;
+  padding-right: 4px;
+  /* Square at the foot, so the corners it has are the two that are not
+     touching the window. */
+  border-radius: 9px 9px 0 0;
+  color: var(--mac-label-dim);
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+.g-tab:hover {
+  background: var(--g-fill);
+  color: var(--mac-label);
+}
+/* The open tab takes the bar's colour (the pane's colour) and covers the
+   hairline under the strip, so tab and window are one surface. */
+.g-tab[data-on="true"] {
+  background: var(--mac-bar);
+  color: var(--g-ink);
+  z-index: 1;
+  /* The outline in three pieces (top and both sides), leaving out the bottom
+     edge where the tab joins the window. */
+  box-shadow:
+    inset 0 1px 0 var(--mac-tab-rim),
+    inset 1px 0 0 var(--mac-tab-rim),
+    inset -1px 0 0 var(--mac-tab-rim);
+}
+
+/* Tab dragging: every tab is positioned by a transform and the list is only
+   reordered when the drag ends, so the layout never moves and the positions
+   read at the start stay valid (no FLIP needed). The carried tab has no
+   transition, so it does not lag behind the pointer. */
+.g-tab {
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    transform 180ms var(--mac-ease);
+}
+/* The carried tab is not joined to anything: closed corners, a raised ground
+   and a shadow. */
+.g-tab[data-drag="true"] {
+  z-index: 3;
+  cursor: grabbing;
+  border-radius: 9px;
+  background: var(--mac-raise-2);
+  color: var(--g-ink);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.38);
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+:root[data-theme="light"] .g-tab[data-drag="true"] {
+  box-shadow: 0 10px 22px rgba(80, 35, 50, 0.18);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .g-tab[data-drag="true"] {
+    box-shadow: 0 10px 22px rgba(80, 35, 50, 0.18);
+  }
+}
+.g-tab-strip[data-dragging="true"] .g-tab-hit,
+.g-tab-strip[data-dragging="true"] .g-tab-x {
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-tab {
+    transition-duration: 1ms;
+  }
+}
+
+.g-tab-hit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 100%;
+  padding-inline: 12px 5px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-family: var(--mac-chrome);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.g-tab[data-on="true"] .g-tab-hit {
+  font-weight: 600;
+}
+.g-tab-hit svg {
+  flex: none;
+}
+.g-tab-glyph {
+  color: var(--hue, currentColor);
+}
+.g-tab-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The close, which only appears once there is more than one tab to close. */
+.g-tab-x {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--mac-label-dim);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 140ms ease,
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.g-tab:hover .g-tab-x,
+.g-tab[data-on="true"] .g-tab-x,
+.g-tab-x:focus-visible {
+  opacity: 1;
+}
+.g-tab-x:hover {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+
+.g-tab-new {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  margin: 0 0 3px 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mac-label-dim);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.g-tab-new:hover {
+  background: var(--g-fill-2);
+  color: var(--mac-label);
+}
+
+/* ------------------------------------------------------- window controls */
+
+/* Minimise, fill and close at the trailing end: plain glyphs with a soft
+   squircle on hover. Close takes the danger colour. */
+.g-win-act {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mac-label-dim);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.g-win-act:hover {
+  background: var(--g-fill-2);
+  color: var(--mac-label);
+}
+.g-win-act:active {
+  background: var(--g-line);
+}
+.g-win-act-close:hover {
+  background: color-mix(in srgb, var(--mac-danger) 20%, transparent);
+  color: var(--mac-danger);
+}
+
+/* ----------------------------------------------------------- the history */
+
+/* Back and forward: two plain glyphs with a squircle on hover, dimmed when
+   there is nothing on that side. */
+.g-mac-steps button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mac-label-dim);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.g-mac-steps button:hover:not(:disabled) {
+  background: var(--g-fill-2);
+  color: var(--mac-label);
+}
+.g-mac-steps button:active:not(:disabled) {
+  background: var(--g-line);
+}
+.g-mac-steps button:disabled {
+  color: var(--mac-label-dim);
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ------------------------------------------------- the toolbar's trailing half */
+
+/* The toolbar's right side: the view switcher and the search field for the
+   module wall. */
+.g-mac-tools {
+  gap: 8px;
+}
+
+/* View switcher: two icon buttons in a group. Hover shows the soft squircle;
+   the selected one takes a tonal fill and full-contrast glyph, a step above
+   hover. */
+.g-mac-seg {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+.g-mac-seg button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mac-label-dim);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.g-mac-seg button:hover {
+  background: var(--g-fill-2);
+  color: var(--mac-label);
+}
+.g-mac-seg button[data-on="true"] {
+  background: var(--g-line);
+  color: var(--g-ink);
+}
+
+/* Search field: a recessed fill with no border at rest, and a ring when
+   focused. */
+.g-mac-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: clamp(140px, 15vw, 210px);
+  height: 28px;
+  padding-inline: 9px;
+  border-radius: 8px;
+  background: var(--mac-recess);
+  box-shadow: inset 0 0 0 1px var(--mac-hair);
+  color: var(--mac-label-dim);
+  transition:
+    box-shadow 140ms ease,
+    background-color 140ms ease;
+}
+.g-mac-search:focus-within {
+  background: var(--mac-recess-on);
+  box-shadow: inset 0 0 0 1px var(--g-accent-line);
+}
+.g-mac-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--g-ink);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.g-mac-search input::placeholder {
+  color: var(--mac-label-dim);
+}
+/* Safari draws its own clear button on a search input, on top of ours. */
+.g-mac-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.g-mac-search button {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--mac-label-dim);
+  cursor: pointer;
+}
+.g-mac-search button:hover {
+  color: var(--mac-label);
+}
+
+/* ------------------------------------------------------------------ body */
+
+.g-mac-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+}
+
+/* The sidebar, a channel list. No divider: the pane beside it is a step
+   lighter. */
+.g-mac-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* 16px top padding, so there is a visible gap between the bar's seam and the
+     first caption. */
+  padding: 16px 8px 16px;
+  background: var(--mac-side-bg);
+  box-shadow: inset -1px 0 0 var(--mac-hair);
+  overflow-y: auto;
+}
+/* Set in the chrome face; a bare `h2` would pick up the display face. */
+.g-mac-side h2 {
+  margin: 6px 0 6px 8px;
+  font-family: var(--mac-chrome);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mac-label-dim);
+  opacity: 0.8;
+}
+
+/* A navigation row: small radius, 32px tall, muted by default, brighter where
+   you are, with a tonal fill. */
+.g-side-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding-inline: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--mac-label-dim);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.g-side-row:hover {
+  background: var(--g-fill-2);
+  color: var(--mac-label);
+}
+.g-side-row[data-current="true"] {
+  background: var(--g-line);
+  color: var(--g-ink);
+  font-weight: 600;
+}
+/* Neutral grey at rest, brightening with the row. */
+.g-side-row svg {
+  flex: none;
+  color: var(--mac-label-dim);
+  transition: color 120ms ease;
+}
+.g-side-row:hover svg,
+.g-side-row[data-current="true"] svg {
+  color: var(--mac-label);
+}
+/* Marks a row that leaves the site. Drawn on the diagonal (a rotated arrow puts
+   its round ends off-axis). */
+.g-side-out {
+  margin-left: auto;
+  opacity: 0.7;
+}
+.g-side-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.g-mac-pane {
+  min-width: 0;
+  overflow-y: auto;
+  /* Clipped horizontally, so contents sliding in from the side do not show a
+     horizontal scrollbar during the animation. */
+  overflow-x: clip;
+  overscroll-behavior: contain;
+  padding: clamp(20px, 3vw, 40px);
+  background: var(--mac-pane-bg);
+  font-family: var(--font-ui);
+}
+
+/* ------------------------------------------------------- arriving somewhere */
+
+/* Opening something in the window: the pane's contents move 10px and fade in
+   from the side the step came from (right for deeper, left for back). Small, so
+   a step does not look like the whole interface rebuilding. `both`, not
+   `forwards`, so the first frame already shows the start state. */
+.g-pane-place {
+  animation: g-place-in 240ms var(--mac-ease) both;
+}
+.g-pane-place[data-dir="out"] {
+  animation-name: g-place-out;
+}
+@keyframes g-place-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+@keyframes g-place-out {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-pane-place {
+    animation: none;
+  }
+}
+/* While the window is parked its contents must not take the wheel, or a
+   scroll aimed at the page would scroll the window's insides instead. */
+.g-mac[data-open="false"] .g-mac-pane,
+.g-mac[data-open="false"] .g-mac-side {
+  overflow: hidden;
+}
+
+.g-pane-lede {
+  margin: 0 0 clamp(20px, 3vh, 34px);
+  max-width: 68ch;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--g-ink-dim);
+}
+
+/* The hint for the two gestures sits under the wall as a footnote. */
+.g-wall-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 14px 0 0;
+  font-family: var(--mac-chrome);
+  font-size: 12.5px;
+  color: var(--mac-label-dim);
+}
+
+/* ------------------------------------------------------------- status bar */
+
+/* The strip along the foot. Chrome, so it takes the chrome's tone, and it is
+   separated from the pane by that and nothing else. */
+.g-mac-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 40px;
+  padding-inline: 12px;
+  background: var(--mac-bar);
+  box-shadow: inset 0 1px 0 var(--mac-hair);
+}
+.g-mac-path {
+  font-size: 11.5px;
+  color: var(--mac-label-dim);
+}
+/* A secondary button: neutral tonal, compact, 8px, no rim and no gradient. */
+.g-foot-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding-inline: 11px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--g-fill-2);
+  color: var(--mac-label);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.g-foot-step:hover {
+  background: var(--g-line);
+  color: var(--g-ink);
+}
+.g-foot-step:active {
+  transform: scale(0.98);
+}
+
+/* ---------------------------------------------------------------- folders */
+
+/* The wall: cards with a near-black panel, one hairline, a small mark at the
+   top, a name, a line saying what it does, and the same mark at about 5% behind
+   it, large and clipped by the corner. Small radius (about 10px), not the
+   rounded-dashboard look. */
+
+.g-wall-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* Content at the foot of the card, the mark in the space at the top, so tall
+   cards do not look empty. */
+.g-fcard {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 7px;
+  /* The slot holds the height and the card fills it, because the card leaves
+     its slot while dragged. */
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 16px 16px 15px;
+  border: 1px solid var(--mac-hair);
+  border-radius: 10px;
+  background: var(--mac-raise);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  /* A press on a card becomes a drag, so the browser must not also treat it as
+     a scroll or as text to select. */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  /* `--card-move` (quick to leave, slow to settle) and `--card-time` are shared
+     with the mark behind the card, so a hover is one motion of one length. */
+  --card-time: 260ms;
+  --card-move: cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    background-color 200ms var(--g-ease-state),
+    border-color 200ms var(--g-ease-state),
+    transform var(--card-time) var(--card-move),
+    box-shadow var(--card-time) var(--card-move);
+}
+
+/* Hover is a quiet tonal awakening and a hint of the folder's own colour on
+   the edge. No lift, no glow, no shadow. */
+/* Lifts 2px with a shadow to match the lift. */
+.g-fcard:hover,
+.g-fcard:focus-visible {
+  background: var(--mac-raise-2);
+  border-color: color-mix(in srgb, var(--hue) 28%, var(--mac-hair));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.26);
+}
+/* Picked is a step past hover rather than the same state again: the edge takes
+   the hue properly and the ghost comes up with it. */
+.g-fcard[data-selected="true"] {
+  background: var(--mac-raise-2);
+  border-color: color-mix(in srgb, var(--hue) 52%, transparent);
+}
+.g-fcard:focus-visible {
+  outline: 2px solid var(--g-accent);
+  outline-offset: 2px;
+}
+/* The press settles back through the lift, quickly. */
+.g-fcard:active {
+  transform: translateY(-1px) scale(0.985);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
+  transition-duration: 90ms, 90ms, 90ms, 90ms;
+}
+
+/* The mark, naked and in the folder's own colour. */
+.g-fcard-glyph {
+  flex: none;
+  align-self: flex-start;
+  margin-bottom: 4px;
+  color: var(--hue);
+}
+
+/* The card's mark again as background texture: oversized, run into the top
+   corner and clipped by it. Hidden from assistive tech and pointer events. It
+   drifts a little on hover. */
+.g-fcard-ghost {
+  position: absolute;
+  top: -18px;
+  right: -16px;
+  z-index: -1;
+  /* Neutral, not the folder's colour; the small mark at the top carries the
+     colour. */
+  color: var(--mac-label);
+  opacity: 0.055;
+  pointer-events: none;
+  transition:
+    opacity 200ms ease,
+    color 200ms ease,
+    transform var(--card-time) var(--card-move);
+}
+/* Drifts on hover without scaling (scaling inside the clipping corner reads as
+   a second thing moving), on the card's curve and duration. */
+.g-fcard:hover .g-fcard-ghost,
+.g-fcard:focus-visible .g-fcard-ghost {
+  opacity: 0.085;
+  transform: translate(-6px, 5px);
+}
+/* Picked is the one state where it takes the hue, because that is the card you
+   are in and it is worth one more signal. */
+.g-fcard[data-selected="true"] .g-fcard-ghost {
+  color: var(--hue);
+  opacity: 0.13;
+}
+
+.g-fcard-name {
+  margin-top: 1px;
+  font-family: var(--mac-chrome);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.2;
+  color: var(--mac-label);
+  transition: color 120ms ease;
+}
+.g-fcard:hover .g-fcard-name,
+.g-fcard:focus-visible .g-fcard-name,
+.g-fcard[data-selected="true"] .g-fcard-name {
+  color: var(--g-ink);
+}
+
+/* What it does, in the dashboard's own words. Capped at three lines so a long
+   one cannot make its card taller than the row it is in. */
+.g-fcard-say {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: var(--mac-chrome);
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.42;
+  color: var(--mac-label-dim);
+}
+
+/* ------------------------------------------------------------------ files */
+
+.g-desk-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.g-file {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 132px;
+  padding: 10px 6px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 130ms linear;
+}
+.g-file:hover,
+.g-file:focus-visible {
+  background: var(--g-fill-2);
+}
+.g-file-art {
+  position: relative;
+  display: block;
+  width: 62px;
+  height: 80px;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
+  transition: transform 240ms var(--mac-ease);
+}
+.g-file:hover .g-file-art,
+.g-file:focus-visible .g-file-art {
+  transform: translateY(-3px);
+}
+.g-file-page {
+  position: absolute;
+  inset: 0;
+  border-radius: 5px;
+  background: #f5f5f5;
+  clip-path: polygon(0 0, 68% 0, 100% 26%, 100% 100%, 0 100%);
+}
+.g-file-fold {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 32%;
+  height: 26%;
+  background: #cbcbcb;
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+}
+/* Ruled lines, so it reads as a text file rather than as a blank page. */
+.g-file-rules {
+  position: absolute;
+  inset: 38% 14% 16%;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.42) 0 1.5px,
+    transparent 1.5px 8px
+  );
+}
+.g-file-name {
+  font-family: var(--mac-chrome);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: center;
+  color: var(--mac-label);
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+.g-file:hover .g-file-name,
+.g-file:focus-visible .g-file-name {
+  background: var(--g-accent);
+  color: var(--g-on-accent);
+}
+.g-desk-hint {
+  margin: 26px 0 0;
+  font-size: 12px;
+  color: var(--mac-label-dim);
+}
+
+/* ------------------------------------------------------------- list view */
+
+/* List view: columns with a header, one row per folder, opened by the same
+   double-click as the wall. */
+.g-list {
+  display: grid;
+  border-radius: 8px;
+  border: 0.5px solid var(--mac-hair);
+  background: var(--g-fill);
+  overflow: hidden;
+}
+.g-list-head,
+.g-list-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.1fr) minmax(90px, 0.6fr) minmax(0, 2fr);
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 0 14px;
+  text-align: left;
+}
+.g-list-head {
+  height: 26px;
+  background: var(--mac-bar);
+  box-shadow: inset 0 -0.5px 0 var(--mac-hair);
+  font-family: var(--mac-chrome);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mac-label-dim);
+}
+.g-list-row {
+  min-height: 30px;
+  padding-block: 6px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 110ms linear;
+}
+/* No zebra striping; rows are separated by tone and spacing. Hover and selected
+   are two tonal steps, and selected uses the folder's own hue at low strength. */
+.g-list-row:hover,
+.g-list-row:focus-visible {
+  background: var(--g-fill-2);
+}
+.g-list-row[data-selected="true"] {
+  background: color-mix(in srgb, var(--hue) 18%, transparent);
+  color: var(--mac-label);
+}
+.g-list-row[data-selected="true"] .g-list-cell {
+  color: var(--mac-label);
+  opacity: 0.72;
+}
+/* A row that is only a record, not a place: the sixteen that have no folder. */
+.g-list-row-flat {
+  cursor: default;
+}
+.g-list-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-family: var(--mac-chrome);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: inherit;
+}
+.g-list-name svg {
+  flex: none;
+  color: var(--hue, var(--mac-label-dim));
+}
+.g-list-row[data-selected="true"] .g-list-name svg {
+  color: var(--hue, currentColor);
+}
+.g-list-cell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mac-chrome);
+  font-size: 12px;
+  color: var(--mac-label-dim);
+}
+
+/* ------------------------------------------------------------ no results */
+
+/* Empty state: a centred title and one line in the secondary label colour. No
+   illustration or button. */
+.g-nothing {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 320px;
+  padding: 32px;
+  text-align: center;
+}
+.g-nothing-title {
+  margin: 0;
+  font-family: var(--mac-chrome);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--g-ink);
+}
+.g-nothing-say {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mac-label-dim);
+}
+
+/* ----------------------------------------------------------------- drawer */
+
+.g-drawer {
+  margin-top: clamp(28px, 4vh, 48px);
+  border-top: 1px solid var(--mac-hair);
+  padding-top: 16px;
+}
+.g-drawer summary {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--g-ink-dim);
+  list-style: none;
+  transition: color 160ms var(--g-ease-state);
+}
+@media (hover: hover) {
+  .g-drawer summary:hover {
+    color: var(--g-ink);
+  }
+}
+.g-drawer summary::-webkit-details-marker {
+  display: none;
+}
+.g-drawer summary::before {
+  content: "›";
+  display: inline-block;
+  width: 16px;
+  color: var(--mac-label-dim);
+  transition: transform 180ms var(--mac-ease);
+}
+.g-drawer[open] summary::before {
+  transform: rotate(90deg);
+}
+
+/* The drawer opens with an animated height, like the legal pages' disclosures.
+   It needs `interpolate-size: allow-keywords` (to animate to `auto`) and
+   `allow-discrete` on `content-visibility` (a closed `<details>` does not
+   render its contents, so they would be blank on the first frame of closing).
+   Longer than the legal pages' 300ms because it can be four rows deep. */
+.g-drawer {
+  interpolate-size: allow-keywords;
+}
+@supports selector(::details-content) {
+  .g-drawer::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size 360ms var(--mac-ease),
+      content-visibility 360ms allow-discrete;
+  }
+  .g-drawer[open]::details-content {
+    block-size: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-drawer::details-content {
+    transition: none;
+  }
+}
+
+/* Smaller, quieter tiles than the wall, without the hue or the ghost mark. */
+.g-drawer-grid {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(214px, 1fr));
+  gap: 8px;
+}
+.g-drawer-tile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 8px;
+  row-gap: 4px;
+  padding: 11px 12px 12px;
+  border: 1px solid var(--mac-hair);
+  border-radius: 8px;
+  background: var(--mac-raise);
+}
+/* The glyph keeps the label's tone. */
+.g-drawer-glyph {
+  grid-row: 1;
+  align-self: center;
+  color: var(--mac-label-dim);
+  transform: translateY(1px);
+}
+.g-drawer-name {
+  grid-row: 1;
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  color: var(--g-ink);
+}
+.g-drawer-purpose {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--g-ink-faint);
+  text-wrap: pretty;
+}
+
+/* ---------------------------------------------------------------- notepad */
+
+.g-note-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  /* A drag on the desk behind the document must not reach the page, whose
+     scroll is what lowers the window the document is sitting in. */
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+/* A flat scrim. No backdrop blur: inside the scroll-driven window it would make
+   the window a backdrop root and re-blur on every scroll tick and dot-field
+   frame. */
+.g-note-desk {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.44);
+  animation: g-note-desk-in 200ms linear both;
+}
+@keyframes g-note-desk-in {
+  from {
+    opacity: 0;
+  }
+}
+/* TextEdit, in the visitor's appearance: macOS's own light and dark editor
+   palettes (tokens at the foot of this block). */
+.g-note {
+  position: relative;
+  width: min(560px, 86%);
+  max-height: min(78%, 620px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--note-paper);
+  box-shadow:
+    0 0 0 0.5px var(--note-edge),
+    0 24px 70px rgba(0, 0, 0, 0.55);
+  /* The drag offset is two custom properties rather than an inline transform,
+     so the open and close keyframes can include it (an inline transform is
+     overridden by the animation and the window would snap back). */
+  transform: translate(var(--nx, 0px), var(--ny, 0px));
+  animation: g-note-in 220ms var(--mac-ease) both;
+}
+@keyframes g-note-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--nx, 0px), var(--ny, 0px)) scale(0.965)
+      translateY(6px);
+  }
+}
+
+/* Closing animation, faster than opening. */
+.g-note-layer[data-closing] .g-note {
+  animation: g-note-out 170ms var(--mac-ease) both;
+}
+.g-note-layer[data-closing] .g-note-desk {
+  animation: g-note-desk-out 170ms linear both;
+}
+/* Nothing in a window that is leaving is worth clicking. */
+.g-note-layer[data-closing] {
+  pointer-events: none;
+}
+@keyframes g-note-out {
+  to {
+    opacity: 0;
+    transform: translate(var(--nx, 0px), var(--ny, 0px)) scale(0.975)
+      translateY(4px);
+  }
+}
+@keyframes g-note-desk-out {
+  to {
+    opacity: 0;
+  }
+}
+/* No focus ring on the window itself (it takes focus on open so the keyboard
+   lands inside); its controls keep theirs. */
+.g-note:focus,
+.g-note:focus-visible {
+  outline: none;
+}
+
+/* The note's own bar. It borrows the band and sets its own padding, because
+   it has no zones to divide: one title and one close. */
+.g-note-bar {
+  justify-content: space-between;
+  gap: 10px;
+  padding-inline: 14px;
+  height: 40px;
+  background: var(--note-bar);
+  border-bottom: 0.5px solid var(--note-bar-line);
+  cursor: grab;
+}
+.g-note-bar:active {
+  cursor: grabbing;
+}
+/* A window's name, which only the note has now: the Finder's is on its tabs. */
+.g-win-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--mac-chrome);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mac-label);
+  pointer-events: none;
+}
+.g-note .g-win-title {
+  color: var(--note-title);
+}
+/* The note's close button takes the note's own ink, since the note is a paper
+   surface rather than a charcoal one. */
+.g-note .g-win-acts {
+  margin-left: auto;
+}
+.g-note .g-win-act {
+  color: var(--note-title);
+}
+.g-note-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 26px 30px;
+  background: var(--note-paper);
+}
+.g-note-body pre {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Courier New", monospace;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--note-ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.g-note-source {
+  margin: 22px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--note-rule);
+  font-family: var(--mac-chrome);
+  font-size: 13px;
+}
+.g-note-source a {
+  color: var(--note-link);
+  font-weight: 600;
+}
+.g-note-status {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 26px;
+  padding-inline: 12px;
+  background: var(--note-status);
+  border-top: 0.5px solid var(--note-status-line);
+  font-size: 11px;
+  /* At 11px: 5.5:1 on the light bar, 6.1:1 on the dark bar. */
+  color: var(--note-status-ink);
+}
+
+/* --------------------------------------------------------- the two papers */
+
+:root {
+  /* Dark is the default appearance, so it is written first. macOS's own dark
+     editor values, so the window looks like the one the visitor has open. */
+  --note-paper: #1e1e1f;
+  --note-bar: #353535;
+  --note-bar-line: rgba(255, 255, 255, 0.09);
+  --note-title: rgba(255, 255, 255, 0.82);
+  --note-ink: #dddddd;
+  --note-rule: rgba(255, 255, 255, 0.12);
+  --note-link: #64a8ff;
+  --note-status: #2b2b2b;
+  --note-status-line: rgba(255, 255, 255, 0.08);
+  --note-status-ink: rgba(255, 255, 255, 0.58);
+  --note-edge: rgba(255, 255, 255, 0.14);
+}
+:root[data-theme="light"] {
+  --note-paper: #fbfbfa;
+  --note-bar: #e9e9e7;
+  --note-bar-line: rgba(0, 0, 0, 0.14);
+  --note-title: rgba(0, 0, 0, 0.72);
+  --note-ink: #1d1d1d;
+  --note-rule: rgba(0, 0, 0, 0.1);
+  --note-link: #0a62d0;
+  --note-status: #ededeb;
+  --note-status-line: rgba(0, 0, 0, 0.12);
+  --note-status-ink: rgba(0, 0, 0, 0.62);
+  --note-edge: rgba(0, 0, 0, 0.3);
+}
+/* Written out again rather than grouped: grouped, the device's preference
+   would beat an explicit light choice made on a dark machine. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --note-paper: #fbfbfa;
+    --note-bar: #e9e9e7;
+    --note-bar-line: rgba(0, 0, 0, 0.14);
+    --note-title: rgba(0, 0, 0, 0.72);
+    --note-ink: #1d1d1d;
+    --note-rule: rgba(0, 0, 0, 0.1);
+    --note-link: #0a62d0;
+    --note-status: #ededeb;
+    --note-status-line: rgba(0, 0, 0, 0.12);
+    --note-status-ink: rgba(0, 0, 0, 0.62);
+    --note-edge: rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Reduced motion: the scroll-driven rise stays (it follows the scroll
+   one-to-one, which is direct manipulation), but the timed fallback transition
+   goes. */
+@media (prefers-reduced-motion: reduce) {
+  .g-mac {
+    transition: none;
+  }
+  /* The card keeps its tonal states — those are what say hovered and picked —
+     and loses every part of the movement: the lift, the press and the drift. */
+  .g-fcard,
+  .g-fcard-ghost,
+  .g-file-art {
+    transition: none !important;
+  }
+  .g-fcard:hover,
+  .g-fcard:focus-visible,
+  .g-fcard:active {
+    transform: none;
+    box-shadow: none;
+  }
+  .g-fcard:hover .g-fcard-ghost,
+  .g-fcard:focus-visible .g-fcard-ghost {
+    transform: none;
+  }
+  /* No open or close animation; the component checks the same preference and
+     closes immediately. */
+  .g-note,
+  .g-note-desk,
+  .g-note-layer[data-closing] .g-note,
+  .g-note-layer[data-closing] .g-note-desk {
+    animation: none;
+  }
+}
+
+/* Secondary window controls remain available without crowding the first view. */
+.g-win-bar [hidden] {
+  display: none !important;
+}
+.g-window-options {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: var(--g-ink-dim);
+  border-radius: 6px;
+}
+.g-window-options[aria-pressed="true"] {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+.g-module-grid {
+  position: relative;
+}
+.g-module-slot {
+  display: grid;
+  min-width: 0;
+  min-height: 152px;
+  touch-action: pan-y;
+}
+.g-module-slot .g-fcard {
+  height: 100%;
+}
+.g-module-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9999;
+  pointer-events: none;
+  display: grid;
+  background: none;
+}
+.g-module-ghost .g-fcard {
+  height: 100%;
+  background: var(--mac-raise-2);
+  border-color: var(--g-accent-line);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
+  cursor: grabbing;
+}
+.g-module-grid[data-holding="true"] {
+  cursor: grabbing;
+}
+
+.g-module-grid[data-holding="true"] .g-fcard {
+  transform: none;
+  pointer-events: none;
+  box-shadow: none;
+}
+.g-module-ghost .g-fcard {
+  transform: none;
+}
+
+/* ── dressed as the dashboard ──
+
+   This window is the dashboard drawn small (it is what the dashboard shrinks
+   into when you go home), so it uses the dashboard's grey window: one grey
+   sheet, hairlines between bar, sidebar and page, the neutral greys from
+   tokens.css, the tab standing on the bar beside the mark, the sidebar's
+   travelling highlight and sentence-case captions. */
+
+/* The bar's first zone keeps its room while the history buttons are hidden,
+   so the mark and the tabs do not move when they come and go. */
+.g-mac .g-mac-steps[hidden] {
+  display: flex !important;
+  visibility: hidden;
+}
+/* The highlight below is placed against the sidebar, not the window. */
+.g-mac .g-mac-side {
+  position: relative;
+}
+
+/* The sidebar: its caption in sentence case, and one highlight travelling to
+   the row you are on instead of backgrounds swapping. */
+.g-mac .g-mac-side h2 {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 1;
+}
+.g-side-blob {
+  position: absolute;
+  top: 0;
+  right: 8px;
+  left: 8px;
+  height: var(--blob-h, 32px);
+  border-radius: 8px;
+  background: var(--g-line);
+  opacity: 0;
+  transform: translate3d(0, var(--blob-y, 0px), 0);
+  transition:
+    transform 420ms var(--mac-ease),
+    opacity 200ms ease;
+  pointer-events: none;
+}
+.g-mac-side[data-lit="true"] .g-side-blob {
+  opacity: 1;
+}
+.g-mac .g-side-row {
+  position: relative;
+  z-index: 1;
+  border-radius: 8px;
+}
+.g-mac .g-side-row[data-current="true"] {
+  background: transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-side-blob {
+    transition: none;
+  }
+}
+
+.g-mac-brand {
+  position: absolute;
+  top: 50%;
+  left: 18px;
+  display: grid;
+  place-items: center;
+  color: var(--g-accent-display, var(--g-accent));
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.g-mac .g-mac-steps {
+  padding-left: 52px;
+}

@@ -1,0 +1,702 @@
+/* Account identity, connections and communities use the landing palette. */
+.account-page {
+  position: relative;
+  min-height: 100dvh;
+  overflow-x: clip;
+  background: var(--g-ground);
+  color: var(--g-ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+.account-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* The landing page's fade ellipse, centred mid-screen (and horizontally,
+     since this page is a centred column), so the field reaches the lower part
+     of the screen too. */
+  --g-dot-fade: 92% 74% 50% 44% 18% 82%;
+}
+
+.account-shell {
+  position: relative;
+  z-index: 1;
+}
+.account-stack {
+  width: min(76rem, calc(100% - var(--g-gutter) * 2));
+  margin-inline: auto;
+  padding-block: clamp(40px, 7vh, 88px) clamp(40px, 6vh, 72px);
+}
+
+/* ------------------------------------------------------------------- head */
+
+.account-head h1 {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: clamp(1.9rem, 3vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--g-ink);
+}
+.account-head p {
+  margin: 10px 0 0;
+  max-width: 52ch;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--g-ink-dim);
+}
+
+/* ------------------------------------------------------------------- grid */
+
+/* Two columns: the accounts on the left at a fixed measure, everything that
+   is a list on the right. One column below the breakpoint. */
+.account-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  margin-top: clamp(26px, 4vh, 40px);
+}
+@media (min-width: 1000px) {
+  .account-grid {
+    grid-template-columns: 22rem minmax(0, 1fr);
+  }
+}
+.account-col {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ------------------------------------------------------------------ sheet */
+
+/* One hairline box, squared off, on the ground a step up from the page. */
+.account-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--mac-hairline, var(--g-line));
+  border-radius: 12px;
+  background: var(--g-raise);
+}
+/* The ones whose body is a list run their rows to the edges, so the hairlines
+   between them cross the whole sheet. */
+.account-card-flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* The micro-heading: the service's name, said once, small and quiet. */
+.account-card-eyebrow {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--g-ink-faint);
+}
+
+/* The header band on a flush sheet, divided from its rows by a hairline. */
+.account-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--mac-hairline, var(--g-line));
+}
+.account-card-head > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.account-card-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  color: var(--g-ink);
+}
+.account-card-head p {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--g-ink-faint);
+}
+.account-card-mark {
+  flex: none;
+  color: var(--g-ink-faint);
+}
+.account-card-body {
+  padding: 16px 20px;
+}
+.account-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.account-card-body .account-card-actions {
+  margin-top: 12px;
+}
+
+/* ------------------------------------------------------------------- whom */
+
+.account-who {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+}
+.account-who-face {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+/* `UserAvatar` hard-codes `bg-white/[0.08]` and `text-white/70`, invisible on
+   light paper. Selected through the parent so it beats the utility class. */
+.account-who > .account-who-face,
+.account-rows > li > a > .account-row-face {
+  background: var(--g-fill-2);
+  color: var(--g-ink-dim);
+}
+
+/* Roblox renders a square avatar, and a circle crops the head off it. */
+.account-who-square {
+  border-radius: 10px;
+  background: var(--g-fill-2);
+}
+.account-who-mark {
+  display: grid;
+  place-items: center;
+  color: var(--g-ink-dim);
+}
+.account-who > div {
+  min-width: 0;
+}
+.account-who-name {
+  margin: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  color: var(--g-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-who-id {
+  margin: 4px 0 0;
+  overflow: hidden;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 11.5px;
+  color: var(--g-ink-faint);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------- the note */
+
+/* A state with its mark, under the heading. */
+.account-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 16px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--g-ink-dim);
+}
+.account-note svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--tone-warn, #eab308);
+}
+.account-said {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--tone-ok, #6ee7b7);
+}
+
+/* ------------------------------------------------------------- the button */
+
+/* One button on this page: a hairline on a low fill, squared to the sheet's
+   own corner radius minus its padding. */
+/* Buttons on this page are `RippleButton`s in the `outline` variant; this only
+   sets their placement and the glyph inside. */
+.account-button {
+  gap: 8px;
+}
+/* The glyph is a different element from the button around it, so a transition
+   written on the button does not reach it. */
+.account-button svg {
+  flex: none;
+  color: var(--g-ink-faint);
+  transition: color 140ms var(--g-ease-state);
+}
+.account-button:hover svg {
+  color: var(--g-ink-dim);
+}
+/* The one on a sheet whose body is rows sits in the header band. */
+.account-card-head .account-button {
+  flex: none;
+}
+/* Full width where it is the sheet's own action. */
+.account-card > .account-button {
+  width: 100%;
+  margin-top: 18px;
+}
+
+/* --------------------------------------------------------------- the rows */
+
+/* A grouped list: one row each, divided by hairlines that cross the sheet. */
+.account-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.account-rows > li + li {
+  border-top: 1px solid var(--mac-hairline, var(--g-line));
+}
+.account-rows > li > a {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  color: var(--g-ink);
+  font-size: 14px;
+  text-decoration: none;
+  transition: background-color 140ms var(--g-ease-state);
+}
+.account-rows > li > a:hover {
+  background: var(--g-fill);
+}
+.account-rows > li > a > svg:last-child {
+  flex: none;
+  margin-left: auto;
+  color: var(--g-ink-faint);
+  transition: color 140ms var(--g-ease-state);
+}
+.account-rows > li > a:hover > svg:last-child {
+  color: var(--g-ink);
+}
+.account-row-face {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.account-row-name {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (pointer: coarse) {
+  .account-rows > li > a {
+    padding-block: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-button svg,
+  .account-rows > li > a,
+  .account-rows > li > a > svg:last-child {
+    transition: none;
+  }
+}
+
+/* A row is a link to somewhere else, and it says so the same way. */
+.account-rows > li > a:active {
+  background: var(--g-fill-2);
+}
+
+/* ── Roblox flow ──
+
+   `/account/roblox` imports this file, so its panel lives here. */
+
+/* Roblox uses the same account grammar: one clear identity panel, a single
+   dividing line between regions, and the pink accent only where it helps. */
+.roblox-account-stack {
+  position: relative;
+  z-index: 1;
+  width: min(54rem, calc(100% - var(--g-gutter) * 2));
+  margin-inline: auto;
+  padding-block: clamp(46px, 8vh, 92px) clamp(56px, 9vh, 104px);
+}
+
+.roblox-page-head {
+  max-width: 42rem;
+  margin-bottom: 24px;
+}
+
+.roblox-page-head > span {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--g-accent-ink);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.roblox-page-head h1 {
+  margin: 0;
+  color: var(--g-ink);
+  font-family: var(--font-ui);
+  font-size: clamp(2.25rem, 5vw, 3.6rem);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.roblox-panel {
+  overflow: hidden;
+  border: 1px solid var(--g-line);
+  border-radius: 14px;
+  background: var(--g-raise);
+}
+
+.roblox-panel-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--g-line);
+}
+
+.roblox-service-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+
+.roblox-panel-head div > span,
+.roblox-panel-head div > strong {
+  display: block;
+}
+
+.roblox-panel-head div > span {
+  margin-bottom: 2px;
+  color: var(--g-ink-faint);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.roblox-panel-head div > strong {
+  color: var(--g-ink);
+  font-size: 14px;
+}
+
+.roblox-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--g-ink-faint);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.roblox-status[data-linked="true"] {
+  color: var(--g-gator);
+}
+
+.roblox-panel-body {
+  padding: 24px 22px;
+}
+
+.roblox-connect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.roblox-connect-copy {
+  margin: 0;
+  color: var(--g-ink-dim);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.roblox-connect-button {
+  min-width: 164px;
+}
+
+.roblox-identity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.roblox-identity > img,
+.roblox-identity-fallback {
+  width: 72px;
+  height: 72px;
+  flex: none;
+  border: 1px solid var(--g-line);
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.roblox-identity-fallback {
+  display: grid;
+  place-items: center;
+  background: var(--g-fill-2);
+  color: var(--g-ink-dim);
+}
+
+.roblox-identity div {
+  min-width: 0;
+}
+
+.roblox-identity strong,
+.roblox-identity span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.roblox-identity strong {
+  color: var(--g-ink);
+  font-family: var(--font-ui);
+  font-size: clamp(20px, 3vw, 28px);
+  line-height: 1.25;
+}
+
+.roblox-identity span {
+  margin-top: 7px;
+  color: var(--g-ink-dim);
+  font-size: 12px;
+}
+
+.roblox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 26px;
+}
+
+.roblox-error {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--tone-bad) 30%, var(--g-line));
+  color: var(--tone-bad);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.roblox-panel-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 24px;
+  padding: 16px 22px;
+  border-top: 1px solid var(--g-line);
+  background: var(--g-fill);
+}
+
+.roblox-panel-loading {
+  display: flex;
+  min-height: 160px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--g-ink-faint);
+  font-size: 13px;
+}
+
+@media (max-width: 680px) {
+  .roblox-account-stack {
+    padding-top: 36px;
+  }
+
+  .roblox-panel-head {
+    padding-inline: 18px;
+  }
+
+  .roblox-status {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .roblox-connect {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 22px;
+  }
+
+  .roblox-connect-button {
+    width: 100%;
+  }
+
+  .roblox-panel-foot {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+    padding-inline: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roblox-panel-loading .animate-spin {
+    animation: none;
+  }
+}
+
+/* ── a row that answers itself ──
+
+   The "Your data" rows open in place to answer "what does this know about me"
+   instead of linking into the privacy policy. `summary` is styled to be the
+   row, so open and closed rows have the same height and hover. */
+
+.account-fold summary {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  color: var(--g-ink);
+  cursor: pointer;
+  font-size: 14px;
+  list-style: none;
+  transition: background-color 140ms var(--g-ease-state);
+}
+.account-fold summary::-webkit-details-marker {
+  display: none;
+}
+.account-fold summary:hover {
+  background: var(--g-fill);
+}
+.account-fold summary:focus-visible {
+  outline: 2px solid var(--g-accent-line, var(--g-line-strong));
+  outline-offset: -2px;
+}
+
+/* The mark turns to show which way it is going, like the legal pages'
+   disclosures. */
+.account-fold-mark {
+  flex: none;
+  margin-left: auto;
+  color: var(--g-ink-faint);
+  transition:
+    transform 220ms var(--g-ease-out),
+    color 140ms var(--g-ease-state);
+}
+.account-fold summary:hover .account-fold-mark {
+  color: var(--g-ink);
+}
+.account-fold[open] .account-fold-mark {
+  transform: rotate(90deg);
+}
+
+/* Animated open and shut like the legal pages' disclosures:
+   `::details-content`, `interpolate-size` (so `auto` can be animated) and
+   `allow-discrete` on `content-visibility` (keeps the contents rendered while
+   closing). */
+.account-fold {
+  interpolate-size: allow-keywords;
+}
+@supports selector(::details-content) {
+  .account-fold::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size 280ms var(--g-ease-out),
+      content-visibility 280ms allow-discrete;
+  }
+  .account-fold[open]::details-content {
+    block-size: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-fold::details-content {
+    transition-duration: 1ms;
+  }
+  .account-fold-mark {
+    transition-duration: 1ms;
+  }
+}
+
+/* A term and what it means. The label is a narrow column on a wide card and
+   stacks above its value on a phone. */
+.account-facts {
+  display: grid;
+  margin: 0;
+  padding: 0 20px 14px;
+  gap: 10px;
+}
+.account-facts > div {
+  display: grid;
+  grid-template-columns: 11.5rem minmax(0, 1fr);
+  gap: 4px 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--mac-hairline, var(--g-line));
+}
+.account-facts dt {
+  color: var(--g-ink);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: -0.008em;
+}
+.account-facts dd {
+  margin: 0;
+  color: var(--g-ink-dim);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+@media (max-width: 720px) {
+  .account-facts > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A placeholder row at a real row's height, using the picker's skeleton
+   primitives, so the sheet does not change shape when the bot answers. */
+.account-row-skel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+}
+.account-row-skel .account-row-face {
+  border-radius: 8px;
+}
+
+/* The link to the full wording: words and an arrow in the accent, at the end of
+   the facts it follows (`justify-self: end`, since the list is a grid). The
+   arrow moves on hover. */
+.account-facts-more {
+  /* Both axes. A grid item stretches by default, so `justify-self` alone left
+     it the right width and the height of whatever row it landed in. */
+  justify-self: start;
+  align-self: start;
+  margin-top: 4px;
+}
+.account-facts-more svg {
+  transition: transform 180ms var(--g-ease-out);
+}
+.account-facts-more:hover svg,
+.account-facts-more:focus-visible svg {
+  transform: translateX(3px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-facts-more svg {
+    transition-duration: 1ms;
+  }
+}

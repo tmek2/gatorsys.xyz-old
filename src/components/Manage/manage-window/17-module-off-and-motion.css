@@ -1,0 +1,281 @@
+/* A module that is off, the save prompt, phone motion, dropdown corners and the
+   wall filter (part of manage-window.css) */
+
+/* ── a module that is off ──
+
+   The gate card has its own corners (20 outside, 12 on the buttons 8px in),
+   since the window has none on a phone. On a phone the buttons stack, the
+   primary first and full width. */
+.manage-root .gw-gate-behind {
+  opacity: 0.22;
+  filter: blur(10px) saturate(0.8);
+}
+.manage-root .gw-gate-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 56px 16px 0;
+}
+.manage-root .gw-pane .gw-gate {
+  max-width: 400px;
+  padding: 24px;
+  border: 1px solid var(--g-line);
+  border-radius: 20px;
+  background: var(--mac-raise-2);
+  box-shadow:
+    0 40px 80px -36px rgba(0, 0, 0, 0.85),
+    0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.manage-root .gw-pane .gw-gate-title {
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 750;
+}
+.manage-root .gw-pane .gw-gate-say {
+  margin-top: 6px;
+}
+.manage-root .gw-pane .gw-gate-acts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 22px;
+}
+.manage-root .gw-pane :is(.gw-gate-back, .gw-gate-go) {
+  min-height: 42px;
+}
+.manage-root .gw-pane .gw-gate-go:disabled {
+  cursor: default;
+}
+/* Turned on: the card lifts away and blurs out as the settings sharpen. */
+.manage-root .gw-gate-layer[data-leaving="true"] {
+  pointer-events: none;
+}
+.manage-root .gw-gate-layer[data-leaving="true"] .gw-gate {
+  animation: gw-gate-out 380ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+@keyframes gw-gate-out {
+  to {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(-10px) scale(0.97);
+  }
+}
+@media (max-width: 560px) {
+  .manage-root .gw-pane .gw-gate {
+    padding: 22px 20px 20px;
+  }
+  .manage-root .gw-pane .gw-gate-acts {
+    grid-template-columns: 1fr;
+  }
+  .manage-root .gw-pane .gw-gate-go {
+    order: -1;
+    min-height: 48px;
+  }
+  .manage-root .gw-pane .gw-gate-back {
+    min-height: 44px;
+  }
+}
+
+/* Turned on: the settings come into focus from behind the card. */
+.manage-root .gw-gate-thaw {
+  animation: gw-gate-thaw 620ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes gw-gate-thaw {
+  from {
+    opacity: 0.22;
+    filter: blur(10px) saturate(0.8);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gw-gate-thaw,
+  .manage-root .gw-gate-layer[data-leaving="true"] .gw-gate {
+    animation-duration: 1ms;
+  }
+}
+
+/* While search is open on a phone, the dock sinks a little and waits under the
+   dimmed page instead of dropping off screen. */
+@media (max-width: 760px) {
+  .gw-dock[data-tucked="true"] {
+    transform: translate3d(0, 10px, 0) scale(0.94);
+    pointer-events: none;
+  }
+}
+
+/* Brought in by a view transition: that was its entrance. */
+.manage-root .gw-pane > .gw-place[data-still="true"] {
+  animation: none;
+}
+
+/* The open dock is nearly opaque, so it drops its backdrop blur while open (the
+   blur behind a growing panel was redrawn every frame for no visible
+   difference). Its lists are laid out independently so the panel's height
+   change does not re-measure anything outside it. */
+@media (max-width: 760px) {
+  .gw-dock[data-open="true"] {
+    background: color-mix(in srgb, var(--mac-raise) 97%, transparent);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .gw-dock-panel {
+    contain: layout paint;
+  }
+}
+.gw-dock-caption {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.gw-dock-list[hidden] {
+  display: none;
+}
+
+/* ── motion on a phone ──
+
+   A tab change on a phone moves further and a little longer than on desktop,
+   since most of the screen changes. (It needs the root's `overflow-x` in
+   globals.css; the page must not be wider than the screen.) On arrival the dock
+   rises from below the edge after the page settles. Its animation has no fill
+   afterwards, so the transitions it uses to move out of the way still work. */
+@media (max-width: 760px) {
+  ::view-transition-old(gw-tab-page) {
+    animation: gw-tab-out 200ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+  ::view-transition-new(gw-tab-page) {
+    animation: gw-tab-in 420ms var(--gw-ease) 50ms both;
+  }
+  :root {
+    --gw-tab-out: -14px;
+    --gw-tab-in: 28px;
+  }
+  :root[data-nav-dir="up"] {
+    --gw-tab-out: 14px;
+    --gw-tab-in: -28px;
+  }
+  .manage-root .gw-dock {
+    animation: gw-dock-arrive 620ms cubic-bezier(0.34, 1.2, 0.64, 1) 260ms backwards;
+  }
+  @keyframes gw-dock-arrive {
+    from {
+      transform: translate3d(0, calc(100% + 40px), 0);
+      opacity: 0;
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gw-dock {
+    animation: none;
+  }
+}
+
+/* When most modules are on, on cards use a quieter wash and edge so the cards
+   that need attention (a cog with a count) stand out. Paper needs more of the
+   pink than the dark ground does before a card reads as on, so light mode has
+   its own amounts. */
+.gw-mod {
+  --gw-mod-edge: 20%;
+  --gw-mod-wash: 11%;
+  --gw-mod-wash-mid: 5%;
+}
+:root[data-theme="light"] .gw-mod {
+  --gw-mod-edge: 36%;
+  --gw-mod-wash: 17%;
+  --gw-mod-wash-mid: 8%;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .gw-mod {
+    --gw-mod-edge: 36%;
+    --gw-mod-wash: 17%;
+    --gw-mod-wash-mid: 8%;
+  }
+}
+.gw-mod[data-enabled="true"] {
+  border-color: color-mix(in srgb, var(--g-accent) var(--gw-mod-edge), transparent);
+}
+.gw-mod-fill {
+  background:
+    linear-gradient(
+      to right,
+      transparent calc(var(--gw-fill) * 1.25 - 34%),
+      color-mix(
+          in srgb,
+          var(--g-accent) calc((100% - var(--gw-fill)) * 0.5),
+          transparent
+        )
+        calc(var(--gw-fill) * 1.25 - 16%),
+      transparent calc(var(--gw-fill) * 1.25)
+    ),
+    linear-gradient(
+      105deg,
+      color-mix(in srgb, var(--g-accent) var(--gw-mod-wash), transparent),
+      color-mix(in srgb, var(--g-accent) var(--gw-mod-wash-mid), transparent) 55%,
+      transparent
+    );
+}
+
+/* ── filtering the wall ──
+
+   The page itself does not cross-fade; only the cards and headings move to
+   their new places on the sheet curve, leaving ones shrink away and arriving
+   ones grow in a beat later. */
+:root[data-filtering]::view-transition-old(root) {
+  animation: none;
+  opacity: 0;
+}
+:root[data-filtering]::view-transition-new(root) {
+  animation: none;
+}
+:root[data-filtering]::view-transition-group(*) {
+  animation-duration: 440ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+:root[data-filtering]::view-transition-old(*):only-child {
+  animation: gw-card-out 200ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+:root[data-filtering]::view-transition-new(*):only-child {
+  animation: gw-card-in 380ms cubic-bezier(0.32, 0.72, 0, 1) 90ms both;
+}
+@keyframes gw-card-out {
+  to {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+@keyframes gw-card-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+/* Entrances fill backwards, not both: a held transform would make the element
+   the containing block for fixed-position descendants (the phone's editing
+   sheet came out the width of the editor). */
+.gw-place {
+  animation-fill-mode: backwards;
+}
+.gw-md-mode {
+  animation-fill-mode: backwards;
+}
+
+/* Not a size container when it holds a message editor: size containment implies
+   layout containment, which makes it the containing block for the phone's fixed
+   editing sheet. */
+.manage-root .gw-pane .gw-set-panel:has(.gw-md),
+.manage-root .gw-pane .gw-set-row:has(.gw-md) {
+  container-type: normal;
+}
+/* And no clipping (overflow or the rounding clip-path), which would cut the
+   fixed sheet to the panel. */
+.manage-root .gw-pane .gw-set-panel:has(.gw-md) {
+  overflow: visible;
+  clip-path: none;
+}

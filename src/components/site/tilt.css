@@ -1,0 +1,48 @@
+/* The pointer's report as typed properties (written by `useTilt`, read by the
+   rotation, two radial washes and a pair of inset rims).
+
+   Unlayered, like the rest of the landing: Tailwind v3's preflight is unlayered
+   and beats every layered rule.
+
+   Registered because: - they are typed (an angle, a percentage, a length),
+   parsed once instead of re-tokenised on each of the six writes per frame; -
+   `initial-value` gives a neutral value, so on the server, on touch screens and
+   under reduced motion the whole response collapses with no branching.
+
+   They carry no transition: tilt.ts advances all six once per frame (a
+   transition restarted by each pointer event follows the event clock and moves
+   unevenly).
+
+   `inherits: true` on all of them: the washes are drawn in `::after`, and a
+   pseudo-element only sees inherited properties of its element. */
+
+@property --tilt-x {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 0deg;
+}
+@property --tilt-y {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 0deg;
+}
+@property --tilt-px {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 50%;
+}
+@property --tilt-py {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 50%;
+}
+@property --rim-x {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+@property --rim-y {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}

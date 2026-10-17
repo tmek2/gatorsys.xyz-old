@@ -1,0 +1,921 @@
+/* Files, as iOS draws it (the landing window below 860px).
+
+   Below 860px the Mac window is not shown; a separate component is, described
+   here from scratch (why two trees: see files.tsx). Measurements from Apple's
+   Human Interface Guidelines: - navigation bar 44pt; large title 34pt bold;
+   inline title 17pt semibold - search field 36pt with 10pt radius; segmented
+   control 32pt; grouped radius 10pt - list row 44pt minimum; row leading inset
+   16pt; screen margin 16pt - tab bar 49pt; tab glyph 25pt; tab label 10pt -
+   sheet grabber 36×5pt; tap floor 44pt everywhere
+
+   Unlayered, like every landing stylesheet: Tailwind v3's preflight is
+   unlayered and beats layered rules. */
+
+/* Above the breakpoint there is no phone screen at all. */
+.g-ios {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  /* --------------------------------------------------------- the presentation */
+
+  /* Presented like an iOS full-height modal: edge to edge, top corners rounded,
+     the page visible above it. The page's existing rise is the sheet's motion. */
+  .g-poster {
+    --mac-top: 62px;
+    --mac-side: 0px;
+    --mac-bottom: 0px;
+  }
+  .g-mac {
+    border-radius: 14px 14px 0 0;
+  }
+  /* The Mac window is not shown here. Not restyled — not shown. */
+  .g-mac-desktop {
+    display: none;
+  }
+
+  .g-ios {
+    /* iOS grouped surfaces: a container sits above its ground in both themes. */
+    --ios-bg: var(--g-grouped-ground);
+    --ios-box: var(--g-grouped-box);
+    /* A bar is the ground at partial opacity, which is what the blurred
+       material resolves to. */
+    --ios-bar: color-mix(in srgb, var(--g-grouped-ground) 78%, transparent);
+    --ios-sep: var(--mac-hair);
+    --ios-fill: var(--g-fill-2);
+    --ios-label: var(--g-ink);
+    --ios-label-2: var(--g-ink-dim);
+    --ios-label-3: var(--mac-label-dim);
+    --ios-tint: var(--g-accent-ink, var(--g-accent));
+    /* The screen margin, and therefore where a row's text begins. */
+    --ios-margin: 16px;
+    --ios-lead: 57px;
+    /* iOS's own curve: fast out, long settle, no bounce. */
+    --ios-ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--ios-bg);
+    font-family: var(--mac-chrome);
+    color: var(--ios-label);
+  }
+
+  /* The grabber on the presented sheet: a mark, not a control (scrolling the
+     page back down puts the sheet away). */
+  .g-ios::before {
+    content: "";
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    z-index: 4;
+    width: 36px;
+    height: 5px;
+    translate: -50% 0;
+    border-radius: 2.5px;
+    background: var(--ios-label-3);
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* ------------------------------------------------------------ navigation bar */
+
+  .g-ios-nav {
+    position: relative;
+    z-index: 3;
+    flex: none;
+    padding-top: 8px;
+    background: var(--ios-bar);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    /* The hairline under the bar exists only once content has gone under it,
+       which is how iOS says the bar is now floating over something. */
+    box-shadow: 0 0.5px 0 transparent;
+    transition: box-shadow 200ms linear;
+  }
+  .g-ios-nav[data-collapsed="true"] {
+    box-shadow: 0 0.5px 0 var(--ios-sep);
+  }
+
+  .g-ios-bar {
+    display: grid;
+    /* Leading and trailing are equal, so the title is centred in the bar and
+       not merely centred between whatever happens to be beside it. */
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    height: 44px;
+    padding-inline: 8px;
+  }
+  .g-ios-bar-lead {
+    display: flex;
+    justify-self: start;
+    align-items: center;
+    min-width: 0;
+  }
+  .g-ios-bar-trail {
+    display: flex;
+    justify-self: end;
+    align-items: center;
+    gap: 2px;
+  }
+
+  /* The back button: a chevron and the name of the screen underneath. iOS puts
+     the name there so back means something before you press it. */
+  .g-ios-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    height: 44px;
+    max-width: 26vw;
+    padding: 0 8px 0 2px;
+    border: 0;
+    background: transparent;
+    color: var(--ios-tint);
+    font: inherit;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+    cursor: pointer;
+  }
+  .g-ios-back span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .g-ios-back:active {
+    opacity: 0.35;
+  }
+
+  /* The inline title is always in the markup and shown once the large title
+     passes under the bar, so the change is a property change and can
+     cross-fade. */
+  .g-ios-inline-title {
+    grid-column: 2;
+    justify-self: center;
+    max-width: 56vw;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    color: var(--ios-label);
+    opacity: 0;
+    translate: 0 8px;
+    transition: opacity 180ms linear, translate 180ms var(--ios-ease);
+  }
+  .g-ios-nav[data-collapsed="true"] .g-ios-inline-title,
+  .g-ios[data-pushed="true"] .g-ios-inline-title {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  /* A bar button. 44pt of target around a 23pt glyph, which is the relationship
+     iOS holds: the glyph is small and the thing you hit is not. */
+  .g-ios-glyph-button {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 22px;
+    background: transparent;
+    color: var(--ios-tint);
+    cursor: pointer;
+  }
+  .g-ios-glyph-button:active {
+    opacity: 0.35;
+  }
+  /* No menu on a pushed screen (it crowded the title out of the 393pt bar), as
+     on iOS. */
+  .g-ios[data-pushed="true"] .g-ios-glyph-button {
+    display: none;
+  }
+
+  .g-ios-done {
+    min-width: 44px;
+    height: 44px;
+    padding-inline: 8px;
+    border: 0;
+    border-radius: 22px;
+    background: transparent;
+    color: var(--ios-tint);
+    font: inherit;
+    font-size: 17px;
+    /* Done is the confirming action, and iOS sets those semibold. */
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    cursor: pointer;
+  }
+  .g-ios-done:active {
+    opacity: 0.35;
+  }
+
+  /* ------------------------------------------------------------- the stack */
+
+  .g-ios-stack {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .g-ios-screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--ios-bg);
+    transition: transform 380ms var(--ios-ease);
+  }
+
+  /* The push: the new screen comes in from the trailing edge while the one
+     underneath moves a quarter of the way out and dims, showing what Back will
+     do. */
+  .g-ios-detail {
+    transform: translateX(100%);
+    box-shadow: -1px 0 0 var(--ios-sep), -12px 0 28px rgba(0, 0, 0, 0.16);
+  }
+  .g-ios[data-pushed="true"] .g-ios-detail {
+    transform: translateX(0);
+  }
+  .g-ios[data-pushed="true"] .g-ios-root {
+    transform: translateX(-25%);
+  }
+  /* The dimming layer over the screen being covered. */
+  .g-ios-root::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 380ms var(--ios-ease);
+  }
+  .g-ios[data-pushed="true"] .g-ios-root::after {
+    opacity: 0.14;
+  }
+
+  /* A pull past the top of the list carries on into the page, which is how
+     the window is put away again. `contain` here trapped it open. */
+  .g-ios-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 28px;
+  }
+  /* While parked at the foot of the page, the app does not take the wheel. */
+  .g-mac[data-open="false"] .g-ios-scroll {
+    overflow: hidden;
+  }
+
+  /* One scroll indicator while the sheet is up: the page's own scrollbar is
+     hidden (its remaining scroll only puts the sheet away), leaving the
+     sheet's. Only without a fine pointer: on desktop the document scrollbar is
+     a draggable control. `:has` on the root because the flag is on an element
+     inside it. The OS's transient touch indicator is separate and cannot be
+     styled. */
+  @media (pointer: coarse) {
+    :root:has(.g-poster[data-open="true"]) {
+      scrollbar-width: none;
+    }
+    :root:has(.g-poster[data-open="true"])::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+  }
+
+  /* Zero-height sentinel at the top of the scroller: it stops intersecting on
+     the first pixel of scroll, when the large title starts going under the bar. */
+  .g-ios-top-mark {
+    height: 1px;
+    margin-bottom: -1px;
+  }
+
+  /* ------------------------------------------------------------ large title */
+
+  /* 34pt bold with iOS's negative display tracking, inside the scroller so it
+     scrolls away. */
+  .g-ios-large-title {
+    margin: 6px var(--ios-margin) 0;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.032em;
+    line-height: 1.14;
+    color: var(--ios-label);
+  }
+  /* A pushed screen's title is in the sheet header, so the large title is
+     visually hidden but still announced. */
+  .g-ios-title-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* ---------------------------------------------------------- search field */
+
+  .g-ios-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    margin: 12px var(--ios-margin) 0;
+    padding-inline: 8px;
+    border-radius: 10px;
+    background: var(--ios-fill);
+    color: var(--ios-label-3);
+  }
+  .g-ios-search input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--ios-label);
+    font: inherit;
+    font-size: 17px;
+    letter-spacing: -0.022em;
+    outline: none;
+  }
+  .g-ios-search input::placeholder {
+    color: var(--ios-label-3);
+  }
+  /* Safari draws its own clear button on a search input, on top of ours. */
+  .g-ios-search input::-webkit-search-cancel-button {
+    display: none;
+  }
+  /* 28pt by Apple's spec inside a 36pt field; the tap floor would make it 44
+     and burst the field. */
+  /* Two selectors deep: `[data-tap="inline"]` releases the height floor, but
+     the icon-button rule `button:has(> svg:only-child)` sets min-width and
+     outranks a single class. */
+  .g-ios-search .g-ios-clear {
+    min-width: 0;
+  }
+  .g-ios-clear {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--ios-label-3);
+    cursor: pointer;
+  }
+  .g-ios-clear::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+  }
+
+  /* ------------------------------------------------------------- the body */
+
+  .g-ios-body {
+    padding-top: 4px;
+  }
+  /* --------------------------------------------------- segmented control */
+
+  /* A real segmented control: a track in the tertiary fill and a raised pill
+     that slides between segments (a separate element, so it can animate). */
+  .g-ios-seg {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 32px;
+    margin: 16px var(--ios-margin) 0;
+    padding: 2px;
+    border-radius: 9px;
+    background: var(--ios-fill);
+    isolation: isolate;
+  }
+  .g-ios-seg-pill {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 2px;
+    z-index: -1;
+    width: calc(50% - 2px);
+    border-radius: 7px;
+    background: var(--g-lifted);
+    box-shadow:
+      0 0 0 0.5px rgba(0, 0, 0, 0.04),
+      0 3px 8px rgba(0, 0, 0, 0.12);
+    transition: translate 260ms var(--ios-ease);
+  }
+  .g-ios-seg[data-at="1"] .g-ios-seg-pill {
+    translate: 100% 0;
+  }
+  /* Segments opt out of the 44px tap floor (the control is 32pt on iOS;
+     stretched buttons hung below the track and pushed labels 8px low) and get
+     their target from a pseudo-element: `inset: -6px 0` on a 32px button makes
+     44, over the padding beside the track. */
+  .g-ios-seg button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--ios-label-2);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.008em;
+    cursor: pointer;
+    transition: color 160ms linear;
+  }
+  .g-ios-seg button::after {
+    content: "";
+    position: absolute;
+    /* The button is the 32px track less its 2px padding, so 28px: -8 either
+       side is the 44px floor exactly. */
+    inset: -8px 0;
+  }
+  .g-ios-seg button[data-on="true"] {
+    color: var(--ios-label);
+    /* The selected segment is semibold, so the track uses equal columns and
+       nothing shifts. */
+    font-weight: 600;
+  }
+
+  /* ------------------------------------------------------------- the grid */
+
+  /* Files' icon view: three across, glyph over name over group. A tap opens (no
+     select-then-open on touch). */
+  /* The desktop wall's card, two across. */
+  .g-ios-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 4px var(--ios-margin);
+  }
+  .g-ios-cell {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    min-height: 106px;
+    padding: 11px 12px 12px;
+    border: 1px solid var(--mac-hair);
+    border-radius: 10px;
+    background: var(--mac-raise);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 120ms ease, transform 120ms var(--ios-ease);
+  }
+  .g-ios-cell:active {
+    transform: scale(0.98);
+    background: var(--mac-raise-2);
+  }
+  /* The card's subject: the same mark, oversized and clipped by the corner. */
+  .g-ios-cell-ghost {
+    position: absolute;
+    top: -26px;
+    right: -24px;
+    z-index: -1;
+    color: var(--ios-label);
+    opacity: 0.05;
+    pointer-events: none;
+  }
+  /* The wall's tile at phone size: the flat squircle, no shadow. */
+  /* Naked, and the folder's own colour. */
+  .g-ios-cell-glyph {
+    flex: none;
+    color: var(--hue);
+  }
+  .g-ios-cell-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    line-height: 1.2;
+    color: var(--ios-label);
+  }
+  .g-ios-cell-say {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--ios-label-3);
+  }
+
+  /* ------------------------------------------------------ the grouped list */
+
+  .g-ios-group {
+    margin-top: 22px;
+  }
+  /* iOS's section header sits in the margin above the container, uppercase and
+     small, and is the only uppercase text on the screen. */
+  .g-ios-cap {
+    margin: 0 var(--ios-margin) 7px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    color: var(--ios-label-3);
+  }
+  .g-ios-box {
+    /* An inset grouped list runs to the screen margin and no further, and it
+       carries no border: the fill is what separates it from the ground. */
+    margin-inline: var(--ios-margin);
+    border-radius: 10px;
+    background: var(--ios-box);
+    overflow: hidden;
+  }
+  .g-ios-foot {
+    margin: 7px var(--ios-margin) 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--ios-label-3);
+  }
+
+  .g-ios-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 11px var(--ios-margin);
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+  }
+  /* The separator starts where the row's text starts. */
+  .g-ios-row + .g-ios-row::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: var(--ios-lead);
+    right: 0;
+    height: 0.5px;
+    background: var(--ios-sep);
+  }
+  /* iOS's press state for a row is the whole row filling, immediately, with no
+     transition in and a slow one out. */
+  .g-ios-row-tap {
+    cursor: pointer;
+  }
+  .g-ios-row-tap:active {
+    background: var(--ios-fill);
+  }
+
+  .g-ios-row-glyph {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    color: var(--hue, var(--ios-tint));
+  }
+  .g-ios-row-tint {
+    color: var(--ios-tint);
+  }
+  .g-ios-row-doc {
+    color: var(--ios-label-3);
+  }
+  .g-ios-row-quiet {
+    color: var(--ios-label-3);
+    opacity: 0.75;
+  }
+  .g-ios-row-text {
+    min-width: 0;
+  }
+  .g-ios-row-title {
+    display: block;
+    font-size: 17px;
+    letter-spacing: -0.022em;
+    line-height: 1.25;
+    color: var(--ios-label);
+  }
+  .g-ios-row-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 13px;
+    line-height: 1.35;
+    color: var(--ios-label-3);
+  }
+  /* The disclosure chevron: small, tertiary label colour, never the tint. */
+  .g-ios-row-chev {
+    color: var(--ios-label-3);
+    opacity: 0.65;
+  }
+
+  /* ------------------------------------------------------------ no results */
+
+  .g-ios-empty {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 64px 32px;
+    text-align: center;
+  }
+  .g-ios-empty-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    color: var(--ios-label);
+  }
+  .g-ios-empty-say {
+    margin: 0;
+    max-width: 34ch;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--ios-label-3);
+  }
+
+  /* -------------------------------------------------------------- tab bar */
+
+  .g-ios-tabs {
+    flex: none;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    align-items: stretch;
+    height: calc(49px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--ios-bar);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    box-shadow: 0 -0.5px 0 var(--ios-sep);
+  }
+  .g-ios-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    padding: 4px 2px 0;
+    border: 0;
+    background: transparent;
+    color: var(--ios-label-3);
+    font: inherit;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .g-ios-tab[data-current="true"] {
+    color: var(--ios-tint);
+  }
+  .g-ios-tab:active {
+    opacity: 0.45;
+  }
+
+  /* ----------------------------------------------------------- the menu */
+
+  .g-ios-menu-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    /* See the note on the sheet layer below: a drag here must not reach the
+       page, because the page's scroll is what puts the window away. */
+    touch-action: none;
+    overscroll-behavior: contain;
+  }
+  .g-ios-menu-scrim {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    cursor: default;
+  }
+  /* An iOS menu: a plain rounded card under its button, scaling up from the
+     corner nearest the button. */
+  .g-ios-menu {
+    position: absolute;
+    top: 50px;
+    right: 8px;
+    width: 250px;
+    padding: 0;
+    border-radius: 13px;
+    background: var(--ios-box);
+    box-shadow:
+      0 0 0 0.5px var(--ios-sep),
+      0 12px 34px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    transform-origin: 100% 0;
+    animation: g-ios-menu-in 180ms var(--ios-ease) both;
+  }
+  @keyframes g-ios-menu-in {
+    from {
+      opacity: 0;
+      transform: scale(0.86);
+    }
+  }
+  .g-ios-menu-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 44px;
+    padding-inline: 16px;
+    color: var(--ios-label);
+    font-size: 17px;
+    letter-spacing: -0.022em;
+    text-decoration: none;
+  }
+  .g-ios-menu-row + .g-ios-menu-row {
+    box-shadow: inset 0 0.5px 0 var(--ios-sep);
+  }
+  .g-ios-menu-row:active {
+    background: var(--ios-fill);
+  }
+
+  /* ---------------------------------------------------------- the sheet */
+
+  /* `touch-action: none` on the scrim: a drag there would otherwise scroll the
+     page, whose scroll drives the window, and close the open file. Locking the
+     document with `overflow: hidden` would collapse its scroll height and snap
+     the window back to parked. */
+  .g-ios-sheet-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    touch-action: none;
+    overscroll-behavior: contain;
+  }
+  .g-ios-sheet-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    animation: g-ios-fade 260ms linear both;
+  }
+  @keyframes g-ios-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  /* A sheet stops short of the top so the screen it came from stays visible
+     behind it. That gap is the whole reason a sheet is not a new screen. */
+  .g-ios-sheet {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100% - 34px);
+    border-radius: 14px 14px 0 0;
+    background: var(--ios-box);
+    box-shadow: 0 -1px 0 var(--ios-sep);
+    animation: g-ios-sheet-in 380ms var(--ios-ease) both;
+    outline: none;
+  }
+  @keyframes g-ios-sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  .g-ios-grabber {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    width: 36px;
+    height: 5px;
+    translate: -50% 0;
+    border-radius: 2.5px;
+    background: var(--ios-label-3);
+    opacity: 0.4;
+  }
+  .g-ios-sheet-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 52px;
+    padding: 8px 8px 0 16px;
+    box-shadow: inset 0 -0.5px 0 var(--ios-sep);
+  }
+  .g-ios-sheet-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.022em;
+  }
+  .g-ios-sheet-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* The one thing inside the layer that may still be dragged. */
+    touch-action: pan-y;
+    padding: 18px 16px calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+  .g-ios-sheet-body pre {
+    margin: 0;
+    /* The fiction is a plain text file, and a plain text file has no typeface
+       opinion. SF Mono where it exists, which on an Apple device it does. */
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    font-size: 12.5px;
+    line-height: 1.62;
+    color: var(--ios-label);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .g-ios-sheet-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 44px;
+    margin-top: 12px;
+    color: var(--ios-tint);
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: -0.022em;
+    text-decoration: none;
+  }
+
+  /* -------------------------------------------------------- the sheet inside */
+
+  /* The module sheet is shared with the Mac window; on a phone it uses iOS's
+     grouped colours. */
+  .g-ios .g-sheet {
+    --sheet-box: var(--ios-box);
+    --sheet-sep: var(--ios-sep);
+    /* The folder's tab is drawn above its own box, so a sheet that opens with
+       the icon needs the tab's height of clearance or the bar crops it. */
+    padding: 22px var(--ios-margin) 0;
+  }
+  /* An inset grouped container carries no ring on iOS. */
+  .g-ios .g-group-box {
+    box-shadow: none;
+  }
+  .g-ios .g-group-cap {
+    margin-inline: 0;
+  }
+  .g-ios .g-row-body {
+    font-size: 15px;
+  }
+}
+
+/* Below 360px: fewer columns and glyph-only tabs, as iOS does at compact
+   widths. */
+@media (max-width: 360px) {
+  .g-ios-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .g-ios-seg button {
+    gap: 4px;
+    font-size: 12px;
+  }
+}
+
+/* On touch devices the bars drop their backdrop blur: two full-width blurs
+   inside a scroll-driven transform recomposite every frame and lagged on
+   phones, and the blur is nearly invisible on a dark bar. Keyed on input, not
+   width. */
+@media (hover: none) and (pointer: coarse) {
+  .g-ios-nav,
+  .g-ios-tabs {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--g-grouped-ground);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-ios-screen,
+  .g-ios-root::after,
+  .g-ios-seg-pill,
+  .g-ios-inline-title,
+  .g-ios-cell {
+    transition: none;
+  }
+  .g-ios-sheet,
+  .g-ios-sheet-scrim,
+  .g-ios-menu {
+    animation: none;
+  }
+}

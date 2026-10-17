@@ -1,0 +1,365 @@
+/* The server card.
+
+   Unlayered: Tailwind v3's preflight is unlayered and beats every layered rule.
+
+   ERM's guild card element for element: a banner with the card's ground faded
+   up over it, the icon hanging off it with a ring of that ground, the name, the
+   member count, and the way in as a button across the foot. One surface and one
+   border. */
+
+.sv-frame {
+  --sv-round: 12px;
+  /* The three the department card has to agree with. See `tokens.css`. */
+  --sv-inset: var(--card-inset);
+  --sv-tile: var(--card-tile);
+  --sv-band: var(--card-band);
+  --sv-ring: 3px;
+  /* The height of the way-in row once shown. Named so the row's closed and open
+     heights agree exactly. */
+  --sv-go: 29px;
+
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--mac-hairline, var(--g-line));
+  border-radius: var(--sv-round);
+  background: var(--g-raise);
+  /* The whole card is the way in -- see the note in `server-card.tsx`. */
+  cursor: pointer;
+  transition: border-color 160ms var(--g-ease-state);
+}
+/* Except the things that are not. */
+.sv-pin {
+  cursor: pointer;
+}
+.sv-frame:hover,
+.sv-frame:focus-within {
+  border-color: var(--g-line-strong);
+}
+.sv-frame[data-pinned="true"] {
+  border-color: var(--g-accent-line, var(--g-line-strong));
+}
+
+/* ------------------------------------------------------------------- band */
+
+/* Both bands fade into the card over the same distance: with artwork the card's
+   ground is drawn up over the image; without, the same ramp is painted from the
+   ground up to the panel tone, so there is no hard line making the plain card
+   look smaller. */
+.sv-band {
+  position: relative;
+  display: block;
+  height: var(--sv-band);
+  overflow: hidden;
+  background: linear-gradient(to top, var(--g-raise), var(--g-fill-2) 82%);
+}
+.sv-band-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* The card's ground, faded up over the artwork, so the icon and the name have
+   something to sit against whatever the banner happens to be. */
+.sv-band[data-art="true"]::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--g-raise), transparent);
+  content: "";
+}
+
+/* ------------------------------------------------------------------- body */
+
+.sv-body {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: calc(var(--sv-tile) / -2);
+  padding: 0 var(--sv-inset) var(--sv-inset);
+}
+
+/* ------------------------------------------------------------------- tile */
+
+.sv-tile {
+  display: grid;
+  width: var(--sv-tile);
+  height: var(--sv-tile);
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 11px;
+  background: var(--g-raise);
+  box-shadow: 0 0 0 var(--sv-ring) var(--g-raise);
+}
+.sv-tile-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 11px;
+  object-fit: cover;
+}
+/* A hairline inside the monogram tile gives it the edge an image icon has
+   naturally, so it does not look smaller. */
+.sv-tile-monogram {
+  display: grid;
+  place-items: center;
+  background: var(--g-fill-2);
+  box-shadow: inset 0 0 0 1px var(--mac-hairline, var(--g-line));
+  color: var(--g-ink-dim);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ------------------------------------------------------------------- text */
+
+.sv-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  max-width: 100%;
+  margin: 9px 0 0;
+  overflow: hidden;
+  color: var(--g-ink);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: -0.014em;
+  overflow-wrap: anywhere;
+}
+/* ------------------------------------------------------------------- foot */
+
+/* One row at the foot, always exactly one control tall, where the member count
+   and the way in take turns (see server-card.tsx). */
+.sv-foot {
+  /* One distance and one duration for both halves of the exchange, declared
+     where both can read them. */
+  --sv-roll: 5px;
+  --sv-swap: 260ms;
+
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: var(--sv-go);
+  margin-top: 3px;
+  align-items: center;
+}
+
+.sv-sub {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: var(--g-ink-faint);
+  font-size: 11.5px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition:
+    opacity 120ms var(--g-ease-state),
+    transform var(--sv-swap) var(--g-ease-out);
+}
+/* The count steps aside over the same distance and duration as the way in
+   arrives, so they move as one exchange. */
+.sv-frame:hover .sv-sub,
+.sv-frame:focus-within .sv-sub {
+  opacity: 0;
+  transform: translateY(calc(var(--sv-roll) * -1));
+}
+
+/* ------------------------------------------------------------------- the way in */
+
+/* The way in: a button across the foot that says where it goes. It takes the
+   count's place in the fixed-height foot row and the two cross-fade, so
+   hovering never changes the card's height (animating height would push every
+   card below and shake the page). */
+.sv-actions {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  /* The count is underneath it, and a row nobody is pointing at must not
+     swallow the click that opens the server. */
+  pointer-events: none;
+}
+.sv-frame:hover .sv-actions,
+.sv-frame:focus-within .sv-actions {
+  pointer-events: auto;
+}
+.sv-go {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--sv-go);
+  padding: 0 12px;
+  border: 1px solid var(--mac-hairline, var(--g-line));
+  border-radius: 8px;
+  background: var(--g-fill);
+  color: var(--g-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  opacity: 0;
+  transform: translateY(var(--sv-roll));
+  transition:
+    opacity 150ms var(--g-ease-state),
+    transform var(--sv-swap) var(--g-ease-out),
+    background-color 140ms var(--g-ease-state),
+    border-color 140ms var(--g-ease-state);
+}
+.sv-frame:hover .sv-go,
+.sv-frame:focus-within .sv-go,
+.sv-go[aria-busy="true"] {
+  opacity: 1;
+  transform: none;
+  /* The count leaves first and quickly; the way in starts arriving once it is
+     mostly gone, so they are never both half-visible. The movement underneath
+     stays continuous. On the hover rule only, so leaving has no delay. */
+  transition-delay: 70ms, 0s, 0s, 0s;
+}
+.sv-go > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.sv-go svg {
+  flex: none;
+  color: var(--g-ink-faint);
+}
+.sv-frame:hover .sv-go {
+  border-color: var(--g-line-strong);
+  background: var(--g-fill-2);
+}
+/* And it answers the press, at the same 3% the landing's buttons use. The
+   whole card is the way in, so this is the only part of it that can. */
+.sv-go:active {
+  transform: scale(0.97);
+  transition-duration: 90ms;
+}
+
+/* -------------------------------------------------------------------- pin */
+
+/* The pin on the banner's corner: the mark itself with no disc behind it. White
+   with a shadow over artwork, the page's dim ink on a plain band. The box stays
+   26px for hitting. */
+.sv-pin {
+  position: absolute;
+  z-index: 3;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--g-ink-dim);
+  opacity: 0;
+  transition:
+    opacity 150ms var(--g-ease-state),
+    color 150ms var(--g-ease-state);
+}
+.sv-frame[data-art="true"] .sv-pin {
+  color: #fff;
+  /* An outline: four zero-blur shadows (one per direction) put a hairline on
+     the glyph so it reads on any banner, and a fifth seats it. */
+  filter:
+    drop-shadow(0.6px 0 0 rgba(0, 0, 0, 0.6))
+    drop-shadow(-0.6px 0 0 rgba(0, 0, 0, 0.6))
+    drop-shadow(0 0.6px 0 rgba(0, 0, 0, 0.6))
+    drop-shadow(0 -0.6px 0 rgba(0, 0, 0, 0.6))
+    drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45));
+}
+.sv-frame:hover .sv-pin,
+.sv-frame:focus-within .sv-pin,
+.sv-pin:focus-visible,
+.sv-frame[data-pinned="true"] .sv-pin {
+  opacity: 1;
+}
+.sv-pin:hover {
+  color: var(--g-ink);
+}
+.sv-frame[data-art="true"] .sv-pin:hover {
+  color: #fff;
+}
+.sv-frame[data-pinned="true"] .sv-pin,
+.sv-frame[data-art="true"][data-pinned="true"] .sv-pin {
+  color: var(--g-accent-display, var(--g-accent));
+}
+@media (hover: none), (pointer: coarse) {
+  /* A bare mark needs its tap target back, which is the box and not the
+     paint -- 30px of nothing around a 13px glyph. */
+  .sv-pin {
+    width: 32px;
+    height: 32px;
+    opacity: 1;
+  }
+  /* Touch: no swap. The count and the way in are both shown, stacked, with a
+     bigger button (touch browsers keep `:hover` on the last tapped card, which
+     would leave its count stuck faded). */
+  .sv-frame {
+    --sv-go: 38px;
+  }
+  .sv-foot {
+    display: block;
+    min-height: 0;
+    margin-top: 2px;
+  }
+  .sv-actions {
+    position: static;
+    margin-top: 10px;
+    pointer-events: auto;
+  }
+  .sv-frame:hover .sv-sub,
+  .sv-frame:focus-within .sv-sub {
+    opacity: 1;
+    transform: none;
+  }
+  .sv-go {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------ spin */
+
+.sv-spin {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: svTurn 0.7s linear infinite;
+}
+@keyframes svTurn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sv-frame,
+  .sv-pin,
+  .sv-go,
+  .sv-sub,
+  .sv-actions {
+    transition: none;
+    transform: none;
+  }
+  .sv-spin {
+    animation: none;
+  }
+}

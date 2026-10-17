@@ -1,0 +1,368 @@
+/* The ripple button.
+
+   Unlayered, like the rest of the restyle: Tailwind v3's preflight is unlayered
+   and beats every layered rule.
+
+   - No glow. At rest: one specular hairline along the top edge. Hover scales up
+     2%, press scales down 3%.
+   - It tips toward the pointer: the surface dips on the pointer's side and
+     rises on the other, with shading and rim to match (`useTilt` in tilt.ts
+     writes the pointer position; the rules under "the lit surface" do the
+     rest). Mouse only, off under reduced motion, and shared with the picker's
+     cards at half the angle.
+   - The ripple is drawn in `currentColor`, the label's colour, which always
+     contrasts with the fill. Its geometry is Animate UI's (a circle from the
+     contact point, half-opaque to nothing over 600ms), sized to the button so
+     it reaches the far corner. */
+
+/* The hover pop, registered so it can transition on its own curve while sharing
+   one `transform` with the tilt. */
+@property --pop {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+.g-ripple {
+  /* The label's own colour, so the wave contrasts with every variant's fill. */
+  --ripple: currentColor;
+  --ripple-hover: 1.02;
+  --ripple-press: 0.97;
+
+  /* Written by `useTilt`. Neutral at rest, which makes the tilt vanish on
+     touch, under reduced motion and on the server with no branching. */
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --tilt-px: 50%;
+  --tilt-py: 50%;
+  --rim-x: 0px;
+  --rim-y: 0px;
+  --pop: 1;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  /* The waves are drawn to the button's own shape and would otherwise leave
+     it; this is the one place a square corner would show. */
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid transparent;
+  /* A button, not a capsule. */
+  border-radius: var(--g-r-control);
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  /* One composed transform: the pop drives the scale through `--pop`, so hover
+     and tilt both apply (a second `transform` declaration would replace the
+     first), and press overrides the pop without touching the rotation. */
+  transform: perspective(420px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y))
+    scale(var(--pop));
+  /* Nothing here transitions the tilt. tilt.ts advances all six values once per
+     frame on one time constant; a CSS transition restarted by each pointer
+     event would follow the event clock and step unevenly. The pop keeps its
+     transition because it is a state change. */
+  transition:
+    --pop 150ms var(--g-ease-out),
+    border-color 160ms var(--g-ease-state),
+    background-color 160ms var(--g-ease-state),
+    color 160ms var(--g-ease-state);
+}
+
+/* The pop. On the pointer only — a finger has no hover, and a tap that scales
+   the thing under it reads as the page moving. */
+@media (hover: hover) and (pointer: fine) {
+  .g-ripple:hover:not(:disabled):not([aria-disabled="true"]) {
+    --pop: var(--ripple-hover);
+  }
+}
+.g-ripple:active:not(:disabled):not([aria-disabled="true"]) {
+  --pop: var(--ripple-press);
+  transition-duration: 90ms;
+}
+
+.g-ripple:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--g-accent-soft);
+}
+
+.g-ripple:disabled,
+.g-ripple[aria-disabled="true"] {
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* -------------------------------------------------------- the lit surface */
+
+/* The lit surface: shading that agrees with the tilt, which is what makes a few
+   pixels of rotation read as a key tipping. Two washes and a rim, all from the
+   same pointer reading: - a dark radial at the pointer (the side that dipped);
+   - a light radial opposite (the side that rose); - a 1.5px rim, dark on the
+   near inside edge and light on the far one (two offset inset shadows).
+
+   Shading both ways reads on every variant and theme (only lightening vanishes
+   on pale fills; only darkening on dark ones). Amplitudes are about 5% either
+   side, within the reference's 7-12%; more reads as a gloss gradient. Separate
+   from the ripple: the ripple is the click, this is the pointer. */
+.g-ripple::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(
+      92% 190% at calc(100% - var(--tilt-px)) calc(100% - var(--tilt-py)),
+      rgba(255, 255, 255, 0.16),
+      rgba(255, 255, 255, 0) 76%
+    ),
+    radial-gradient(
+      92% 190% at var(--tilt-px) var(--tilt-py),
+      rgba(0, 0, 0, 0.11),
+      rgba(0, 0, 0, 0) 76%
+    );
+  box-shadow:
+    inset var(--rim-x) var(--rim-y) 0 0 rgba(0, 0, 0, 0.13),
+    inset calc(var(--rim-x) * -1) calc(var(--rim-y) * -1) 0 0
+      rgba(255, 255, 255, 0.26);
+  transition: opacity 150ms var(--g-ease-state);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .g-ripple:hover:not(:disabled):not([aria-disabled="true"])::after {
+    opacity: 1;
+  }
+}
+
+/* Nothing to light. The ghost variant has no fill of its own, so a wash on it
+   is a blob floating on the page rather than a surface catching light. */
+.g-ripple[data-variant="ghost"]::after {
+  display: none;
+}
+
+/* Content above the waves. Without this the layer, which comes after it in the
+   DOM, paints over the label. */
+.g-ripple-label {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+}
+
+.g-ripple-field {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* The wave starts at a tenth of its size and visible, on a curve that covers
+   half the distance in the first fifth of the time, so it registers before a
+   navigating button takes focus away. */
+.g-ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0.1);
+  opacity: 0.6;
+  animation: gRipple var(--duration, 600ms) cubic-bezier(0.16, 0.84, 0.34, 1)
+    forwards;
+}
+
+@keyframes gRipple {
+  60% {
+    opacity: 0.34;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ sizes */
+
+/* macOS control heights; with a coarse pointer every size clears 44px (see the
+   block at the foot of this file). */
+.g-ripple[data-size="sm"] {
+  min-height: 32px;
+  padding-inline: 14px;
+  font-size: 13px;
+}
+.g-ripple[data-size="default"] {
+  min-height: 40px;
+  padding-inline: 18px;
+  font-size: 14px;
+}
+.g-ripple[data-size="lg"] {
+  min-height: 48px;
+  padding-inline: 24px;
+  font-size: 15.5px;
+}
+.g-ripple[data-size="icon"] {
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+}
+.g-ripple[data-size="icon-sm"] {
+  width: 32px;
+  min-height: 32px;
+  padding: 0;
+}
+/* Touch: every size reaches 44px, defined here so pages do not each have to
+   remember. */
+@media (pointer: coarse) {
+  .g-ripple[data-size="sm"],
+  .g-ripple[data-size="default"],
+  .g-ripple[data-size="icon"],
+  .g-ripple[data-size="icon-sm"] {
+    min-height: 36px;
+  }
+  .g-ripple[data-size="icon"],
+  .g-ripple[data-size="icon-sm"] {
+    width: 36px;
+  }
+}
+.g-ripple[data-size="icon"] .g-ripple-label,
+.g-ripple[data-size="icon-sm"] .g-ripple-label {
+  gap: 0;
+}
+
+/* --------------------------------------------------------------- variants */
+
+/* The prominent one. A macOS filled button is flat, with one hairline of
+   specular light along the top edge and nothing under it. */
+.g-ripple[data-variant="default"] {
+  background: var(--g-accent);
+  color: var(--g-on-accent);
+  /* A hairline marks the button's edge: the accent fill is only 2.04:1 on the
+     paper ground (under the 3:1 a control edge needs), so the line uses the
+     deepened accent at 4.5:1. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0 0 1px var(--g-accent-line);
+}
+/* Hover mixes toward white in both themes (mixing toward the ink darkened it in
+   light mode and dropped the label's contrast below AA). */
+.g-ripple[data-variant="default"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--g-accent) 86%, #fff);
+}
+.g-ripple[data-variant="default"]:active:not(:disabled) {
+  background: color-mix(in srgb, var(--g-accent) 74%, #fff);
+}
+.g-ripple[data-variant="default"]:disabled {
+  border-color: var(--mac-hairline, var(--g-line));
+  background: var(--g-fill-2);
+  color: var(--g-ink-faint);
+  box-shadow: none;
+}
+
+.g-ripple[data-variant="outline"] {
+  border-color: var(--mac-hairline, var(--g-line));
+  background: var(--g-fill);
+  color: var(--g-ink-dim);
+}
+.g-ripple[data-variant="outline"]:hover:not(:disabled) {
+  border-color: var(--g-line-strong);
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+
+.g-ripple[data-variant="secondary"] {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+.g-ripple[data-variant="secondary"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--g-ink) 12%, var(--g-fill-2));
+}
+
+.g-ripple[data-variant="ghost"] {
+  background: transparent;
+  color: var(--g-ink-dim);
+}
+.g-ripple[data-variant="ghost"]:hover:not(:disabled) {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+
+.g-ripple[data-variant="destructive"] {
+  background: var(--tone-bad, #d9455f);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.g-ripple[data-variant="destructive"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--tone-bad, #d9455f) 88%, #000);
+}
+
+/* Two tones for the owner panel: a toggle that is on, and an irreversible
+   action. Colour only; size, hover and press stay the variant's. */
+.g-ripple.owner-on {
+  border-color: var(--tone-ok-line, rgba(95, 208, 138, 0.34));
+  background: var(--tone-ok-soft, rgba(95, 208, 138, 0.12));
+  color: var(--tone-ok, #5fd08a);
+}
+.g-ripple.owner-bad {
+  border-color: var(--tone-bad-line, rgba(217, 83, 111, 0.34));
+  background: var(--tone-bad-soft, rgba(217, 83, 111, 0.12));
+  color: var(--tone-bad, #d9455f);
+}
+.g-ripple.owner-bad:hover:not(:disabled) {
+  border-color: var(--tone-bad, #d9455f);
+  background: var(--tone-bad-wash, rgba(217, 83, 111, 0.2));
+  color: var(--tone-bad, #d9455f);
+}
+
+/* ---------------------------------------------------------------- a finger */
+
+/* Touch sizes: 44pt minimum targets. */
+@media (pointer: coarse) {
+  /* Phone sizes as in Apple's apps: full-width actions at 44, small ones at 36. */
+  .g-ripple[data-size="sm"] {
+    min-height: 36px;
+    padding-inline: 14px;
+    font-size: 14px;
+  }
+  .g-ripple[data-size="default"] {
+    min-height: 42px;
+    padding-inline: 18px;
+    font-size: 15px;
+  }
+  .g-ripple[data-size="lg"] {
+    min-height: 46px;
+    padding-inline: 22px;
+    font-size: 16px;
+  }
+  .g-ripple[data-size="icon"] {
+    width: 38px;
+    min-height: 38px;
+  }
+  .g-ripple[data-size="icon-sm"] {
+    width: 36px;
+    min-height: 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-ripple {
+    transition-duration: 1ms;
+  }
+  .g-ripple:hover,
+  .g-ripple:active {
+    transform: none;
+  }
+  /* `useTilt` writes nothing under reduced motion; this also removes the
+     shading layer. */
+  .g-ripple::after {
+    opacity: 0 !important;
+  }
+  .g-ripple-wave {
+    animation: none;
+    opacity: 0;
+  }
+}

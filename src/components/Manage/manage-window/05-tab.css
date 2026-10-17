@@ -1,0 +1,537 @@
+/* Inside a tab: its top, settings groups, empty states, controls, and the phone
+   tab list (part of manage-window.css) */
+
+/* ═══ Inside a tab ═══
+
+   Every tab is built from five shapes: a section header, a group heading, a
+   config card, a card led by a switch, and an empty state. Styling those five
+   styles every tab. Same rules as the chrome above. */
+
+/* One type system for every tab. These element-plus-class rules outrank the
+   older hand-written tabs' utility classes (`text-base font-bold
+   text-[#f5f2f2]`, serif faces). Headings use the body face. */
+.manage-root .gw-pane :is(h2, h3, h4, h5) {
+  font-family: inherit;
+  color: var(--g-ink);
+}
+.manage-root .gw-pane :is(p, li, dd, dt, label, span) {
+  font-family: inherit;
+}
+.manage-root .gw-pane .cool-text {
+  color: var(--mac-label-dim);
+}
+
+/* ── the top of a tab ────────────────────────────────────────────────────── */
+
+.manage-root .gw-pane .tab-page-header {
+  gap: var(--u4);
+  margin-bottom: var(--u8);
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+/* One title style on every tab, for both Overview's own header and
+   `SectionHeader`. */
+.manage-root .gw-pane .section-header-title,
+.manage-root .gw-pane .overview-heading-copy h2 {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(30px, 2.8vw, 37px);
+  /* 700, not 800: the face is set to read calm at a title's size, and at
+     800 its counters close up and the title starts to shout. */
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--g-ink);
+}
+/* The accent is a colour now, not a second face: a title is one voice. */
+.manage-root .gw-pane .section-header-title .accent {
+  font-family: inherit;
+  font-weight: inherit;
+  color: var(--g-accent-ink);
+}
+
+/* ── a group of settings ──
+
+   One box per group: the group's name is the first row, under the same border
+   as its settings, and the rows take the full width. */
+.manage-root .gw-pane .gw-set {
+  max-width: var(--set-max);
+  margin-bottom: var(--u6);
+}
+.manage-root .gw-pane .gw-set:last-child {
+  margin-bottom: 0;
+}
+
+/* The header row opens and closes the group. On hover only the chevron turns;
+   nothing moves. */
+.manage-root .gw-pane .gw-set-head {
+  display: flex;
+  align-items: center;
+  gap: var(--u3);
+  width: 100%;
+  padding: var(--u3) var(--u4);
+  border: 0;
+  background: var(--g-fill);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms var(--g-ease-state);
+}
+.manage-root .gw-pane .gw-set-head[data-static="true"] {
+  cursor: default;
+}
+@media (hover: hover) {
+  .manage-root .gw-pane .gw-set-head:not([data-static="true"]):hover {
+    background: var(--g-fill-2);
+  }
+}
+.manage-root .gw-pane .gw-set-head + .gw-set-slot,
+.manage-root .gw-pane .gw-set-head + .gw-set-roll .gw-set-slot:first-child {
+  border-top: 1px solid var(--mac-hair);
+}
+.manage-root .gw-pane .gw-set-head-copy {
+  display: block;
+  min-width: 0;
+  flex: 1;
+}
+.manage-root .gw-pane .gw-set-head-name {
+  display: block;
+  font-size: var(--t-lead);
+  line-height: var(--lh-lead);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--g-ink);
+}
+.manage-root .gw-pane .gw-set-head-say {
+  display: block;
+  margin-top: 1px;
+  max-width: 76ch;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+
+.manage-root .gw-pane .gw-set-panel {
+  border: 1px solid var(--mac-hair);
+  border-radius: var(--r-card);
+  background: var(--mac-raise);
+  overflow: clip;
+  /* Rounded clip-path as well as overflow: while a group animates, its rows are
+     composited and a rounded overflow clip is not always applied to them. */
+  clip-path: inset(0 round var(--r-card));
+}
+.manage-root .gw-pane .gw-set-panel[data-bare="true"] {
+  border: 1px solid var(--mac-hair);
+}
+.manage-root .gw-pane .gw-set-lede {
+  margin: 0;
+  padding: var(--u3) var(--u4);
+  border-bottom: 1px solid var(--mac-hair);
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+.manage-root .gw-pane .gw-set-slot + .gw-set-slot {
+  border-top: 1px solid var(--mac-hair);
+}
+
+/* One setting row: label on the left, control on the right. */
+.manage-root .gw-pane .gw-set-row {
+  /* A size container, so the row responds to its own width: the same setting
+     can be full width on one tab and half a two-up grid on another. */
+  container: gw-row / inline-size;
+  display: grid;
+  /* The control column grows with the row, so pickers show full names and role
+     chips wrap in lines. */
+  grid-template-columns: minmax(0, 1fr) clamp(260px, 40%, 560px);
+  align-items: center;
+  gap: var(--u4);
+  min-height: 60px;
+  padding: var(--u3) var(--u4);
+  transition: background-color 140ms var(--g-ease-state);
+}
+/* Too narrow for a label and a control side by side, the control goes under
+   the label -- rather than the label being crushed to a word a line. */
+@container gw-row (max-width: 620px) {
+  .manage-root .gw-pane .gw-set-row > .gw-set-control,
+  .manage-root .gw-pane .gw-set-row:has(> .gw-set-control) > .gw-set-lead {
+    grid-column: 1 / -1;
+  }
+}
+@media (hover: hover) {
+  .manage-root .gw-pane .gw-set-row:hover {
+    background: var(--g-fill);
+  }
+}
+.manage-root .gw-pane .gw-set-row[data-problem="true"] {
+  background: var(--tone-warn-soft);
+}
+/* A control too wide for the column takes the row under the label. */
+.manage-root .gw-pane .gw-set-slot[data-wide="true"] .gw-set-row,
+.manage-root .gw-pane .gw-set-row:has(.gw-set-trailing) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.manage-root .gw-pane .gw-set-slot[data-wide="true"] .gw-set-row {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+.manage-root .gw-pane .gw-set-slot[data-wide="true"] .gw-set-control {
+  grid-column: 1;
+  max-width: none;
+}
+@media (max-width: 720px) {
+  .manage-root .gw-pane .gw-set-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.manage-root .gw-pane .gw-set-lead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--u3);
+  min-width: 0;
+}
+.manage-root .gw-pane .gw-set-copy {
+  min-width: 0;
+  padding-top: 2px;
+}
+.manage-root .gw-pane .gw-set-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--u2);
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--g-ink);
+}
+.manage-root .gw-pane .gw-set-note {
+  margin: 2px 0 0;
+  max-width: 58ch;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+.manage-root .gw-pane .gw-set-why {
+  margin: var(--u1) 0 0;
+  max-width: 58ch;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--tone-warn);
+}
+.manage-root .gw-pane .gw-set-flag {
+  padding: 2px var(--u2);
+  border-radius: 999px;
+  background: var(--tone-warn-wash);
+  color: var(--tone-warn);
+  font-size: var(--t-micro);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.manage-root .gw-pane .gw-set-control,
+.manage-root .gw-pane .gw-set-trailing {
+  min-width: 0;
+}
+.manage-root .gw-pane .gw-set-trailing {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* The glyph for a setting's type, without a tile behind it. */
+.manage-root .gw-pane .field-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--u4);
+  height: var(--u6);
+  color: var(--mac-label-dim);
+  opacity: 0.7;
+  transition:
+    color 180ms var(--g-ease-state),
+    opacity 180ms var(--g-ease-state);
+}
+.manage-root .gw-pane .field-icon svg {
+  width: 15px;
+  height: 15px;
+}
+.manage-root .gw-pane .gw-set-row:focus-within .field-icon,
+.manage-root .gw-pane .gw-set-row:hover .field-icon {
+  color: var(--g-accent-ink);
+  opacity: 1;
+}
+.manage-root .gw-pane .field-icon[data-problem="true"] {
+  color: var(--tone-warn);
+  opacity: 1;
+}
+
+/* What is left of the old card shells, for the hand-written tabs that still
+   build their own panels. */
+.manage-root .gw-pane .settings-card,
+.manage-root .gw-pane .glass-panel {
+  padding: var(--u4);
+  border: 1px solid var(--mac-hair) !important;
+  border-radius: var(--r-card) !important;
+  background: var(--mac-raise) !important;
+}
+
+
+/* ── nothing here yet ────────────────────────────────────────────────────── */
+
+.manage-root .gw-pane .gator-empty {
+  gap: var(--u3);
+  padding: var(--u10) var(--u5);
+  border-radius: var(--r-card);
+}
+.manage-root .gw-pane .gator-empty-title {
+  font-size: var(--t-lead);
+  line-height: var(--lh-lead);
+  font-weight: 650;
+  color: var(--g-ink);
+}
+.manage-root .gw-pane .gator-empty-hint {
+  max-width: 48ch;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+
+/* ── the controls ────────────────────────────────────────────────────────── */
+
+/* One height for everything you operate, on the 8 grid, with the window's
+   control radius. The tab had inputs at 2.2rem, 2.3rem, 36px and 40px. */
+.manage-root .gw-pane input:not([type="checkbox"]):not([type="radio"]):not([data-bare]),
+.manage-root .gw-pane select,
+.manage-root .gw-pane [role="combobox"],
+.manage-root .gw-pane .gator-control {
+  min-height: var(--u10);
+  border-radius: var(--r-control) !important;
+  font-size: var(--t-body);
+}
+.manage-root .gw-pane textarea:not([data-bare]) {
+  border-radius: var(--r-control) !important;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+}
+@media (pointer: coarse) {
+  .manage-root .gw-pane input:not([type="checkbox"]):not([type="radio"]):not([data-bare]),
+  .manage-root .gw-pane select,
+  .manage-root .gw-pane .gator-control {
+    min-height: 44px;
+  }
+}
+
+/* ── the tab list on a phone ──
+
+   No rail on a phone. Pressing the status strip opens the tab list as a bottom
+   sheet, using the landing's action sheet metrics: 36×5 grabber, 14px radius,
+   56px rows, inset hairlines, 44px minimum targets. */
+.gw-sheet-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  /* Same reason as the picker's layer: a backdrop root here stops the scrim
+     blurring the page behind the sheet. */
+  will-change: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overscroll-behavior: contain;
+}
+/* Not faded as a whole, for the same reason as the picker layer: below full
+   opacity it is a backdrop root and the scrim's blur would see nothing. */
+.gw-sheet-layer[data-enter] {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+.gw-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--g-ground) 62%, transparent);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  cursor: default;
+  opacity: 0;
+  transition: opacity 240ms var(--g-ease-state);
+}
+.gw-sheet-layer[data-enter="to"] .gw-sheet-scrim {
+  opacity: 1;
+}
+.gw-sheet {
+  position: relative;
+  max-height: min(72dvh, 640px);
+  margin: var(--u2);
+  padding-bottom: max(var(--u2), env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--mac-hair);
+  border-radius: var(--r-panel);
+  background: var(--mac-raise);
+  box-shadow: 0 -20px 60px -20px rgba(0, 0, 0, 0.7);
+  transform: translateY(100%);
+  transition: transform 300ms var(--gw-ease);
+}
+.gw-sheet-layer[data-enter="to"] .gw-sheet {
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-sheet {
+    transition-duration: 1ms;
+  }
+}
+/* The drag handle is the whole strip across the top of the sheet. It owns the
+   gesture; the list below it scrolls. */
+.gw-sheet-pull {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  padding-bottom: var(--u1);
+  touch-action: none;
+  cursor: grab;
+}
+.gw-sheet-pull:active {
+  cursor: grabbing;
+}
+/* iOS's grabber, at iOS's size. */
+.gw-sheet-grab {
+  flex: none;
+  width: 36px;
+  height: 5px;
+  margin: var(--u2) auto var(--u1);
+  border-radius: 999px;
+  background: var(--g-line-strong);
+}
+.gw-sheet-list {
+  flex: 1;
+  min-height: 0;
+  padding: var(--u2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.gw-sheet-group + .gw-sheet-group {
+  margin-top: var(--u4);
+}
+.gw-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: var(--u3);
+  width: 100%;
+  height: 56px;
+  padding-inline: var(--u3);
+  border: 0;
+  border-radius: var(--r-row);
+  background: transparent;
+  color: var(--mac-label);
+  font: inherit;
+  font-size: var(--t-lead);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+.gw-sheet-row[data-current="true"] {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+  font-weight: 650;
+}
+.gw-sheet-row[data-current="true"] .gw-row-icon {
+  color: var(--g-accent-ink);
+}
+.gw-sheet-row[data-off="true"] {
+  opacity: 0.44;
+}
+/* Hover and press feedback, matching the rail. */
+.gw-sheet-row,
+.gw-dock-row {
+  transition:
+    background-color 120ms var(--g-ease-state),
+    color 120ms var(--g-ease-state),
+    transform 160ms var(--gw-ease);
+}
+@media (hover: hover) {
+  .gw-sheet-row:not([data-current="true"]):hover,
+  .gw-dock-row:not([data-current="true"]):hover {
+    background: var(--g-fill);
+    color: var(--g-ink);
+  }
+}
+.gw-sheet-row:active {
+  transform: scale(0.985);
+}
+.gw-sheet-row .gw-row-icon {
+  width: var(--u5);
+  height: var(--u5);
+}
+
+/* ── phone ──
+
+   The bar keeps only the mark, the server tab, search and the account.
+   Appearance lives on the account page, reload is pull-to-refresh, and there is
+   no rail to toggle. */
+@media (max-width: 760px) {
+  .gw-bar {
+    gap: var(--u1);
+    padding-inline: var(--u3);
+  }
+  .gw-bar .g-theme,
+  .gw-rail-toggle,
+  .gw-bar .gw-icon[aria-label="Reload channels and roles"],
+  .gw-sep,
+  /* Search is the dock's, at the foot of the screen where a thumb is. */
+  .gw-bar .g-find {
+    display: none;
+  }
+  /* What is left in the bar is drawn at a phone's size. Beside a 40px tab,
+     a 22px mark and a 28px face read as leftovers from the desktop bar. */
+  .gw-mark {
+    width: var(--u10);
+    height: var(--u10);
+  }
+  .gw-mark svg {
+    width: 30px;
+    height: auto;
+  }
+  .gw-face {
+    width: 36px;
+    height: 36px;
+    font-size: var(--t-small);
+  }
+  /* The tab takes the room the dropped controls left, rather than truncating
+     a name at fourteen characters beside four things nobody pressed. */
+  .gw-tab,
+  .gw-tab-coach,
+  .gw-tab-coach > .relative {
+    flex: 1;
+    max-width: none;
+  }
+  .gw-zone[data-grow="true"] {
+    display: none;
+  }
+  .gw-zone:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+  /* The rail is the sheet now. */
+  .gw-side {
+    display: none;
+  }
+  .manage-root .gw-pane {
+    padding: var(--u5) var(--u4) var(--u10);
+  }
+  /* No status strip on a phone: the dock carries its breadcrumb and warning. */
+  :root,
+  .manage-root {
+    --gw-foot: 0px;
+  }
+  .gw-foot {
+    display: none;
+  }
+  .gw-mod-say {
+    max-width: none;
+  }
+}

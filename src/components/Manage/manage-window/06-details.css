@@ -1,0 +1,618 @@
+/* Details: hit boxes, numerals, radii, focus, density, disclosures, switch
+   groups and the module gate (part of manage-window.css) */
+
+/* ═══ Details ═══
+
+   Five rules applied across everything the window draws: larger hit areas,
+   tabular figures, one radius ladder, visible focus, and density. */
+
+/* ── 1. Hit boxes are bigger than what you can see ───────────────────────── */
+
+/* An invisible collar enlarges each standalone control's hit area. It paints
+   above the control (a collar under the background would not receive the press)
+   and is transparent. A collar may be at most half the gap to the next control,
+   so neighbours meet in the middle instead of overlapping. List rows already
+   touch, so they get none. */
+.gw-icon,
+.gw-mark,
+.gw-face,
+.gw-pun,
+.gw-health-chip,
+.gw-bar .g-find,
+.gw-bar .g-theme-block {
+  position: relative;
+}
+.gw-icon::after,
+.gw-mark::after,
+.gw-face::after,
+.gw-pun::after,
+.gw-health-chip::after,
+.gw-bar .g-find::after,
+.gw-bar .g-theme-block::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+}
+/* The status strip's controls have the whole strip's height around them, so
+   they can afford the full collar. */
+.gw-pun::after,
+.gw-health-chip::after {
+  inset: -6px -4px;
+}
+
+/* 8px between controls in a group, so the 4px collars meet exactly in the
+   middle. */
+.gw-zone {
+  gap: var(--u2);
+}
+
+/* ── 2. Numerals line up ─────────────────────────────────────────────────── */
+
+/* Tabular figures, so numbers in lists, badges and tables line up and do not
+   shift as they change. */
+.manage-root .gw-pane table,
+.manage-root .gw-pane td,
+.manage-root .gw-pane th,
+.manage-root .gw-pane input[type="number"],
+.manage-root .gw-pane time,
+.manage-root .gw-pane [data-numeric],
+.manage-root .gw-count,
+.manage-root .gw-row-badge,
+.manage-root .gw-health-chip,
+.gw-pick-note,
+.gw-set-count {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ── 3. One radius ladder, and the transitions that sell it ──────────────── */
+
+/* Maps Tailwind's rounded-xl/2xl in the hand-written tabs onto the window's
+   radius ladder. */
+.manage-root .gw-pane .rounded-2xl {
+  border-radius: var(--r-card);
+}
+.manage-root .gw-pane .rounded-xl {
+  border-radius: var(--r-control);
+}
+.manage-root .gw-pane .rounded-lg {
+  border-radius: var(--r-tile);
+}
+
+/* Anything you point at answers on the same two properties and the same
+   curve. Colour and radius only — both composite cheaply, neither reflows. */
+.manage-root .gw-pane button:not(.gw-mod-toggle):not([role="switch"]),
+.manage-root .gw-pane a,
+.manage-root .gw-pane [role="button"] {
+  transition:
+    background-color 120ms var(--g-ease-state),
+    border-color 120ms var(--g-ease-state),
+    color 120ms var(--g-ease-state),
+    border-radius 160ms var(--gw-ease);
+}
+
+/* ── 4. Focus you can see, everywhere ────────────────────────────────────── */
+
+/* One focus ring in the accent, offset from the control. `:focus-visible`, so
+   pointer presses leave no ring. */
+/* `!important` because manage-restyle.css sets `outline: none !important` on
+   buttons, links and switches. */
+/* The search box carries the ring, not the bare input inside it (that drew two
+   outlines). */
+:root .manage-root :is(button, a, [role="button"], [role="switch"], [tabindex]):focus-visible,
+.gw-pick-layer :is(button, a):focus-visible,
+.gw-sheet-layer :is(button, a):focus-visible {
+  outline: 2px solid var(--g-accent) !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}
+
+/* ── 5. Density ──────────────────────────────────────────────────────────── */
+
+/* Density: every spacing here is one 4px step smaller than the first version,
+   with group gaps reduced less than gaps inside groups. */
+.manage-root .gw-pane {
+  padding-top: var(--u5);
+}
+.manage-root .gw-pane .tab-page-header {
+  margin-bottom: var(--u6);
+}
+.manage-root .gw-pane .gw-set {
+  margin-bottom: var(--u5);
+}
+.manage-root .gw-pane .gw-set-row {
+  padding: 10px var(--u4);
+  gap: var(--u4);
+}
+.manage-root .gw-pane .gw-set-note {
+  margin-top: 1px;
+}
+.manage-root .gw-mods {
+  gap: var(--u2);
+}
+.gw-mod {
+  min-height: 144px;
+}
+.gw-mod-toggle {
+  padding: var(--u3) var(--u4) var(--u12);
+}
+.gw-group + .gw-group {
+  margin-top: var(--u5);
+}
+
+/* ── the disclosure ──────────────────────────────────────────────────────── */
+
+/* The chevron on the header row. It turns; nothing else moves. */
+.gw-set-chev {
+  flex: none;
+  color: var(--mac-label-dim);
+  transition: transform 200ms var(--gw-ease);
+}
+.manage-root .gw-pane .gw-set-head[aria-expanded="false"] .gw-set-chev {
+  transform: rotate(-90deg);
+}
+/* Shut, a group says how much is inside rather than nothing at all. */
+.gw-set-count {
+  flex: none;
+  font-size: var(--t-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mac-label-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── a group that is one feature, with a switch ──────────────────────────── */
+
+/* A group led by a switch uses the same container as every other group: the
+   name in the header row, the switch as the first setting, and the settings it
+   gates rolling down below. */
+/* Off, the gated settings collapse to nothing. `grid-template-rows: 0fr → 1fr`
+   animates that without measuring the content. */
+.manage-root .gw-pane .gw-set-roll {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 420ms var(--gw-ease);
+}
+.manage-root .gw-pane .gw-set-roll[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+/* The rows trail the height slightly so the group unfolds; on close they leave
+   first. */
+.manage-root .gw-pane .gw-set-roll-clip {
+  min-height: 0;
+  overflow: clip;
+  overflow-clip-margin: 4px;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 160ms var(--g-ease-state),
+    transform 320ms var(--gw-ease);
+}
+.manage-root .gw-pane .gw-set-roll[data-open="true"] .gw-set-roll-clip {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 260ms var(--g-ease-state) 80ms,
+    transform 420ms var(--gw-ease) 40ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gw-pane .gw-set-roll,
+  .manage-root .gw-pane .gw-set-roll-clip {
+    transition-duration: 1ms;
+    transition-delay: 0ms;
+  }
+}
+/* The roll is a wrapper, so the hairline rule between sibling rows cannot see
+   across it. Its first row draws its own. */
+.manage-root .gw-pane .gw-set-roll-clip > .gw-set-slot:first-child {
+  border-top: 1px solid var(--mac-hair);
+}
+.manage-root .gw-pane .gw-set-roll-clip > .gw-set-slot + .gw-set-slot {
+  border-top: 1px solid var(--mac-hair);
+}
+/* A row under a switch, rolled: it draws its own rule above and gives the
+   next row one, since neither can see across the roll. */
+.manage-root .gw-pane .gw-set-roll[data-requires="true"] .gw-set-slot {
+  border-top: 1px solid var(--mac-hair);
+}
+.manage-root .gw-pane .gw-set-roll[data-requires="true"] + .gw-set-slot {
+  border-top: 1px solid var(--mac-hair);
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gw-pane .gw-set-roll {
+    transition-duration: 1ms;
+  }
+}
+
+/* ── the wall's density control ──────────────────────────────────────────── */
+
+/* Filter for the module wall. Each segment shows its own count. */
+.manage-root .gw-filter {
+  display: inline-flex;
+  /* The groups list stretches its children, which made a three-segment control
+     span 1400px with the segments huddled at one end. */
+  align-self: start;
+  width: fit-content;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  margin-bottom: var(--u5);
+  border: 1px solid var(--mac-hair);
+  border-radius: var(--r-control);
+  background: var(--mac-raise);
+}
+.manage-root .gw-filter-seg {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--u2);
+  height: 28px;
+  padding-inline: var(--u3);
+  border: 0;
+  border-radius: var(--r-tile);
+  background: transparent;
+  color: var(--mac-label-dim);
+  font: inherit;
+  font-size: var(--t-small);
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state);
+}
+@media (hover: hover) {
+  .manage-root .gw-filter-seg:hover {
+    color: var(--mac-label);
+  }
+}
+.manage-root .gw-filter-seg[data-on="true"] {
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+}
+.gw-filter-n {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--mac-label-dim);
+}
+.manage-root .gw-filter-seg[data-on="true"] .gw-filter-n {
+  color: var(--g-accent-ink);
+}
+
+/* ── one stroke ──────────────────────────────────────────────────────────── */
+
+/* A thin, constant stroke for Tabler icons at every size, so they read as one
+   set. */
+.manage-root :is(.gw-row-icon, .field-icon, .gw-mod-glyph, .gw-icon, .gw-sheet-row) svg {
+  stroke-width: 1.8;
+}
+.manage-root .gw-mod-ghost svg {
+  stroke-width: 1;
+}
+
+/* ── the wall's category headings ────────────────────────────────────────── */
+
+/* Category headings one step below a group heading. */
+.manage-root .gw-pane .overview-category-heading h3 {
+  font-size: var(--t-lead);
+  font-weight: 800;
+  line-height: var(--lh-lead);
+  letter-spacing: -0.015em;
+}
+
+/* ── the gate on a tab whose module is off ───────────────────────────────── */
+
+/* The panel shown over a module's blurred settings when the module is off. */
+.manage-root .gw-pane .gw-gate {
+  animation: gw-gate-in 360ms var(--gw-ease) both;
+  width: 100%;
+  max-width: 420px;
+  padding: var(--u5);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-window);
+  background: var(--mac-raise);
+  box-shadow: var(--mac-shadow);
+}
+.manage-root .gw-pane .gw-gate-title {
+  margin: 0;
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.manage-root .gw-pane .gw-gate-say {
+  margin: var(--u2) 0 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--mac-label-dim);
+}
+.manage-root .gw-pane .gw-gate-acts {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--u2);
+  margin-top: var(--u5);
+}
+/* The gate's buttons are the site's ripple buttons (site/ripple-button.css).
+   Here they only get their glyph's small motion: the arrow leans the way it
+   goes, and the power mark turns like a knob. */
+.manage-root .gw-pane :is(.gw-gate-back, .gw-gate-go) svg {
+  flex: none;
+  transition: transform 260ms var(--gw-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .manage-root .gw-pane .gw-gate-back:hover svg {
+    transform: translateX(-3px);
+  }
+  .manage-root .gw-pane .gw-gate-go:hover:not(:disabled) svg {
+    transform: rotate(-24deg);
+  }
+}
+
+/* The module's own mark, large and faint in the card's corner, as on the
+   module wall. It warms to the accent while the module is being turned on. */
+.manage-root .gw-pane .gw-gate {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.manage-root .gw-pane .gw-gate > :not(.gw-gate-mark) {
+  position: relative;
+}
+.manage-root .gw-pane .gw-gate-mark {
+  position: absolute;
+  top: -22px;
+  right: -22px;
+  z-index: -1;
+  display: grid;
+  color: var(--g-ink);
+  opacity: 0.05;
+  pointer-events: none;
+  transition:
+    opacity 300ms var(--g-ease-state),
+    color 300ms var(--g-ease-state),
+    transform 480ms var(--gw-ease);
+}
+.manage-root .gw-pane .gw-gate-mark svg {
+  stroke-width: 1;
+}
+.manage-root .gw-pane .gw-gate:hover .gw-gate-mark {
+  opacity: 0.08;
+  transform: translate(-3px, 3px) rotate(-4deg);
+}
+.manage-root .gw-pane .gw-gate[data-busy="true"] .gw-gate-mark {
+  color: var(--g-accent);
+  opacity: 0.16;
+}
+
+/* ── a tab that already has a rail of its own ────────────────────────────── */
+
+/* ER:LC has its own section rail, so its groups are slightly narrower. */
+.manage-root .gw-pane .prc-tab-panel .gw-set {
+  max-width: none;
+  margin-bottom: var(--u6);
+}
+
+/* The rail's own rows: the glyph, and no tile under it. */
+.manage-root .prc-rail-icon {
+  width: var(--u5);
+  height: var(--u5);
+  border-radius: 0;
+  background: transparent;
+  color: var(--mac-label-dim);
+}
+.manage-root .prc-rail-item[data-active="true"] .prc-rail-icon {
+  background: transparent;
+  color: var(--g-accent-ink);
+}
+.manage-root .prc-rail-item {
+  border-radius: var(--r-row);
+  padding: var(--u2) var(--u3);
+}
+.manage-root .prc-rail-item[data-active="true"] {
+  border-color: transparent;
+  background: var(--g-fill-2);
+}
+/* Once the highlight is measured, it draws the selection and the rows stay
+   clear. */
+/* The rail is sticky where it is a column, which already positions the
+   highlight; where it is a row of tabs it is not, and needs to be. */
+@media (max-width: 1099px) {
+  .manage-root .prc-rail {
+    position: relative;
+  }
+}
+.manage-root .prc-rail-item {
+  position: relative;
+  z-index: 1;
+}
+.manage-root .prc-rail-blob {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--blob-w, 0);
+  height: var(--blob-h, 0);
+  border-radius: var(--r-row);
+  background: var(--g-fill-2);
+  opacity: 0;
+  transform: translate(var(--blob-x, 0), var(--blob-y, 0));
+  transition:
+    transform 420ms var(--gw-ease),
+    width 420ms var(--gw-ease),
+    height 420ms var(--gw-ease),
+    opacity 200ms var(--g-ease-state);
+  pointer-events: none;
+}
+.manage-root .prc-rail[data-lit="true"] .prc-rail-blob {
+  opacity: 1;
+}
+.manage-root .prc-rail[data-lit="true"] .prc-rail-item[data-active="true"] {
+  background: transparent;
+}
+.manage-root .prc-rail-item .prc-rail-icon,
+.manage-root .prc-rail-item {
+  transition:
+    color 260ms var(--g-ease-state),
+    background-color 260ms var(--g-ease-state);
+}
+.manage-root .prc-tab-panel {
+  animation: gw-prc-in 320ms var(--gw-ease);
+}
+@keyframes gw-prc-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .prc-rail-blob {
+    transition-duration: 1ms;
+  }
+  .manage-root .prc-tab-panel {
+    animation: none;
+  }
+}
+.manage-root .prc-rail-label {
+  font-size: var(--t-body);
+  font-weight: 650;
+}
+.manage-root .prc-rail-blurb {
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro, 16px);
+  color: var(--mac-label-dim);
+}
+
+/* ── tabs written by hand ── */
+
+/* Older tabs lay out their own settings: a `GroupHeader`, then a Tailwind grid
+   of `ConfigCard`s, each already a `.gw-set-row`. `:has()` finds any grid
+   holding setting rows and turns it into one panel with hairlines between rows,
+   matching schema tabs without editing each tab. */
+.manage-root .gw-pane :is(.grid, .schema-grid):has(> .gw-set-row) {
+  display: block;
+  gap: 0;
+  border: 1px solid var(--mac-hair);
+  border-radius: var(--r-card);
+  background: var(--mac-raise);
+  overflow: clip;
+}
+.manage-root .gw-pane :is(.grid, .schema-grid):has(> .gw-set-row) > .gw-set-row + .gw-set-row {
+  border-top: 1px solid var(--mac-hair);
+}
+/* A control too wide for the right-hand column still takes the full row; the
+   row itself already knows how to do that. */
+.manage-root .gw-pane :is(.grid, .schema-grid):has(> .gw-set-row) > :is(.sm\:col-span-2, .lg\:col-span-2, .col-span-2) {
+  grid-column: auto;
+}
+
+/* A hand-written tab's heading sits above its grid as a separate element.
+   `:has(+ …)` joins the two into one box: the heading takes the top edge and
+   corners, and the seam is the same hairline as between rows. */
+.manage-root .gw-pane .schema-group-header {
+  margin-bottom: var(--u3);
+}
+.manage-root .gw-pane .schema-group-heading-row {
+  display: flex;
+  align-items: center;
+  gap: var(--u3);
+}
+.manage-root .gw-pane .schema-group-header h3 {
+  font-size: var(--t-lead);
+  line-height: var(--lh-lead);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+.manage-root .gw-pane .schema-group-rule {
+  display: none;
+}
+.manage-root .gw-pane .schema-group-header p {
+  margin-top: 1px;
+  max-width: 76ch;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+
+.manage-root .gw-pane .schema-group-header:has(+ :is(.grid, .schema-grid) > .gw-set-row) {
+  margin-bottom: 0;
+  padding: var(--u3) var(--u4);
+  border: 1px solid var(--mac-hair);
+  border-bottom: 0;
+  border-radius: var(--r-card) var(--r-card) 0 0;
+  background: var(--g-fill);
+}
+.manage-root
+  .gw-pane
+  .schema-group-header:has(+ :is(.grid, .schema-grid) > .gw-set-row)
+  + :is(.grid, .schema-grid) {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.manage-root
+  .gw-pane
+  .schema-group-header:has(+ :is(.grid, .schema-grid) > .gw-set-row)
+  + :is(.grid, .schema-grid)
+  > .gw-set-row:first-child {
+  border-top: 1px solid var(--mac-hair);
+}
+
+/* One max width for every container on a settings tab. On a laptop it caps
+   nothing; it only stops very wide screens stretching a label away from its
+   control. ER:LC is exempt (its rail already narrows it). */
+.manage-root .gw-pane :is(.grid, .schema-grid):has(> .gw-set-row),
+.manage-root .gw-pane .schema-group-header:has(+ :is(.grid, .schema-grid) > .gw-set-row),
+.manage-root .gw-pane > * > :is(.settings-card, .glass-panel, .config-card),
+.manage-root .gw-pane > * > * > :is(.settings-card, .glass-panel, .config-card) {
+  max-width: var(--set-max);
+}
+.manage-root .gw-pane .prc-settings :is(.settings-card, .glass-panel, .config-card) {
+  max-width: none;
+}
+
+/* `SectionLabel`, used by the older tabs, gets the same look as every group
+   heading. */
+.manage-root .gw-pane .gw-h3,
+.manage-root .gw-pane .settings-card h3 {
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+/* The buttons those tabs use are set in the display serif, which is the face
+   for a heading and never for a control. */
+.manage-root .gw-pane :is(.btn-pop, .btn-peach, .btn-quiet, button) {
+  font-family: inherit;
+}
+
+/* ── the wall on a phone ─────────────────────────────────────────────────── */
+
+/* Touch has no hover, so the hint never shows; a tap on the card toggles it. */
+@media (hover: none) {
+  .gw-mod {
+    min-height: 120px;
+  }
+  .gw-mod-hint {
+    display: none;
+  }
+}
+
+/* ── the module wall under a thumb ───────────────────────────────────────── */
+
+/* The cog is the one small target left on the card, so it gets a finger's
+   width where there is a finger. */
+@media (pointer: coarse) {
+  .manage-root .gw-mod-cog {
+    width: var(--u12);
+    height: var(--u12);
+  }
+  .manage-root .gw-mod-cog-spot {
+    right: var(--u1);
+    bottom: var(--u1);
+  }
+  /* Touch-sized target for the pun button. */
+  .manage-root .gw-pun {
+    width: var(--u12);
+  }
+}

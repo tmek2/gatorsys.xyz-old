@@ -1,0 +1,698 @@
+/* Text fields, hand-written groups, the bar's geometry and a tab's face and
+   headings (part of manage-window.css) */
+
+/* ── text fields and dropdown triggers ──
+
+   One text field style, `gw-field`, for `TextField` and every hand-written
+   input. The dropdown trigger matches it and shows when it is open: the edge
+   lights, a ring appears, and the list grows out of it. */
+.manage-root .gw-field,
+.gw-picker-trigger {
+  min-height: var(--u10);
+  padding: 0 var(--u3);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-control);
+  background: color-mix(in srgb, var(--g-ink) 4%, transparent);
+  color: var(--g-ink);
+  font-family: inherit;
+  font-size: var(--t-body);
+  font-weight: 500;
+  letter-spacing: normal;
+  box-shadow: none;
+  outline: none;
+  transform: none;
+  transition:
+    border-color 140ms var(--g-ease-state),
+    background-color 140ms var(--g-ease-state),
+    box-shadow 180ms var(--g-ease-state);
+}
+.manage-root textarea.gw-field {
+  padding: 10px var(--u3);
+  line-height: var(--lh-body);
+}
+.manage-root .gw-field::placeholder {
+  color: var(--mac-label-dim);
+}
+@media (hover: hover) {
+  .manage-root .gw-field:hover:not(:disabled):not(:focus),
+  .gw-picker-trigger:hover:not([aria-expanded="true"]) {
+    border-color: var(--g-line-strong);
+    background: color-mix(in srgb, var(--g-ink) 6%, transparent);
+  }
+}
+.manage-root .gw-field:focus,
+.gw-picker-trigger:focus-visible,
+.gw-picker-trigger[aria-expanded="true"] {
+  border-color: var(--g-accent-line);
+  background: color-mix(in srgb, var(--g-ink) 6%, transparent);
+  box-shadow: 0 0 0 3px var(--g-accent-soft);
+}
+/* Never hops. */
+.manage-root :is(input, textarea).gator-control,
+.manage-root :is(input, textarea).gator-control:active {
+  transform: none;
+  font-weight: 500;
+}
+@media (pointer: coarse) {
+  .manage-root .gw-field,
+  .gw-picker-trigger {
+    min-height: 44px;
+  }
+}
+
+/* The dropdown's own field. */
+.gw-picker-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--u2);
+  padding: 6px var(--u2) 6px var(--u3);
+  text-align: left;
+  cursor: pointer;
+}
+.gw-picker-trigger .gw-picker-chev {
+  flex: none;
+  color: var(--mac-label-dim);
+  transition:
+    transform 320ms var(--gw-ease),
+    color 140ms var(--g-ease-state);
+}
+.gw-picker-trigger[aria-expanded="true"] .gw-picker-chev {
+  transform: rotate(180deg);
+  color: var(--g-accent-ink);
+}
+
+/* What a dropdown shows before and after you choose. */
+.gw-picker-placeholder {
+  color: var(--mac-label-dim);
+  font-weight: 450;
+}
+.gw-picker-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 26px;
+  padding: 2px 8px;
+  border: 1px solid var(--mac-hair);
+  border-radius: 7px;
+  background: var(--g-fill-2);
+  color: var(--g-ink);
+  font-size: var(--t-small);
+  font-weight: 550;
+}
+.gw-picker-chip > .truncate {
+  min-width: 0;
+}
+/* One chosen value: plain text with its glyph, like the row it was picked
+   from. */
+.gw-picker-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--g-ink);
+  font-weight: 550;
+}
+.gw-picker-value .gw-menu-glyph {
+  opacity: 1;
+}
+
+/* Tab change view transition: only the page moves. The name is applied only
+   during the change, the window stays still, and the page box does not morph
+   between heights. The old page leaves quickly with a little blur; the new one
+   comes in from the rail's side on the sheet curve. */
+:root[data-nav="tab"] .manage-root .gw-pane > .gw-place {
+  view-transition-name: gw-tab-page;
+  animation: none;
+}
+:root[data-nav="tab"]::view-transition-old(root),
+:root[data-nav="tab"]::view-transition-new(root) {
+  animation: none;
+}
+:root[data-nav="tab"]::view-transition-group(gw-tab-page) {
+  animation: none;
+}
+::view-transition-old(gw-tab-page) {
+  animation: gw-tab-out 170ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+::view-transition-new(gw-tab-page) {
+  animation: gw-tab-in 340ms var(--gw-ease) 40ms both;
+}
+@keyframes gw-tab-out {
+  to {
+    opacity: 0;
+    transform: translate3d(0, var(--gw-tab-out, -10px), 0);
+    filter: blur(2px);
+  }
+}
+@keyframes gw-tab-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--gw-tab-in, 16px), 0);
+  }
+}
+:root[data-nav-dir="up"] {
+  --gw-tab-out: 10px;
+  --gw-tab-in: -16px;
+}
+
+/* ── a hand-written group ────────────────────────────────────────────────── */
+
+/* `SettingsCard` as a panel: a header row, then its parts ruled off at the
+   panel inset. An option card placed directly inside keeps its own box, inset
+   by margin. */
+.manage-root .gw-pane .gw-card-acts {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--u2);
+}
+.manage-root .gw-pane .gw-card-body {
+  border-top: 1px solid var(--mac-hair);
+}
+.manage-root .gw-pane .gw-card-body > :not(.gw-opt) {
+  padding: var(--u3) var(--u4);
+}
+.manage-root .gw-pane .gw-card-body > .gw-opt {
+  width: calc(100% - var(--u8));
+  margin: var(--u3) var(--u4);
+}
+.manage-root .gw-pane .gw-card-body > * + * {
+  border-top: 1px solid var(--mac-hair);
+}
+.manage-root .gw-pane .gw-card-body > .gw-opt + .gw-opt {
+  border-top: 1px solid var(--g-line);
+  margin-top: 0;
+}
+.manage-root .gw-pane .gw-card-body > .gw-opts {
+  padding: var(--u3);
+}
+/* Grids and stacks of fields inside a card keep a rhythm of their own. */
+.manage-root .gw-pane .gw-card-body :is(.space-y-5, .space-y-4) > * + * {
+  margin-top: var(--u4);
+}
+
+/* A labelled control inside a card. */
+.manage-root .gw-pane .gw-field-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--u3);
+}
+.manage-root .gw-pane .gw-field-row-trail {
+  flex: none;
+  font-size: var(--t-micro);
+  color: var(--mac-label-dim);
+  font-variant-numeric: tabular-nums;
+}
+.manage-root .gw-pane .gw-field-row-control {
+  margin-top: var(--u2);
+}
+.manage-root .gw-pane .gw-field-row[data-inline="true"] {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--u2);
+}
+.manage-root .gw-pane .gw-field-row-copy {
+  min-width: 0;
+}
+.manage-root .gw-pane .gw-field-row-end {
+  flex: none;
+}
+
+/* A row that ends in a switch is the switch: it already lit up under the
+   pointer as if it could be pressed, and now it can. */
+.manage-root .gw-pane .gw-set-row[data-press="true"] {
+  cursor: pointer;
+}
+.manage-root .gw-pane .gw-set-row[data-press="true"]:active {
+  background: var(--g-fill-2);
+}
+
+/* Options under a subject's list of settings. */
+.manage-root .gw-pane .gw-tk-options {
+  margin-top: var(--u3);
+}
+
+/* A field that counts what is typed into it, the count at its own end. */
+.manage-root .gw-counted {
+  position: relative;
+}
+.manage-root .gw-counted > .gw-field {
+  padding-right: 56px;
+}
+.manage-root .gw-counted-n {
+  position: absolute;
+  top: 50%;
+  right: var(--u3);
+  transform: translateY(-50%);
+  font-size: var(--t-micro);
+  color: var(--mac-label-dim);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* An option card on its own, anywhere: the full width it is given. */
+.manage-root .gw-pane .gw-opt {
+  width: 100%;
+}
+/* A page's own views, under its title. */
+.manage-root .gw-pane .gw-page-views {
+  max-width: 320px;
+  margin: 0 0 var(--u5);
+}
+
+
+/* ── category titles ──
+
+   One style for naming a group everywhere (rail, dock, dropdown categories, a
+   tab's eyebrow, editor sub-lists): small, quiet, sentence case. */
+.gw-caption,
+.gw-dock-caption,
+.gw-menu-group,
+.manage-root .gw-pane .gw-tk-sub-name,
+.manage-root .manage-kicker {
+  font-family: var(--gw-chrome);
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.gw-caption,
+.gw-dock-caption,
+.gw-menu-group,
+.manage-root .gw-pane .gw-tk-sub-name {
+  color: var(--mac-label-dim);
+}
+.gw-set-count {
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+/* ── on a phone, the page scrolls ──
+
+   On desktop the pane scrolls inside a fixed window. On a phone the document
+   scrolls instead, so pull-to-refresh and the collapsing address bar work. The
+   bar sits at the top and, driven by scroll position, draws in from the edges
+   into a floating capsule, like the site header. */
+@media (max-width: 760px) {
+  .manage-root {
+    position: relative;
+    inset: auto;
+    display: block;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  .manage-root .gw {
+    display: block;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  .manage-root .gw-body {
+    display: block;
+  }
+  .manage-root .gw-pane {
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
+  .manage-root .gw-bar {
+    position: sticky;
+    top: 0;
+    z-index: 45;
+    background: color-mix(in srgb, var(--mac-bar) 94%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+  }
+}
+@media (max-width: 760px) {
+  @supports (animation-timeline: scroll()) {
+    .manage-root .gw-bar {
+      animation: gw-bar-float var(--gw-ease) both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 220px;
+    }
+  }
+}
+@keyframes gw-bar-float {
+  to {
+    top: 8px;
+    margin-inline: 8px;
+    height: 58px;
+    border-radius: 18px;
+    box-shadow:
+      inset 0 0 0 1px var(--g-line),
+      0 14px 34px -10px rgba(0, 0, 0, 0.5);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gw-bar {
+    animation: none !important;
+  }
+}
+
+/* ── the bar's geometry ──
+
+   The server tab runs from just under the bar's top to its floor and joins the
+   pane like a browser tab. The mark and the tools centre on the tab's line, and
+   the bar's side inset equals the tools' inset from its top. */
+.gw-bar {
+  --gw-tabh: 48px;
+  padding-inline: 16px;
+}
+.gw-zone {
+  height: var(--gw-tabh);
+}
+.gw-tab {
+  height: var(--gw-tabh);
+  padding: 0 var(--u3) 0 10px;
+}
+.gw-tab-art {
+  width: 26px;
+  height: 26px;
+}
+@media (max-width: 760px) {
+  .gw-bar {
+    padding-inline: 14px;
+  }
+}
+
+/* In the floating capsule on a phone, the tab is a chip inside it rather than
+   a tab cut off by its lower edge, and the marks either side centre on it. */
+@media (max-width: 760px) {
+  @supports (animation-timeline: scroll()) {
+    .manage-root .gw-bar .gw-zone {
+      animation: gw-zone-float var(--gw-ease) both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 220px;
+    }
+    .manage-root .gw-bar .gw-tab {
+      animation: gw-tab-float var(--gw-ease) both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 220px;
+    }
+  }
+}
+@keyframes gw-zone-float {
+  to {
+    margin-bottom: 5px;
+  }
+}
+@keyframes gw-tab-float {
+  to {
+    height: 40px;
+    margin-bottom: 4px;
+    border-radius: 12px;
+    box-shadow: inset 0 0 0 1px var(--mac-tab-rim);
+  }
+}
+
+/* ── a tab's face ──
+
+   The tab's glyph drawn large and faint behind the end of its header (like the
+   Overview cards), drifting in once on arrival. */
+.manage-root .gw-pane .tab-page-header[data-identity="true"] {
+  position: relative;
+  isolation: isolate;
+}
+.manage-root .gw-pane .gw-hero-ghost {
+  position: absolute;
+  top: 50%;
+  right: -6px;
+  z-index: -1;
+  display: grid;
+  color: var(--g-ink);
+  opacity: 0.05;
+  pointer-events: none;
+  transform: translateY(-50%) rotate(-8deg);
+  animation: gw-ghost-in 900ms var(--gw-ease) both;
+}
+.manage-root .gw-pane .gw-hero-ghost svg {
+  width: 132px;
+  height: 132px;
+  stroke-width: 1.4;
+}
+@keyframes gw-ghost-in {
+  from {
+    opacity: 0;
+    transform: translate(18px, -50%) rotate(4deg);
+  }
+}
+/* The page's action sits clear of the ghost, in front of it. */
+.manage-root .gw-pane .gw-hero-acts {
+  position: relative;
+  z-index: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .manage-root .gw-pane .gw-hero-ghost {
+    animation: none;
+  }
+}
+
+/* Turning a module off: a word on a desktop, the mark alone on a phone. */
+.gw-power {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--u2);
+  height: 36px;
+  min-height: 0 !important;
+  padding: 0 var(--u3);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--mac-label);
+  font: inherit;
+  font-size: var(--t-small);
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--g-ease-state),
+    border-color 140ms var(--g-ease-state),
+    color 140ms var(--g-ease-state);
+}
+@media (hover: hover) {
+  .gw-power:hover {
+    border-color: var(--tone-bad-line);
+    background: var(--tone-bad-soft);
+    color: var(--tone-bad);
+  }
+}
+
+/* ── a tab's heading on a phone ──
+
+   Title and description take the full width, with the action at the end of the
+   title's line. */
+@media (max-width: 760px) {
+  .manage-root .gw-pane .tab-page-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--u3);
+    row-gap: var(--u2);
+    align-items: center;
+    margin-bottom: var(--u5);
+    overflow: clip;
+  }
+  .manage-root .gw-pane .tab-page-header > .min-w-\[16rem\] {
+    display: contents;
+  }
+  .manage-root .gw-pane .tab-page-header .section-header-title {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: 30px;
+    line-height: 1.1;
+  }
+  .manage-root .gw-pane .tab-page-header .gw-hero-acts {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .manage-root .gw-pane .gw-hero-ghost svg {
+    width: 96px;
+    height: 96px;
+  }
+  /* The mark alone, bare: no box round it. */
+  .gw-power {
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+    padding: 0;
+    border-color: transparent;
+    border-radius: 50%;
+    color: var(--mac-label-dim);
+  }
+  .gw-power:active {
+    background: var(--tone-bad-soft);
+    color: var(--tone-bad);
+  }
+  .gw-power-label {
+    display: none;
+  }
+}
+
+/* ── the bar as part of the page (phone) ──
+
+   At the top of the page the bar shares the page ground, has no rule under it,
+   and names the server as a title. It becomes the floating capsule only once
+   the page scrolls. */
+@media (max-width: 760px) {
+  .manage-root .gw-bar {
+    background: var(--mac-pane-bg);
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .manage-root .gw-tab {
+    flex: 0 1 auto !important;
+    gap: 10px;
+    padding: 0 10px 0 6px;
+    background: transparent;
+    box-shadow: none;
+    font-size: var(--t-lead);
+    font-weight: 650;
+  }
+  .manage-root .gw-tab-coach,
+  .manage-root .gw-tab-coach > .relative {
+    flex: 0 1 auto !important;
+  }
+  .manage-root .gw-tab-art {
+    width: 26px;
+    height: 26px;
+  }
+  .manage-root .gw-tab:active,
+  .manage-root .gw-tab[data-open="true"] {
+    background: var(--g-fill-2);
+  }
+  /* The teaching dot is for a pointer that has never found the switcher; a
+     phone's title with a chevron already says it opens. */
+  .manage-root .gw-tab-coach .gw-coach-dot,
+  .manage-root .gw-tab-coach .gw-coach-tip {
+    display: none;
+  }
+}
+@keyframes gw-bar-float {
+  from {
+    background-color: var(--mac-pane-bg);
+  }
+  to {
+    top: 8px;
+    margin-inline: 8px;
+    height: 58px;
+    border-radius: 18px;
+    background-color: color-mix(in srgb, var(--mac-raise) 92%, transparent);
+    box-shadow:
+      inset 0 0 0 1px var(--g-line),
+      0 14px 34px -10px rgba(0, 0, 0, 0.5);
+  }
+}
+@keyframes gw-tab-float {
+  to {
+    height: 40px;
+    margin-bottom: 4px;
+    border-radius: 12px;
+  }
+}
+
+/* The dock's lists: the row's mark, bare. */
+.gw-dock-tile,
+.gw-dock-tile[data-tone="warn"],
+.gw-dock-row[data-current="true"] .gw-dock-tile {
+  width: 24px;
+  height: 24px;
+  background: none;
+  box-shadow: none;
+}
+.gw-dock-tile[data-tone="warn"] {
+  color: var(--tone-warn);
+}
+.gw-dock-tile[data-tone="accent"] {
+  width: 24px;
+  height: 24px;
+  background: none;
+  box-shadow: none;
+  color: var(--g-accent-ink);
+}
+
+/* ── a setting's name over its control ──
+
+   Name, description and field stack, so each setting is read and filled in one
+   downward glance. A group lays fields two across; a panel too narrow for two
+   takes one. Options, list editors and anything marked wide keep the full
+   width. */
+.manage-root .gw-pane .gw-set-panel {
+  container: gw-panel / inline-size;
+}
+.manage-root .gw-pane .gw-set-row:has(> .gw-set-control) {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  row-gap: 10px;
+  padding-block: 14px 16px;
+}
+.manage-root .gw-pane .gw-set-row:has(> .gw-set-control) > * {
+  grid-column: 1;
+}
+.manage-root .gw-pane .gw-set-row > .gw-set-control {
+  max-width: none;
+}
+.manage-root .gw-pane .gw-set-panel > .gw-set-roll > .gw-set-roll-clip,
+.manage-root .gw-pane .gw-set-panel[data-bare="true"] {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+}
+.manage-root .gw-pane .gw-set-panel > .gw-set-roll > .gw-set-roll-clip > *,
+.manage-root .gw-pane .gw-set-panel[data-bare="true"] > * {
+  grid-column: 1 / -1;
+}
+.manage-root .gw-pane .gw-set-panel > .gw-set-roll > .gw-set-roll-clip > .gw-set-slot:not([data-wide]):not([data-options]):has(> .gw-set-row > .gw-set-control),
+.manage-root .gw-pane .gw-set-panel[data-bare="true"] > .gw-set-slot:not([data-wide]):not([data-options]):has(> .gw-set-row > .gw-set-control) {
+  grid-column: auto;
+}
+@container gw-panel (max-width: 720px) {
+  .manage-root .gw-pane .gw-set-panel > .gw-set-roll > .gw-set-roll-clip,
+  .manage-root .gw-pane .gw-set-panel[data-bare="true"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── an option on its own ──
+
+   The tile re-centres when it has only a name. An option alone in a panel
+   becomes the panel's row: flush to its edges, its mark aligned with the
+   heading. */
+/* The mark centres on its content, one line or two, like a leading control in
+   an iOS list. Equal inset on all sides, and the mark-to-text gap equals the
+   edge-to-mark gap. */
+.manage-root .gw-pane .gw-opt {
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 14px 16px;
+}
+.manage-root .gw-pane .gw-opt .gw-opt-mark {
+  margin-top: 0;
+}
+.manage-root .gw-pane .gw-opt-say {
+  margin-top: 3px;
+}
+.manage-root .gw-pane .gw-set-slot[data-options="true"]:has(> .gw-opts > .gw-opt:only-child) {
+  padding: 0;
+}
+.manage-root .gw-pane .gw-set-slot[data-options="true"] > .gw-opts > .gw-opt:only-child,
+.manage-root .gw-pane .gw-card-body > .gw-opt {
+  width: 100%;
+  min-height: 56px;
+  margin: 0;
+  padding: 14px var(--u4);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.manage-root .gw-pane .gw-set-slot[data-options="true"] > .gw-opts > .gw-opt:only-child:active,
+.manage-root .gw-pane .gw-card-body > .gw-opt:active {
+  transform: none;
+}

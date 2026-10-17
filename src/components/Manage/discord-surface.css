@@ -1,0 +1,1928 @@
+/* The Discord surface: every message the dashboard draws.
+
+   Taken from the mockup builder (tmek2/gatorsys-builder, src/discord), whose
+   colours come from Discord's own theme definitions and whose sizes are
+   measured from the client: 40px avatars on a 56px gutter, 16px content at
+   1.375 line height, a 4px accent on an embed and 8px on a container.
+
+   The dark appearance is Onyx, Discord's near-black, which sits on the
+   dashboard's black without a seam; light mode uses Discord's Light. The face
+   is Inter, as in the builder (Discord's gg sans cannot be shipped).
+
+   Token names are Discord's own, defined at the root because previews can
+   appear anywhere, and nothing else on the site uses them. */
+
+:root {
+  --chat-background-default: hsl(0 0% 6.863%);
+  --background-surface-high: hsl(0 0% 4.314%);
+  --background-base-low: #000;
+  --background-base-lower: #000;
+  --text-default: hsl(0 0% 83.922%);
+  --text-muted: hsl(0 0% 52.353%);
+  --text-strong: hsl(0 0% 86.863%);
+  --mention-background: hsl(234.935 85.556% 64.706% / 0.239);
+  --mention-foreground: hsl(229.381 96.581% 77.059%);
+  --border-subtle: hsl(0 0% 60.784% / 0.2);
+  --border-normal: hsl(0 0% 60.784% / 0.239);
+  --control-primary-background-default: hsl(234.935 85.556% 64.706%);
+  --control-secondary-background-default: hsl(0 0% 60.784% / 0.122);
+  --control-secondary-text-default: hsl(0 0% 86.863%);
+  --background-mod-subtle: hsl(0 0% 60.784% / 0.078);
+  --background-mod-normal: hsl(0 0% 60.784% / 0.122);
+  --background-mod-strong: hsl(0 0% 60.784% / 0.2);
+  --background-message-hover: hsl(0 0% 60.784% / 0.039);
+  --text-link: hsl(213 100% 61.569%);
+  --text-code: hsl(0 0% 83.922%);
+  --background-code: #000;
+  --input-background: hsl(0 0% 9%);
+  --spoiler-hidden: hsl(0 0% 11%);
+
+  --dc-blurple: #5865f2;
+  --dc-green: #00863a;
+  --dc-green-hover: #04713c;
+  --dc-red: #d22d39;
+  --dc-red-hover: #b42a34;
+  --dc-avatar: 40px;
+  --dc-gutter: 56px;
+  --dc-font: 16px;
+  --dc-line: 1.375;
+  --dc-header-line: 22px;
+}
+:root[data-theme="light"] {
+  --chat-background-default: #fff;
+  --background-surface-high: #fff;
+  --background-base-low: hsl(0 0% 98.431%);
+  --background-base-lower: hsl(0 0% 98.431%);
+  --text-default: hsl(0 0% 19.216%);
+  --text-muted: hsl(0 0% 44.314%);
+  --text-strong: hsl(0 0% 16.667%);
+  --mention-foreground: hsl(230.667 49.451% 35.686%);
+  --border-subtle: hsl(0 0% 60.784% / 0.278);
+  --border-normal: hsl(0 0% 60.784% / 0.4);
+  --control-secondary-text-default: hsl(0 0% 16.667%);
+  --background-mod-subtle: hsl(0 0% 25% / 0.078);
+  --background-mod-normal: hsl(0 0% 25% / 0.122);
+  --background-mod-strong: hsl(0 0% 25% / 0.2);
+  --background-message-hover: hsl(0 0% 25% / 0.039);
+  --text-link: hsl(212 100% 43.922%);
+  --text-code: hsl(0 0% 19.216%);
+  --background-code: hsl(0 0% 96%);
+  --input-background: #fff;
+  --spoiler-hidden: hsl(0 0% 90%);
+}
+
+/* ── the surface ─────────────────────────────────────────────────────────── */
+
+.dc {
+  font-family: var(--font-inter), "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: var(--dc-font);
+  line-height: var(--dc-line);
+  color: var(--text-default);
+  -webkit-font-smoothing: antialiased;
+  text-size-adjust: 100%;
+  letter-spacing: 0;
+}
+.dc *,
+.dc *::before,
+.dc *::after {
+  box-sizing: border-box;
+}
+/* The dashboard sets its own face and tracking on everything under the pane;
+   none of it belongs inside a message. */
+.manage-root .dc :is(p, span, li, label, h1, h2, h3, strong, em, code, button, input, textarea) {
+  font-family: inherit;
+  letter-spacing: inherit;
+}
+
+/* The chat, as a card on the page: the message sits in it the way it sits in
+   a channel. */
+.dc-chat {
+  position: relative;
+  padding: 14px 0 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--chat-background-default);
+}
+
+/* ── the message ─────────────────────────────────────────────────────────── */
+
+.dc-message {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--dc-gutter) minmax(0, 1fr);
+  padding: 2px 16px 2px 16px;
+}
+.dc-gutter {
+  position: relative;
+}
+/* No plate behind it: a picture with transparency in it is drawn over the
+   conversation, as the client draws it. */
+.dc-avatar {
+  display: block;
+  width: var(--dc-avatar);
+  height: var(--dc-avatar);
+  margin-top: 2px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.dc-body {
+  min-width: 0;
+}
+.dc-body > :first-child {
+  margin-top: 0;
+}
+.dc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px;
+  line-height: var(--dc-header-line);
+}
+.dc-username {
+  color: var(--text-strong);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: var(--dc-header-line);
+}
+.dc-app-badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--control-primary-background-default);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.dc-time {
+  margin-left: 3px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+.dc-content {
+  color: var(--text-default);
+  font-size: 1rem;
+  line-height: var(--dc-line);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* ── markdown ────────────────────────────────────────────────────────────── */
+
+.dc-md-p {
+  display: block;
+}
+.dc-md-gap {
+  display: block;
+  height: 0.6em;
+}
+.dc-md-h1,
+.dc-md-h2,
+.dc-md-h3 {
+  display: block;
+  margin: 16px 0 8px;
+  color: var(--text-strong);
+  font-weight: 700;
+  line-height: 1.375;
+}
+.dc-md-h1:first-child,
+.dc-md-h2:first-child,
+.dc-md-h3:first-child {
+  margin-top: 0;
+}
+.dc-md-h1 {
+  font-size: 1.5em;
+}
+.dc-md-h2 {
+  font-size: 1.25em;
+}
+.dc-md-h3 {
+  font-size: 1em;
+}
+.dc-md-sub {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.8125em;
+  line-height: 1.3;
+}
+.dc-md-quote {
+  display: block;
+  margin: 0;
+  padding-left: 12px;
+  border-left: 4px solid var(--border-normal);
+}
+.dc-md-li {
+  display: list-item;
+  margin: 2px 0 2px 20px;
+  list-style: disc;
+}
+.dc-md-oli {
+  display: block;
+  margin: 2px 0 2px 4px;
+}
+.dc-md-strong {
+  color: var(--text-strong);
+  font-weight: 700;
+}
+.dc-md-code {
+  padding: 1px 3px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--background-code);
+  color: var(--text-code);
+  font-family: ui-monospace, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85em;
+  white-space: break-spaces;
+}
+.dc-md-pre {
+  display: block;
+  margin: 6px 0;
+  padding: 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--background-code);
+  color: var(--text-code);
+  font-family: ui-monospace, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.875rem;
+  line-height: 1.125rem;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+.dc-md-link {
+  color: var(--text-link);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.dc-md-link:hover {
+  text-decoration: underline;
+}
+.dc-md-mention {
+  padding: 0 2px;
+  border-radius: 3px;
+  background: var(--mention-background);
+  color: var(--mention-foreground);
+  font-weight: 500;
+}
+.dc-md-stamp {
+  padding: 0 2px;
+  border-radius: 3px;
+  background: var(--background-mod-normal);
+  color: var(--text-default);
+}
+.dc-md-emoji {
+  display: inline-block;
+  width: 1.375em;
+  height: 1.375em;
+  vertical-align: -0.3em;
+  object-fit: contain;
+}
+.dc-md-avatar {
+  display: inline-block;
+  width: 1.375em;
+  height: 1.375em;
+  border-radius: 50%;
+  vertical-align: -0.3em;
+  object-fit: cover;
+}
+
+/* ── the embed ───────────────────────────────────────────────────────────── */
+
+.dc-embed {
+  position: relative;
+  max-width: min(520px, 100%);
+  margin-top: 8px;
+  padding: 12px 16px 16px 12px;
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--embed-accent, var(--border-normal));
+  border-radius: 4px;
+  background: var(--background-surface-high);
+  font-size: 0.875rem;
+  line-height: 1.125rem;
+  transition: border-left-color 200ms ease;
+}
+.dc-embed-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0 16px;
+}
+.dc-embed-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.dc-embed-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--text-strong);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.dc-embed-author-icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.dc-embed-title {
+  margin-bottom: 8px;
+  color: var(--text-strong);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.375rem;
+}
+.dc-embed-title[data-link="true"] {
+  color: var(--text-link);
+}
+.dc-embed-description {
+  color: var(--text-default);
+  font-size: 0.875rem;
+  line-height: 1.125rem;
+  white-space: pre-wrap;
+}
+.dc-embed-fields {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.dc-embed-field {
+  min-width: 0;
+}
+.dc-embed-field-name {
+  margin-bottom: 2px;
+  color: var(--text-strong);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.dc-embed-field-value {
+  color: var(--text-default);
+  font-size: 0.875rem;
+  line-height: 1.125rem;
+  white-space: pre-wrap;
+}
+.dc-embed-thumb {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  width: 80px;
+  height: 80px;
+  margin-top: 8px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+.dc-embed-image {
+  display: block;
+  width: 100%;
+  max-width: min(400px, 100%);
+  margin-top: 16px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+.dc-embed-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--text-default);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 16px;
+}
+.dc-embed-footer-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.dc-embed-dot {
+  color: var(--text-muted);
+}
+
+/* ── components v2 ───────────────────────────────────────────────────────── */
+
+.dc-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(600px, 100%);
+  margin-top: 8px;
+}
+.dc-text-display {
+  color: var(--text-default);
+  font-size: 1rem;
+  line-height: var(--dc-line);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+/* An 8px box with the accent following its corner -- what tells a container
+   from an embed at a glance, since an embed's stripe is square against 4px. */
+.dc-container {
+  position: relative;
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--container-accent, var(--border-subtle));
+  border-radius: 8px;
+  background: var(--background-surface-high);
+  transition: border-left-color 200ms ease;
+}
+.dc-container[data-accent="none"] {
+  border-left-width: 1px;
+}
+.dc-container-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+.dc-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+}
+.dc-section-text {
+  min-width: 0;
+}
+.dc-section-thumb {
+  width: 86px;
+  height: 86px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.dc-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--border-subtle);
+}
+.dc-separator[data-size="large"] {
+  margin: 12px 0;
+}
+.dc-separator[data-line="false"] {
+  height: 8px;
+  margin: 0;
+  background: transparent;
+}
+.dc-separator[data-line="false"][data-size="large"] {
+  height: 20px;
+}
+.dc-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 2px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--control-secondary-background-default);
+  color: var(--control-secondary-text-default);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+  cursor: default;
+}
+.dc-btn[data-style="primary"] {
+  background: var(--control-primary-background-default);
+  color: #fff;
+}
+.dc-btn[data-style="success"] {
+  background: var(--dc-green);
+  color: #fff;
+}
+.dc-btn[data-style="danger"] {
+  background: var(--dc-red);
+  color: #fff;
+}
+.dc-btn-out {
+  opacity: 0.7;
+}
+.dc-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: min(400px, 100%);
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--background-base-lower);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+.dc-select > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dc-gallery {
+  display: grid;
+  gap: 4px;
+  max-width: min(550px, 100%);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.dc-gallery[data-count="1"] {
+  grid-template-columns: minmax(0, max-content);
+  width: fit-content;
+}
+.dc-gallery[data-count="2"],
+.dc-gallery[data-count="4"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.dc-gallery[data-count="3"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.dc-gallery[data-count="3"] > :first-child {
+  grid-row: span 2;
+}
+.dc-gallery[data-count="many"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.dc-gallery-cell {
+  position: relative;
+  min-width: 44px;
+  min-height: 44px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--background-base-lower);
+}
+.dc-gallery-cell img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 350px;
+  object-fit: cover;
+}
+.dc-gallery[data-count="1"] .dc-gallery-cell img {
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/* A picture Discord will fill in when the message is sent -- a member's
+   avatar, a variable -- drawn as the plate it will sit on, named. */
+.dc-img-token {
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  border-radius: inherit;
+  background:
+    repeating-linear-gradient(135deg, transparent 0 7px, var(--background-mod-subtle) 7px 8px),
+    var(--background-base-lower);
+  color: var(--text-muted);
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-size: 10.5px;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* ── editing in place ──
+
+   An editable part shows a wash of its own colour on hover, spread 3px past its
+   edges; while open it keeps a quieter wash and gains an accent hairline. The
+   field that replaces the text inherits all its type properties and has no box,
+   so pressing a title only adds a caret. */
+.dc-inline {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: text;
+  transition:
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+@media (hover: hover) {
+  .dc-inline:hover {
+    background: color-mix(in srgb, currentColor 9%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 9%, transparent);
+  }
+}
+.dc-inline:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, currentColor 9%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 9%, transparent);
+}
+.dc-inline[data-open="true"] {
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 7%, transparent);
+}
+.dc-inline-field {
+  display: block;
+  width: 100%;
+  min-height: 0 !important;
+  height: auto;
+  margin: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: inherit;
+  font: inherit;
+  font-size: inherit !important;
+  letter-spacing: inherit;
+  line-height: inherit;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  caret-color: var(--g-accent, #f7a8c4);
+}
+.dc-inline-field::placeholder,
+.dc-inline-empty {
+  color: currentColor;
+  opacity: 0.42;
+}
+.dc-inline-count {
+  position: absolute;
+  right: 0;
+  bottom: -18px;
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.dc-inline-count[data-tone="bad"] {
+  color: var(--dc-red);
+}
+
+/* An embed with nothing in it at all: the shape of a title and a line of
+   text, rather than the words "Add a title" waiting to be deleted. */
+.dc-ghost {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 2px 0 4px;
+}
+.dc-ghost-line {
+  display: block;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--background-mod-normal);
+}
+.dc-ghost-line[data-line="title"] {
+  width: 38%;
+  min-width: 96px;
+  height: 16px;
+}
+.dc-ghost-line[data-line="body"] {
+  width: 62%;
+  min-width: 150px;
+}
+
+/* ── pictures, changed in place ──────────────────────────────────────────── */
+
+/* An empty picture slot: a place to put one, said in words, that takes a
+   file dropped on it. */
+.dc-imgdrop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px;
+  border: 1px dashed var(--border-normal);
+  border-radius: 8px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 130ms ease,
+    color 130ms ease,
+    background-color 130ms ease,
+    transform 220ms var(--g-ease-sheet, cubic-bezier(0.32, 0.72, 0, 1));
+}
+.dc-imgdrop:hover,
+.dc-imgdrop:focus-visible {
+  border-color: var(--text-muted);
+  background: var(--background-mod-subtle);
+  color: var(--text-default);
+  outline: none;
+}
+/* While a file is being dragged anywhere over the window: every place that
+   takes a picture says so, before the pointer finds it. */
+:root[data-file-drag] .dc-imgdrop,
+:root[data-file-drag] .manage-root .gw-upload-tile {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--g-accent, #f7a8c4) 70%, transparent);
+  background: color-mix(in srgb, var(--g-accent, #f7a8c4) 6%, transparent);
+  color: var(--text-strong);
+}
+:root[data-file-drag] .dc-imgslot::after {
+  content: "Drop to replace";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  border: 1.5px dashed var(--g-accent, #f7a8c4);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--background-base-lowest, #111) 55%, transparent);
+  color: var(--text-strong, #fff);
+  font-family: var(--font-ui, system-ui);
+  font-size: 12.5px;
+  font-weight: 650;
+  pointer-events: none;
+  animation: gw-drop-in 180ms ease both;
+}
+:root[data-file-drag] .dc-imgdrop {
+  animation: gw-drop-in 180ms ease both;
+}
+@keyframes gw-drop-in {
+  from {
+    opacity: 0.4;
+  }
+}
+.dc-imgdrop[data-over="true"] {
+  border-style: solid;
+  border-color: var(--g-accent, #f7a8c4);
+  background: color-mix(in srgb, var(--g-accent, #f7a8c4) 8%, transparent);
+  color: var(--text-strong);
+  transform: scale(1.015);
+}
+.dc-imgdrop[data-size="thumb"] {
+  width: 80px;
+  height: 80px;
+  min-height: 0;
+  padding: 6px;
+  font-size: 11.5px;
+  line-height: 1.25;
+  text-align: center;
+}
+.dc-imgdrop[data-busy="true"] {
+  pointer-events: none;
+  color: var(--text-strong);
+}
+
+/* A picture that is there: the picture is the control, and a small strip over
+   its corner holds what can be done to it. */
+.dc-imgslot {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+.dc-imgtools {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--background-base-lower) 88%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  transform: translateY(-3px);
+  pointer-events: none;
+  transition:
+    opacity 140ms ease,
+    transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.dc-imgslot:hover > .dc-imgtools,
+.dc-imgslot:focus-within > .dc-imgtools,
+.dc-imgslot[data-open="true"] > .dc-imgtools {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+@media (hover: none) {
+  .dc-imgslot > .dc-imgtools {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+.dc-imgtools button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 26px;
+  min-height: 0 !important;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.dc-imgtools button:hover {
+  background: var(--background-mod-strong);
+  color: var(--text-strong);
+}
+.dc-imgtools button[data-tone="bad"]:hover {
+  background: color-mix(in srgb, var(--dc-red) 22%, transparent);
+  color: #f87171;
+}
+.dc-imgslot[data-busy="true"] img {
+  opacity: 0.5;
+  filter: saturate(0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dc-inline,
+  .dc-imgdrop,
+  .dc-imgtools {
+    transition: none;
+  }
+}
+
+/* ── the embed canvas (embed-canvas.tsx) ──
+
+   The message is Discord's; the tools that open under a part are the
+   dashboard's (its face, fields and corners), so they read as the editor's
+   rather than part of what will be sent. */
+.gw-cv {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.gw-cv-part {
+  position: relative;
+  min-width: 0;
+}
+.gw-cv-grow {
+  flex: 1;
+  min-width: 0;
+}
+.dc-embed-author > .dc-inline {
+  flex: 1;
+  min-width: 0;
+}
+.gw-cv-stamp {
+  flex: none;
+  display: inline-flex;
+  gap: 4px;
+}
+
+/* The colour is the strip down the embed's edge, and it is pressable: it
+   thickens under the pointer, which is the whole affordance. */
+.gw-cv-strip {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: -5px;
+  z-index: 2;
+  width: 12px;
+  min-height: 0 !important;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.gw-cv-strip::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1px;
+  width: 4px;
+  border-radius: 4px 0 0 4px;
+  background: var(--embed-accent, var(--border-normal));
+  transform-origin: 0 50%;
+  transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+@media (hover: hover) {
+  .gw-cv-strip:hover::after {
+    transform: scaleX(1.75);
+  }
+}
+.gw-cv-strip[data-active="true"]::after {
+  transform: scaleX(1.75);
+}
+
+/* A part's tools: under it, in the dashboard's own voice. */
+.gw-cv-tools {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--mac-hair, rgba(255, 255, 255, 0.07));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--g-ink, #f4f2f0) 3.5%, var(--background-surface-high));
+  color: var(--g-ink, #f4f2f0);
+  font-family: var(--font-ui, system-ui);
+  font-size: 13px;
+  line-height: 1.4;
+  transform-origin: 24px 0;
+  animation: gw-cv-in 240ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes gw-cv-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.985);
+  }
+}
+.gw-cv-tools-top {
+  margin: 0 0 12px;
+}
+.gw-cv-tools-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gw-cv-field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.gw-cv-label {
+  color: var(--mac-label-dim, #9d9d9d);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.gw-cv-tools .gw-field {
+  font-size: 13px;
+}
+.gw-cv-stack {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.gw-cv-icon-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+.gw-cv-icon-row .dc-imgdrop,
+.gw-cv-icon-row .dc-imgslot {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+}
+.gw-cv-icon-row .dc-imgdrop {
+  font-size: 11px;
+}
+.gw-cv-icon-img {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.gw-cv-icon-row .dc-imgtools {
+  top: auto;
+  right: 50%;
+  bottom: -10px;
+  translate: 50% 0;
+}
+
+.gw-cv-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.gw-cv-swatch {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  min-height: 0 !important;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  color: rgba(0, 0, 0, 0.72);
+  cursor: pointer;
+  transition: transform 180ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.gw-cv-swatch:hover {
+  transform: scale(1.1);
+}
+.gw-cv-swatch[aria-checked="true"] {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 0 0 2px var(--background-surface-high),
+    0 0 0 3.5px var(--g-ink, #f4f2f0);
+}
+.gw-cv-swatch[data-none="true"] {
+  background: linear-gradient(
+    135deg,
+    transparent calc(50% - 1px),
+    var(--mac-label-dim, #9d9d9d) calc(50% - 1px) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+  color: var(--g-ink, #f4f2f0);
+}
+.gw-cv-hex {
+  max-width: 150px;
+}
+
+.gw-cv-acts {
+  display: inline-flex;
+  gap: 2px;
+}
+.gw-cv-act {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  min-height: 0 !important;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mac-label-dim, #9d9d9d);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.gw-cv-act:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+@media (hover: hover) {
+  .gw-cv-act:hover:not(:disabled) {
+    background: var(--g-fill-2, rgba(255, 255, 255, 0.055));
+    color: var(--g-ink, #f4f2f0);
+  }
+  .gw-cv-act[data-tone="bad"]:hover:not(:disabled) {
+    background: rgba(248, 113, 113, 0.12);
+    color: #f87171;
+  }
+}
+
+/* Adding a field, said in the message's own muted voice. */
+.gw-cv-add {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 5px;
+  min-height: 0 !important;
+  margin: 8px 0 0 -6px;
+  padding: 3px 8px 3px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.gw-cv-add:hover {
+  background: var(--background-mod-normal);
+  color: var(--text-strong);
+}
+
+/* Pictures in their places. */
+.gw-cv-image {
+  margin-top: 16px;
+}
+.gw-cv-image .dc-embed-image {
+  margin-top: 0;
+}
+.gw-cv-image > .dc-imgdrop {
+  max-width: 400px;
+}
+.gw-cv-image > .dc-imgslot {
+  width: fit-content;
+  max-width: min(400px, 100%);
+}
+.gw-cv-thumb {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  margin-top: 8px;
+}
+.gw-cv-thumb .dc-embed-thumb {
+  display: block;
+  margin-top: 0;
+}
+.gw-cv-thumb .dc-img-token {
+  width: 80px;
+  height: 80px;
+  border-radius: 4px;
+}
+.gw-cv-image .dc-img-token {
+  width: 100%;
+  max-width: 400px;
+  height: 120px;
+  border-radius: 4px;
+}
+
+/* Under the card: how it works, and the character budget once it matters. */
+.gw-cv-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--mac-label-dim, #9d9d9d);
+  font-family: var(--font-ui, system-ui);
+  font-size: 12px;
+}
+.gw-cv-hint kbd {
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--g-fill-2, rgba(255, 255, 255, 0.055));
+  color: var(--g-ink, #f4f2f0);
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 11px;
+}
+.gw-cv-count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.gw-cv-count[data-tone="warn"] {
+  color: var(--tone-warn, #fbbf24);
+}
+.gw-cv-count[data-tone="bad"] {
+  color: var(--tone-bad, #f87171);
+}
+@media (pointer: coarse) {
+  .gw-cv-hint {
+    display: none;
+  }
+}
+@media (max-width: 560px) {
+  .dc-chat .dc-message {
+    grid-template-columns: 48px minmax(0, 1fr);
+    padding-inline: 12px;
+  }
+  .dc-chat .dc-avatar {
+    width: 36px;
+    height: 36px;
+  }
+  .gw-cv-thumb .dc-embed-thumb,
+  .gw-cv-thumb .dc-imgdrop,
+  .gw-cv-thumb .dc-img-token {
+    width: 64px;
+    height: 64px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-cv-tools {
+    animation: none;
+  }
+}
+
+/* Discord sets text a size down inside a container. */
+.dc-text-display[data-size="small"] {
+  font-size: 0.875rem;
+  line-height: 1.125rem;
+}
+.dc-btn[data-disabled="true"] {
+  opacity: 0.5;
+}
+.dc-controls {
+  position: relative;
+  width: 100%;
+}
+.dc-controls[data-size="compact"] .dc-btn {
+  min-height: 28px;
+  padding-inline: 12px;
+  font-size: 0.8125rem;
+}
+.dc-note {
+  align-self: center;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.dc-select-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+button.dc-select {
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+}
+button.dc-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.dc-select-caret {
+  flex: none;
+  transition: transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.dc-select-caret[data-open="true"] {
+  transform: rotate(180deg);
+}
+.dc-select-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 30;
+  max-height: 208px;
+  padding: 4px;
+  overflow-y: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--background-base-lower);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  transform-origin: 50% 0;
+  animation: dc-menu-in 180ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes dc-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+.dc-select-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-height: 0 !important;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-default);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dc-select-opt:hover {
+  background: var(--background-mod-normal);
+}
+.dc-select-opt-say {
+  display: grid;
+  min-width: 0;
+}
+.dc-select-opt-label {
+  overflow: hidden;
+  color: var(--text-strong);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dc-select-opt-note {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dc-gallery-cell > img:not([class*="dc-"]),
+.dc-gallery-cell > .g-develop-load {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 350px;
+  object-fit: cover;
+}
+.dc-gallery-cell > .dc-img-token {
+  min-height: 110px;
+}
+
+/* ── the container canvas (container-canvas.tsx) ─────────────────────────── */
+
+/* A block is marked the way an embed's parts are: a soft wash spread a few
+   pixels past its edges, grey under the pointer and the accent while it is
+   the one being changed. A container is already a box, so it gets a hairline
+   instead. Neither takes room, and the text inside does not wash a second
+   time. */
+.gw-cc-block {
+  position: relative;
+  min-width: 0;
+  border-radius: 3px;
+  box-shadow: 0 0 0 3px transparent;
+  outline: 1px solid transparent;
+  outline-offset: 4px;
+  cursor: default;
+  transition:
+    background-color 160ms ease,
+    box-shadow 240ms cubic-bezier(0.32, 0.72, 0, 1),
+    outline-color 160ms ease;
+}
+.gw-cc-block[data-type="container"] {
+  border-radius: 9px;
+}
+@media (hover: hover) {
+  .gw-cc-block:not([data-type="container"]):hover:not(:has(.gw-cc-block:hover)) {
+    background: color-mix(in srgb, currentColor 7%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 7%, transparent);
+  }
+  .gw-cc-block[data-type="container"]:hover:not(:has(.gw-cc-block:hover)) {
+    outline-color: var(--border-normal);
+  }
+}
+/* `!important` because the hover rules above are more specific, and the block
+   being changed keeps its accent under the pointer. */
+.gw-cc-block:not([data-type="container"])[data-active="true"] {
+  background: color-mix(in srgb, var(--g-accent, #f7a8c4) 9%, transparent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--g-accent, #f7a8c4) 9%, transparent) !important;
+}
+.gw-cc-block[data-type="container"][data-active="true"] {
+  outline-color: color-mix(in srgb, var(--g-accent, #f7a8c4) 60%, transparent) !important;
+}
+.gw-cc-block .dc-inline,
+.gw-cc-block .dc-inline:hover,
+.gw-cc-block .dc-inline[data-open="true"] {
+  background: transparent;
+  box-shadow: none;
+}
+.gw-cc-block[data-arrived="true"] {
+  animation: gw-cc-in 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes gw-cc-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+}
+
+/* The block's bar: what it is, and what can be done to it, floated over its
+   top edge so opening it moves nothing. */
+.gw-cc-bar {
+  position: absolute;
+  right: -6px;
+  bottom: calc(100% + 9px);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 3px 3px 10px;
+  border: 1px solid var(--mac-hair, rgba(255, 255, 255, 0.07));
+  border-radius: 10px;
+  background: var(--mac-raise-2, #191919);
+  box-shadow: 0 10px 28px -8px rgba(0, 0, 0, 0.6);
+  color: var(--g-ink, #f4f2f0);
+  font-family: var(--font-ui, system-ui);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  transform-origin: 100% 100%;
+  animation: gw-cc-bar-in 200ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes gw-cc-bar-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+}
+.gw-cc-bar-name {
+  color: var(--mac-label-dim, #9d9d9d);
+  font-weight: 650;
+}
+.gw-cc-bar-acts {
+  display: inline-flex;
+  gap: 1px;
+}
+.gw-cc-bar-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 26px;
+  min-height: 0 !important;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--mac-label-dim, #9d9d9d);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.gw-cc-bar-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+@media (hover: hover) {
+  .gw-cc-bar-btn:hover:not(:disabled) {
+    background: var(--g-fill-2, rgba(255, 255, 255, 0.055));
+    color: var(--g-ink, #f4f2f0);
+  }
+  .gw-cc-bar-btn[data-tone="bad"]:hover {
+    background: rgba(248, 113, 113, 0.12);
+    color: #f87171;
+  }
+}
+
+.gw-cc-tools {
+  cursor: auto;
+}
+.gw-cc-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.gw-cc-add .gw-cv-add {
+  margin-top: 0;
+}
+.dc-container-inner > .gw-cc-add[data-empty="true"] .gw-cv-add {
+  margin-left: -6px;
+}
+.gw-cc-thumb.dc-imgdrop,
+.dc-section > .gw-cc-thumb {
+  width: 86px;
+  height: 86px;
+}
+.gw-cc-ghost-btn {
+  border: 1px dashed var(--border-normal);
+  background: transparent !important;
+  opacity: 0.6;
+}
+.gw-cc-gallery {
+  display: grid;
+  gap: 6px;
+  max-width: min(550px, 100%);
+}
+.gw-cc-gallery-add.dc-imgdrop {
+  min-height: 52px;
+}
+.dc-gallery-cell > .dc-imgslot {
+  width: 100%;
+  height: 100%;
+}
+.dc-gallery-cell > .dc-imgslot > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 350px;
+  object-fit: cover;
+}
+.dc-gallery[data-count="1"] .dc-imgslot > img {
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+.dc-gallery-cell > .dc-imgslot > .dc-img-token {
+  min-height: 110px;
+}
+
+/* Switching between an embed and a container: the one editor gives way to
+   the other, rising into place, rather than being swapped in a frame. */
+.gw-md-mode {
+  animation: gw-md-swap 340ms cubic-bezier(0.32, 0.72, 0, 1) backwards;
+}
+@keyframes gw-md-swap {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.992);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-cc-block[data-arrived="true"],
+  .gw-cc-bar,
+  .gw-md-mode {
+    animation: none;
+  }
+}
+
+/* Buttons under an embed: rows of Discord's own buttons. */
+.dc-controls-rows {
+  max-width: min(520px, 100%);
+}
+
+/* A single Discord control shown above its own editor: a slip of the chat,
+   on the chat's own ground, so the button is seen as it will be sent. */
+.gw-dc-strip {
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--chat-background-default);
+}
+
+.gw-cv-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gw-cv-label-note {
+  color: var(--mac-label-dim, #9d9d9d);
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+/* ── message editors on a phone ──
+
+   The message takes the full width, with the avatar and name as a row above it
+   (as a narrow Discord window does). Parts are at least finger-tall, and
+   tapping one opens it in the sheet below, so nothing is typed into inline. */
+@media (max-width: 640px) {
+  .gw-cv .dc-chat {
+    padding: 12px 0 14px;
+  }
+  .gw-cv .dc-message {
+    grid-template-columns: 30px minmax(0, 1fr);
+    column-gap: 10px;
+    row-gap: 6px;
+    padding-inline: 12px;
+  }
+  .gw-cv .dc-avatar {
+    width: 30px;
+    height: 30px;
+    margin-top: 0;
+  }
+  .gw-cv .dc-body {
+    display: contents;
+  }
+  .gw-cv .dc-body > * {
+    grid-column: 1 / -1;
+  }
+  .gw-cv .dc-body > .dc-meta {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+  .gw-cv .dc-embed {
+    max-width: 100%;
+    padding: 10px 12px 12px 10px;
+  }
+  .gw-cv .dc-embed-grid {
+    column-gap: 10px;
+  }
+  .gw-cv .dc-inline {
+    min-height: 24px;
+    padding-block: 2px;
+  }
+  .gw-cv .dc-inline:active {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 12%, transparent);
+  }
+  .gw-cv-part[data-active="true"] > .dc-inline,
+  .gw-cv-part[data-active="true"] .dc-inline {
+    background: color-mix(in srgb, var(--g-accent, #f7a8c4) 12%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--g-accent, #f7a8c4) 12%, transparent);
+  }
+  .gw-cc-blocks {
+    gap: 12px;
+  }
+  /* The formatting and insert buttons ride on the sheet, where the field is;
+     the editor's bar keeps only the choice of embed or container. */
+  .gw-md-bar > .gw-md-format,
+  .gw-md-bar > .gw-md-insert {
+    display: none;
+  }
+  .gw-md-bar > .gw-seg {
+    flex: 1 1 100%;
+  }
+  .gw-md-vars-list {
+    max-height: 220px;
+  }
+}
+
+/* The sheet. */
+.gw-psheet-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+.gw-psheet-scrim {
+  position: absolute;
+  inset: 0;
+  min-height: 0 !important;
+  padding: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--gw-ground, #030303) 40%, transparent);
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity 260ms ease;
+}
+.gw-psheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - var(--kb, 0px) - 64px);
+  margin-bottom: var(--kb, 0px);
+  border: 1px solid var(--g-line);
+  border-bottom: 0;
+  border-radius: 22px 22px 0 0;
+  background: var(--mac-raise-2, #191919);
+  box-shadow: 0 -18px 50px -12px rgba(0, 0, 0, 0.6);
+  color: var(--g-ink);
+  font-family: var(--font-ui);
+  pointer-events: auto;
+  transform: translate3d(0, 104%, 0);
+  transition:
+    transform 420ms cubic-bezier(0.32, 0.72, 0, 1),
+    margin-bottom 200ms ease;
+}
+.gw-psheet-layer[data-state="to"] .gw-psheet {
+  transform: none;
+}
+.gw-psheet-layer[data-state="to"] .gw-psheet-scrim {
+  opacity: 1;
+}
+.gw-psheet-layer[data-state="from"] .gw-psheet {
+  transition-duration: 240ms, 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 1, 1), ease;
+}
+.gw-psheet-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 10px 8px 18px;
+}
+.gw-psheet-grab {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--g-line-strong);
+  transform: translateX(-50%);
+}
+.manage-root .gw-psheet-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gw-psheet-done {
+  min-height: 40px !important;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--g-accent-soft);
+  color: var(--g-accent-ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.gw-psheet-body {
+  display: grid;
+  gap: 14px;
+  min-height: 0;
+  padding: 6px 16px 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.gw-psheet-field {
+  display: grid;
+  gap: 6px;
+}
+.gw-psheet-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--g-line);
+  border-radius: 12px;
+  background: var(--g-fill);
+  color: var(--g-ink);
+  font: inherit;
+  /* Sixteen, or iOS zooms the page into the field. */
+  font-size: 16px;
+  line-height: 1.4;
+  resize: none;
+  outline: none;
+  caret-color: var(--g-accent);
+  transition: border-color 140ms ease;
+}
+.gw-psheet-input:focus {
+  border-color: var(--g-line-strong);
+}
+.gw-psheet-input::placeholder {
+  color: var(--mac-label-dim);
+}
+.gw-psheet .gw-cv-tools {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  animation: none;
+}
+.gw-psheet .gw-field {
+  min-height: 46px;
+  font-size: 16px !important;
+}
+.gw-psheet-picture .dc-imgdrop {
+  min-height: 96px;
+}
+.gw-psheet-picture .dc-imgslot,
+.gw-psheet-picture .dc-embed-image {
+  max-width: 100%;
+  margin-top: 0;
+}
+.gw-psheet-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 4px;
+}
+.gw-psheet-acts .gw-btn {
+  min-height: 42px;
+}
+.gw-psheet .gw-psheet-remove {
+  margin-left: auto;
+  border-color: transparent;
+  background: rgba(248, 113, 113, 0.1);
+  color: var(--tone-bad, #f87171);
+}
+/* Formatting and insert, along the foot where the keyboard meets the sheet. */
+.gw-psheet-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--mac-hair);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.gw-psheet-tools::-webkit-scrollbar {
+  display: none;
+}
+.gw-psheet-format {
+  flex: none;
+  flex-wrap: nowrap !important;
+  gap: 2px !important;
+}
+.gw-psheet-format > button {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  color: var(--mac-label-dim) !important;
+}
+.gw-psheet-format > button:active {
+  background: var(--g-fill-2) !important;
+  color: var(--g-ink) !important;
+}
+.gw-psheet-insert {
+  flex: none;
+  margin-left: auto;
+  padding-left: 6px;
+  box-shadow: -1px 0 0 var(--mac-hair);
+}
+.gw-psheet-insert .gw-insert-trigger {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw-psheet,
+  .gw-psheet-scrim {
+    transition-duration: 1ms;
+  }
+}
+
+:root[data-psheet] .gw-save-layer,
+:root[data-psheet] .gw-dock {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+/* On a phone the canvas is a preview: a picture's buttons are in its sheet,
+   not stuck over it where a hover would have shown them. */
+.gw-cv[data-phone="true"] .dc-imgtools {
+  display: none;
+}
+
+/* ── a part opening and shutting ──
+
+   The wash grows out from the text when a part opens and draws back when it
+   shuts (the same element both ways). The part's tools roll open on the sheet
+   curve, pushing the message down, and roll back on close. */
+/* Also written against the pane: a shut part is `role="button"`, and the pane's
+   rule for those sets its own transition list without box-shadow. */
+.dc-inline,
+.manage-root .gw-pane .dc-inline[role="button"] {
+  box-shadow: 0 0 0 0 transparent;
+  transition:
+    background-color 220ms cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 260ms cubic-bezier(0.32, 0.72, 0, 1),
+    color 120ms ease;
+}
+.gw-cv-roll {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.gw-cv-roll[data-state="to"] {
+  grid-template-rows: 1fr;
+}
+.gw-cv-roll-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+.gw-cv-roll .gw-cv-tools {
+  animation: none;
+  opacity: 0;
+  transform: translate3d(0, -6px, 0) scale(0.985);
+  transition:
+    opacity 180ms ease,
+    transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.gw-cv-roll[data-state="to"] .gw-cv-tools {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 220ms ease 60ms,
+    transform 320ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dc-inline,
+  .gw-cv-roll,
+  .gw-cv-roll .gw-cv-tools {
+    transition-duration: 1ms;
+  }
+}
+
+/* ── several embeds ──
+
+   Stacked as Discord stacks them, each its own card. The current one lifts so
+   its bar can overlap the one before. The add button at the foot works like the
+   container's, without the menu. */
+.gw-cv-embeds {
+  display: grid;
+}
+.gw-cv-embed[data-active="true"] {
+  z-index: 2;
+}
+.gw-cv-add-embed {
+  margin-top: 10px;
+}
+.gw-cv-add-count {
+  margin-left: 4px;
+  color: var(--text-muted);
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+/* A separator's two settings, side by side: the line, and the room it leaves. */
+.gw-sep-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+}
+.gw-sep-tools > .gw-opt {
+  flex: 1 1 180px;
+}
+.gw-sep-space {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 180px;
+}

@@ -1,0 +1,121 @@
+/* Measurements and the shared tokens (part of manage-window.css) */
+
+/* ═══ Measurements ═══
+
+   1. Lengths are multiples of 4px; structural ones (control heights, gaps,
+      section steps) multiples of 8.
+   2. Type scale 1.2 from 13.5px, line heights on the 4px grid: 11/16, 12.5/18,
+      13.5/20, 15/24, 18/24, 22/28.
+   3. Nested radii subtract: inner radius = outer radius minus the padding
+      between them (window 16, card 12, tile 8; panel 14, row 10).
+   4. Targets are 32px for a mouse and 44px for touch (the coarse-pointer block
+      below).
+   5. Prose is capped at 68ch.
+
+   The accent covers roughly a tenth of the surface: a switch that is on, one
+   chip, one pill. */
+
+/* Declared on :root too, because the picker, the palette and Radix menus are
+   portalled to <body>, outside `.manage-root`. An unresolved var() invalidates
+   the whole declaration rather than falling back. */
+:root,
+.manage-root {
+  /* The 4px base and its 8px rhythm. */
+  --u1: 4px;
+  --u2: 8px;
+  --u3: 12px;
+  --u4: 16px;
+  --u5: 20px;
+  --u6: 24px;
+  --u8: 32px;
+  --u10: 40px;
+  --u12: 48px;
+
+  /* Type: size, and the leading that keeps it on the grid. */
+  --t-micro: 11px;
+  --lh-micro: 16px;
+  --t-small: 12.5px;
+  --lh-small: 18px;
+  --t-body: 13.5px;
+  --lh-body: 20px;
+  --t-lead: 15px;
+  --lh-lead: 24px;
+  --t-title: 18px;
+  --lh-title: 24px;
+
+  /* Radii, each the outer minus the padding inside it. */
+  --r-window: 16px;
+  --r-panel: 14px;
+  --r-card: 12px;
+  --r-row: 10px;
+  --r-control: 9px;
+  --r-tile: 8px;
+
+  /* Sizes use clamp(floor, vw, ceiling) so the layout scales continuously
+     instead of jumping at breakpoints. */
+  --gw-side: clamp(8px, 1.2vw, 20px);
+  --gw-bar: 56px;
+  --gw-foot: 32px;
+  /* 200 holds the longest rail label ("Commands & Templates" truncates below
+     it); 248 is where a nav column stops reading as a column. */
+  --gw-rail: clamp(200px, 18.5vw, 248px);
+  /* The wall is auto-fill, so this width alone sets the column count: one on a
+     phone up to four on a wide desktop. */
+  --gw-card: clamp(236px, 20vw, 296px);
+  /* No max width: a tab uses the whole pane. A setting's control column grows
+     with its row (see `.gw-set-row`), and a row too narrow for two columns
+     stacks. */
+  --set-max: none;
+  --wide-max: none;
+
+  /* Out fast, long settle, no bounce — the site's own sheet curve. */
+  --gw-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --gw-chrome: var(--font-ui);
+}
+
+/* The app is the screen. Nothing outside the window scrolls, which is what
+   puts the scrollbar inside the pane, beside the content it scrolls. */
+.manage-root {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--gw-chrome);
+}
+
+/* Touch: 44px targets, and the reading sizes step up by about two thirds of a
+   step. */
+@media (pointer: coarse) {
+  :root,
+  .manage-root {
+    --gw-bar: 64px;
+    --t-small: 13px;
+    --lh-small: 19px;
+    --t-body: 15px;
+    --lh-body: 22px;
+    --t-lead: 16px;
+    --lh-lead: 24px;
+  }
+}
+
+@media (max-width: 900px) {
+  :root,
+  .manage-root {
+    --gw-side: 0px;
+    --r-window: 0px;
+  }
+}
+
+/* The page ground shows round the window. `!important` because manage-restyle
+   paints `.manage-root` at (0,3,1). */
+.manage-root,
+:root:not([data-theme="light"]) .manage-root,
+:root[data-theme="light"] .manage-root {
+  background: var(--g-ground) !important;
+  background-image: none !important;
+  color: var(--g-ink);
+}
+
+/* No dot field behind the window: only a thin frame of it would show, and it
+   repaints on every pointer move. */

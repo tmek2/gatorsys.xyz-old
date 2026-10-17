@@ -1,0 +1,416 @@
+/* Buttons, the module wall, the cannot-open screen and narrow widths (part of
+   manage-window.css) */
+
+/* ── buttons ─────────────────────────────────────────────────────────────── */
+
+/* The dashboard's primary button (`.btn-peach`, used by "Add…", "Create…",
+   "Save…") is the accent with dark ink, like the landing's primary. */
+.manage-root .btn-peach,
+.manage-root .btn-peach:hover {
+  border: 1px solid transparent !important;
+  border-radius: var(--r-control) !important;
+  background-color: var(--g-accent) !important;
+  color: var(--g-on-accent) !important;
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0 0 1px var(--g-accent-line) !important;
+}
+@media (hover: hover) {
+  .manage-root .btn-peach:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--g-accent) 86%, #fff) !important;
+  }
+}
+.manage-root .btn-peach:active:not(:disabled) {
+  background-color: color-mix(in srgb, var(--g-accent) 74%, #fff) !important;
+}
+.manage-root .btn-peach:disabled {
+  background-color: var(--g-fill-2) !important;
+  color: var(--g-ink-faint) !important;
+  box-shadow: none !important;
+}
+.manage-root .btn-pop:not(.btn-peach) {
+  border-radius: var(--r-control);
+}
+
+/* The save prompt clears the status strip at the foot of the screen.
+   `!important` because the prompt sets the gap as an inline custom property. */
+.manage-root [aria-label="Unsaved changes"] {
+  --safe-bottom-gap: calc(var(--gw-foot) + var(--u3)) !important;
+}
+
+/* ── the wall ────────────────────────────────────────────────────────────── */
+
+/* Overview is a wall of module cards, built like the landing's window: a quiet
+   card with the module's glyph drawn large and faint behind it, and the whole
+   card is the link. */
+.manage-root .gw-mods {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--gw-card), 1fr));
+  gap: var(--u3);
+}
+
+/* How far the colour has filled the card. Registered as a <percentage> so it
+   can transition; both the reveal and the bright band at its edge read from it,
+   so they stay in step. */
+@property --gw-fill {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+.gw-mod {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 148px;
+  border: 1px solid var(--mac-hair);
+  border-radius: var(--r-card);
+  background: transparent;
+  /* `clip`, not `hidden`: the ghost glyph hangs over the corner and the card
+     must not become a scroll container to trim it. */
+  overflow: clip;
+  transition:
+    border-color 520ms var(--gw-ease),
+    transform 240ms var(--gw-ease);
+}
+.gw-mod[data-enabled="true"] {
+  border-color: var(--g-accent-line);
+}
+@media (hover: hover) {
+  .gw-mod:hover {
+    transform: translateY(-2px);
+    border-color: var(--g-accent-line);
+  }
+}
+/* A press sinks the card a hair, so the click is felt before the sweep. */
+.gw-mod:has(.gw-mod-toggle:active) {
+  transform: scale(0.985);
+  transition-duration: 90ms;
+}
+.gw-mod:has(.gw-mod-toggle:focus-visible) {
+  border-color: var(--g-accent-line);
+}
+
+/* Turning a module on sweeps the colour in from the leading edge; turning it
+   off draws it back. The wash is laid out once across the card and only
+   revealed, so it is never squashed. The bright band at the sweep's edge fades
+   out as it lands, so cards at rest show no band. */
+.gw-mod-fill {
+  --gw-fill: 0%;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    /* The glow on the leading edge: brightest while the sweep is crossing,
+       gone by the time it lands. */
+    linear-gradient(
+      to right,
+      transparent calc(var(--gw-fill) * 1.25 - 34%),
+      color-mix(
+          in srgb,
+          var(--g-accent) calc((100% - var(--gw-fill)) * 0.5),
+          transparent
+        )
+        calc(var(--gw-fill) * 1.25 - 16%),
+      transparent calc(var(--gw-fill) * 1.25)
+    ),
+    linear-gradient(
+      105deg,
+      color-mix(in srgb, var(--g-accent) 24%, transparent),
+      var(--g-accent-soft) 48%,
+      color-mix(in srgb, var(--g-accent-soft) 40%, transparent)
+    );
+  /* A mask with a 25%-wide ramp gives the fill a feathered edge (clip-path drew
+     a hard line). The ramp is scaled by 1.25 so 0% shows nothing and 100%
+     covers the card. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 calc(var(--gw-fill) * 1.25 - 25%),
+    transparent calc(var(--gw-fill) * 1.25)
+  );
+  mask-image: linear-gradient(
+    to right,
+    #000 calc(var(--gw-fill) * 1.25 - 25%),
+    transparent calc(var(--gw-fill) * 1.25)
+  );
+  transition: --gw-fill 680ms var(--gw-ease);
+}
+.gw-mod[data-enabled="true"] .gw-mod-fill {
+  --gw-fill: 100%;
+}
+/* On hover a card previews its toggle: an off card shows a sliver of colour, an
+   on card draws back a little. */
+@media (hover: hover) {
+  .gw-mod[data-enabled="false"]:not([data-settled="false"]):hover .gw-mod-fill {
+    --gw-fill: 14%;
+    transition-duration: 360ms;
+  }
+  .gw-mod[data-enabled="true"]:not([data-settled="false"]):hover .gw-mod-fill {
+    --gw-fill: 90%;
+    transition-duration: 360ms;
+  }
+}
+
+/* The module's own mark, big, behind everything, bled off the corner. It is
+   what stops twenty-five two-line cards reading as a spreadsheet. */
+.gw-mod-ghost {
+  position: absolute;
+  top: calc(var(--u4) * -1);
+  right: calc(var(--u4) * -1);
+  display: grid;
+  place-items: center;
+  color: var(--g-ink);
+  opacity: 0.045;
+  pointer-events: none;
+  transition:
+    opacity 260ms var(--g-ease-state),
+    transform 400ms var(--gw-ease);
+}
+.gw-mod[data-enabled="true"] .gw-mod-ghost {
+  color: var(--g-accent);
+  opacity: 0.09;
+}
+.gw-mod-ghost svg {
+  width: 104px;
+  height: 104px;
+  stroke-width: 1;
+}
+.gw-mod:hover .gw-mod-ghost {
+  opacity: 0.08;
+  transform: translate(-3px, 3px) rotate(-4deg);
+}
+
+/* A flex column packed to the start: a button centres its contents vertically
+   whatever its display, which put titles at different heights across a row. */
+/* The card is the switch. */
+.gw-mod-toggle {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  flex: 1;
+  min-width: 0;
+  /* Bottom padding keeps the foot clear for the hint on the left and the cog on
+     the right. */
+  padding: var(--u4) var(--u4) var(--u12);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* The glyph sits beside the name at the same size, with no tile. The right
+   padding leaves the corner for the Enable button. */
+.gw-mod-head {
+  display: flex;
+  align-items: center;
+  gap: var(--u2);
+  min-height: var(--u6);
+}
+.gw-mod-glyph {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--mac-label-dim);
+  transition: color 200ms var(--g-ease-state);
+}
+.gw-mod[data-enabled="true"] .gw-mod-glyph {
+  color: var(--g-accent-ink);
+}
+
+.gw-mod-title {
+  margin: 0;
+  min-width: 0;
+  font-size: var(--t-lead);
+  line-height: var(--lh-lead);
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  color: var(--g-ink);
+}
+.gw-mod[data-enabled="false"] .gw-mod-title {
+  color: var(--g-ink-dim);
+}
+.gw-mod-say {
+  margin: var(--u2) 0 0;
+  max-width: 46ch;
+  font-size: var(--t-small);
+  line-height: var(--lh-small);
+  color: var(--mac-label-dim);
+}
+
+/* What a press would do, shown on hover and keyboard focus. The dot shows the
+   state the press would leave: filled for on, a ring for off. */
+.gw-mod-hint {
+  position: absolute;
+  left: var(--u4);
+  bottom: var(--u3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding-inline: 10px 11px;
+  border: 1px solid var(--g-line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mac-raise) 82%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: var(--g-ink);
+  font-size: var(--t-micro);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 160ms var(--g-ease-state),
+    transform 260ms var(--gw-ease);
+  pointer-events: none;
+}
+/* Words, not a status light. A glowing dot beside "Turn on" read as a
+   notification, and a card that is the switch does not need one. */
+@media (hover: hover) {
+  .gw-mod:hover .gw-mod-hint {
+    opacity: 1;
+    transform: none;
+  }
+}
+.gw-mod-toggle:focus-visible .gw-mod-hint {
+  opacity: 1;
+  transform: none;
+}
+
+/* Settings: the cog in the corner. Bare -- no tile under it at rest -- with a
+   round wash under the pointer, and it turns a sixth as it is pointed at. */
+/* The tooltip's wrapper is what sits in the corner; the cog inside it is
+   laid out normally. */
+.gw-mod-cog-spot {
+  position: absolute !important;
+  z-index: 2;
+  right: var(--u2);
+  bottom: var(--u2);
+}
+.gw-mod-cog {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--u10);
+  height: var(--u10);
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--mac-label-dim);
+  cursor: pointer;
+  transition:
+    color 160ms var(--g-ease-state),
+    background-color 160ms var(--g-ease-state);
+}
+.gw-mod-cog svg {
+  transition: transform 420ms var(--gw-ease);
+}
+.gw-mod[data-enabled="true"] .gw-mod-cog {
+  color: var(--g-accent-ink);
+}
+@media (hover: hover) {
+  .gw-mod-cog:hover {
+    color: var(--g-ink);
+    background: var(--g-fill-2);
+  }
+  .gw-mod-cog:hover svg {
+    transform: rotate(60deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gw-mod,
+  .gw-mod-fill,
+  .gw-mod-ghost,
+  .gw-mod-hint,
+  .gw-mod-cog svg {
+    transition-duration: 1ms;
+  }
+}
+
+/* ── what the window says when it cannot open ────────────────────────────── */
+
+.gw-stop {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--u3);
+  padding: var(--u8) var(--u5);
+  text-align: center;
+}
+.gw-stop h2 {
+  margin: 0;
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  font-weight: 800;
+  color: var(--g-ink);
+}
+.gw-stop p {
+  margin: 0;
+  max-width: 34ch;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--g-ink-dim);
+}
+.gw-stop-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u2);
+  justify-content: center;
+  margin-top: var(--u1);
+}
+
+/* ── narrow ──────────────────────────────────────────────────────────────── */
+
+/* Narrow screens: the rail slides over the pane, with a scrim that dismisses
+   it. */
+@media (max-width: 1023px) {
+  .gw-side {
+    position: absolute;
+    top: var(--gw-bar);
+    bottom: var(--gw-foot);
+    left: 0;
+    z-index: 42;
+    width: var(--gw-rail);
+    border-right: 1px solid var(--mac-hair);
+    transform: translateX(-100%);
+    transition: transform 300ms var(--gw-ease);
+  }
+  .gw[data-rail="true"] .gw-side {
+    transform: none;
+  }
+  /* Hidden by sliding off the edge, not by collapsing to zero width. */
+  .gw[data-rail="false"] .gw-side {
+    width: var(--gw-rail);
+    overflow: hidden;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .gw-tab {
+    max-width: 150px;
+  }
+  /* Four controls and a face do not fit beside a server name on a phone. The
+     appearance control and the reload go; both are in reach elsewhere. */
+  .gw-bar .g-theme,
+  .gw-bar .gw-icon[aria-label="Reload channels and roles"],
+  .gw-sep {
+    display: none;
+  }
+  .gw-foot .gw-count {
+    display: none;
+  }
+}

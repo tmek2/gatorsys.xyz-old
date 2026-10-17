@@ -1,0 +1,235 @@
+/* The empty dashboard's box.
+
+   Unlayered, like the rest of the restyle: Tailwind v3's preflight is unlayered
+   and beats every layered rule.
+
+   Three transforms on hover that do not move alike: the button comes furthest
+   and first, the two slips behind it less far, later, fanning outward, like
+   tipping a box toward you. */
+
+.g-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: clamp(20px, 4vh, 40px) 20px clamp(26px, 4vh, 44px);
+  text-align: center;
+}
+
+.g-box-stage {
+  position: relative;
+  width: min(320px, 82vw);
+  aspect-ratio: 320 / 240;
+  /* One plane tipped slightly back, so lifted things come toward the reader. */
+  perspective: 900px;
+}
+
+.g-box-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.g-box-back {
+  z-index: 0;
+}
+.g-box-front {
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* What comes out. Between the two halves of the box, which is the only way
+   the emergence can be believed. */
+.g-box-load {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 40%;
+  display: grid;
+  place-items: center;
+  transform: translateX(-50%);
+}
+
+/* The two behind. They are stacked in one grid cell so the group has no width
+   of its own to animate — what changes is only where each one is. */
+.g-box-slip,
+.g-box-cta {
+  grid-area: 1 / 1;
+}
+
+.g-box-slip {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 132px;
+  padding: 9px 12px;
+  border: 1px solid var(--mac-hairline, var(--g-line));
+  border-radius: 11px;
+  background: var(--g-raise-2);
+  box-shadow: var(--mac-lift, 0 6px 18px rgba(0, 0, 0, 0.34));
+  text-align: left;
+  /* At rest: tucked down in the box, barely showing above the lip. */
+  transform: translate3d(0, 14px, 0) scale(0.9);
+  opacity: 0;
+  transition:
+    transform 520ms var(--g-ease-out),
+    opacity 320ms var(--g-ease-state);
+  /* Behind the button, and staggered, so they arrive after it. */
+  transition-delay: calc(var(--n) * 60ms);
+}
+.g-box-slip b {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--g-ink);
+}
+.g-box-slip i {
+  font-size: 11px;
+  font-style: normal;
+  color: var(--g-ink-faint);
+}
+
+.g-box-cta {
+  position: relative;
+  z-index: 1;
+  /* At rest the button clears the lip (fully legible and hittable) with its
+     bottom tucked behind the front; hover lifts it the rest of the way. It
+     never appears or disappears. */
+  transform: translate3d(0, -26px, 0);
+  transition: transform 460ms var(--g-ease-out);
+}
+.g-box-cta-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-r-pill);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--g-ink-dim);
+}
+
+/* ------------------------------------------------------------------ open */
+
+/* Hover, focus, or a pointer that cannot hover. `:focus-within` so a tabbed-to
+   button is never left half behind the lid. */
+@media (hover: hover) and (pointer: fine) {
+  .g-box-stage:hover .g-box-cta,
+  .g-box-stage:focus-within .g-box-cta {
+    transform: translate3d(0, -74px, 30px);
+  }
+  .g-box-stage:hover .g-box-slip,
+  .g-box-stage:focus-within .g-box-slip {
+    opacity: 1;
+  }
+  /* Out and apart. The two fan to either side rather than stacking, because a
+     stack that rises is one card with a shadow and a fan is a boxful. */
+  .g-box-stage:hover .g-box-slip:nth-child(1),
+  .g-box-stage:focus-within .g-box-slip:nth-child(1) {
+    transform: translate3d(-122px, -58px, 10px) rotate(-8deg);
+  }
+  .g-box-stage:hover .g-box-slip:nth-child(2),
+  .g-box-stage:focus-within .g-box-slip:nth-child(2) {
+    transform: translate3d(122px, -40px, 10px) rotate(7deg);
+  }
+}
+
+/* No hover to wait for. Everything rests where the hover would have put it,
+   because the alternative is an action nobody can find. */
+@media (hover: none), (pointer: coarse) {
+  .g-box-cta {
+    transform: translate3d(0, -70px, 0);
+  }
+  .g-box-slip {
+    opacity: 1;
+  }
+  .g-box-slip:nth-child(1) {
+    transform: translate3d(-96px, -54px, 0) rotate(-7deg);
+  }
+  .g-box-slip:nth-child(2) {
+    transform: translate3d(96px, -38px, 0) rotate(6deg);
+  }
+}
+
+/* Narrow enough that a 132px slip either side would leave the frame. */
+@media (max-width: 460px) {
+  .g-box-slip {
+    width: 108px;
+  }
+  /* Not enough room to put one either side of the button, so they go above it
+     instead — the same fan, rotated onto the axis that has the space. */
+  .g-box-slip:nth-child(1) {
+    transform: translate3d(-58px, -104px, 0) rotate(-8deg);
+  }
+  .g-box-slip:nth-child(2) {
+    transform: translate3d(58px, -88px, 0) rotate(7deg);
+  }
+}
+
+.g-box-title {
+  margin: 4px 0 0;
+  font-family: var(--font-ui);
+  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--g-ink);
+}
+.g-box-say {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--g-ink-dim);
+}
+
+/* ---------------------------------------------------------------- colours */
+
+:root {
+  --box-face-a: #2c2c2c;
+  --box-face-b: #212121;
+  --box-lip-a: #373737;
+  --box-lip-b: #282828;
+  --box-flap-a: #323232;
+  --box-flap-b: #232323;
+  --box-void: #0f0f0f;
+  --box-edge: rgba(255, 255, 255, 0.07);
+}
+:root[data-theme="light"] {
+  --box-face-a: #e9d6bb;
+  --box-face-b: #dcc6a6;
+  --box-lip-a: #f0e0c8;
+  --box-lip-b: #e3cfb0;
+  --box-flap-a: #eddcc3;
+  --box-flap-b: #e0cba9;
+  --box-void: #c9ae8b;
+  --box-edge: rgba(74, 36, 49, 0.16);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --box-face-a: #e9d6bb;
+    --box-face-b: #dcc6a6;
+    --box-lip-a: #f0e0c8;
+    --box-lip-b: #e3cfb0;
+    --box-flap-a: #eddcc3;
+    --box-flap-b: #e0cba9;
+    --box-void: #c9ae8b;
+    --box-edge: rgba(74, 36, 49, 0.16);
+  }
+}
+
+/* Somebody who has asked for less motion still gets the box and still gets the
+   button — they just get it where it lands rather than watching it travel. */
+@media (prefers-reduced-motion: reduce) {
+  .g-box-cta,
+  .g-box-slip {
+    transition: none;
+  }
+  .g-box-cta {
+    transform: translate3d(0, -70px, 0);
+  }
+  .g-box-slip {
+    opacity: 1;
+  }
+}

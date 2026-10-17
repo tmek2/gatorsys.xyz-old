@@ -1,0 +1,17 @@
+{
+  "//": "Copy to .mcp.json and fill in. See tools/gator-mcp/README.md — the key is admin-equivalent over every guild the bot is in, so scope it with GATOR_GUILDS and leave writes off until you mean them.",
+  "mcpServers": {
+    "gator": {
+      "command": "python3",
+      "args": ["tools/gator-mcp/server.py"],
+      "env": {
+        "GATOR_API_AUTH": "",
+        "GATOR_ACTING_USER": "",
+        "GATOR_API_URL": "https://fdny-systems-production.up.railway.app",
+        "GATOR_SITE_URL": "https://www.gatorsys.xyz",
+        "GATOR_GUILDS": "",
+        "GATOR_ALLOW_WRITES": "0"
+      }
+    }
+  }
+}

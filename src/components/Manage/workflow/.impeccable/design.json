@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-10T10:15:00Z",
+  "title": "Design System: Gator Workflow Map",
+  "extensions": {
+    "shadows": [
+      { "name": "map-card", "value": "0 5px 16px #0002", "purpose": "Separate the light workflow cards from the dark canvas." },
+      { "name": "mobile-sheet", "value": "0 -12px 50px #0006", "purpose": "Show that settings overlap the map on mobile." }
+    ],
+    "breakpoints": [{ "name": "mobile-editor", "value": "760px" }]
+  },
+  "components": [],
+  "narrative": {
+    "northStar": "A readable map with one place to focus",
+    "overview": "Gator's existing canvas becomes a numbered map of configured actions. Named source links explain the information each block uses. A single inspector holds the detailed settings, becoming a bottom sheet on mobile.",
+    "keyCharacteristics": ["Warm numbered cards", "Visible run order", "Named data sources", "Focused settings", "Existing Gator pickers"],
+    "rules": [{ "name": "Named Data", "body": "Identify the source block and output rather than relying on wire color.", "section": "components" }],
+    "dos": ["Preserve the editable graph and existing dashboard controls."],
+    "donts": ["Do not promote this workflow-specific contract into a site-wide brand replacement."]
+  }
+}

@@ -1,0 +1,73 @@
+/* Unlayered, like the rest: Tailwind v3's preflight is unlayered and beats
+   every layered rule however specific it is. */
+
+.g-tip-host {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Drawn at the end of the document and positioned, so nothing stacked above the
+   header can cut it off. See the component. */
+.g-tip {
+  position: fixed;
+  z-index: 120;
+  transform: translateX(-50%) translateY(-3px);
+  /* The same surface, type and shadow as the dashboard's `.gw-tip`. */
+  padding: 7px 10px;
+  border: 1px solid var(--g-line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--mac-raise) 96%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--mac-shadow);
+  color: var(--g-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+/* Only in the document while open, so it enters from one starting frame. It
+   grows slightly as it rises from the control's edge, on a quick-then-soft
+   curve. */
+@keyframes g-tip-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-7px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+@keyframes g-tip-in-end {
+  from {
+    opacity: 0;
+    transform: translateX(-100%) translateY(-7px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-100%) translateY(0) scale(1);
+  }
+}
+.g-tip {
+  transform-origin: 50% 0;
+  animation: g-tip-in 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.g-tip[data-align="end"] {
+  transform-origin: 100% 0;
+}
+
+/* Labels on a control at the right edge of the header hang from their right
+   edge instead of centring (which would run off the page). */
+.g-tip[data-align="end"] {
+  animation-name: g-tip-in-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-tip {
+    animation-duration: 1ms;
+  }
+}
