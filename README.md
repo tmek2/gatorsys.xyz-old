@@ -3,6 +3,7 @@
 - **Idea:** Modern, smooth UI with some creative ideas for the interactions. Main color palette for dark mode black/pink, light mode is beige/velvet. Inspo for the UI taken from discord.
 - **Purpose:** A fully production ready dashboard used for a moderation bot. (Code still to be released)
 - **Disclaimer:** This is all made with **AI**, and no it is not AI slop, I'm actually thinking here behind the screen not "Chatgpt make me good site, 0 mistake".
+- All personal branding was removed. Only generic names are now used, will need updating.
 
 
 ## Run the website
