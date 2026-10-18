@@ -1,10 +1,8 @@
 # Gator (Website)
-- Redesign for the website is in progress.
-- **Idea:** Mostly hand drawn, after the gator there would be a sort of discord UI/server previewing what the bot can do, imp better than having images.
-- **Purpose:** Bot serves as a somewhat acceptable quality free alternative instead of the paid greedy giants. Offers full customizability over everything. More coming soon.
-- **Credit:** fir4s for the hand drawn gator and transition idea. Also mentioned that discord design I think?
+- gatorsys.xyz's second design.
+- **Idea:** Modern, smooth UI with some creative ideas for the interactions. Main color palette for dark mode black/pink, light mode is beige/velvet. Inspo for the UI taken from discord.
+- **Purpose:** A fully production ready dashboard used for a moderation bot. (Code still to be released)
 - **Disclaimer:** This is all made with **AI**, and no it is not AI slop, I'm actually thinking here behind the screen not "Chatgpt make me good site, 0 mistake".
-- Send your suggestions to my discord [.tmek](<https://discord.com/users/642749164165267466>)
 
 
 ## Run the website
