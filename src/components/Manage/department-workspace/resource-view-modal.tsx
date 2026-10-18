@@ -7,6 +7,7 @@ import { useWorkspaceHost } from "../workspace-host";
 import { FieldRow, SelectField, TextAreaField, TextField } from "../fields";
 import type { ApplicationQuestion } from "../types";
 import { DOCUMENT_FRAME_STYLE } from "./shared";
+import { sanitizeDocumentHtml } from "@/utils/document-html";
 
 /* A resource opened from the workspace, read in place. */
 
@@ -68,7 +69,7 @@ export function ResourceViewModal({
           <iframe
             sandbox=""
             title={resource.title}
-            srcDoc={`${DOCUMENT_FRAME_STYLE}${resource.document_html || ""}`}
+            srcDoc={`${DOCUMENT_FRAME_STYLE}${sanitizeDocumentHtml(resource.document_html)}`}
             className="mt-5 h-[65vh] w-full rounded-xl border border-white/[0.08]"
           />
         ) : (

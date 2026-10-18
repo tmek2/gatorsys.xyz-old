@@ -1,0 +1,251 @@
+/* ── account pages ──
+
+   A warm pool of brand colour behind the content and the landing's grain, with
+   no images. */
+.account-page {
+  position: relative;
+  isolation: isolate;
+  background: var(--gs-canvas, #030303);
+}
+
+.account-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='an'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23an)' opacity='0.05'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+/* ═══ Status indicators, skeletons and meters ═══
+
+   Here rather than in the manage sheet because /panel, the public department
+   pages and the application form use them too. Every `--manage-*` value has a
+   fallback for the same reason. */
+
+/* ── skeletons ──
+
+   A skeleton has the same height, radius and gap as the row it becomes, so the
+   page does not jump when data arrives. */
+
+.gator-skeleton-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.gator-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  border: 1px solid var(--manage-line, rgba(255, 255, 255, 0.08));
+  border-radius: var(--manage-radius-card, 0.9rem);
+  background: var(--manage-panel, rgba(255, 255, 255, 0.02));
+  padding: 1rem 1.15rem;
+  /* Matched to the real card so the swap is invisible rather than a settle. */
+  min-height: 4.25rem;
+}
+
+.gator-skeleton-bar {
+  display: block;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--manage-text, #f5f2f2) 7%, transparent) 0%,
+    color-mix(in srgb, var(--manage-text, #f5f2f2) 13%, transparent) 50%,
+    color-mix(in srgb, var(--manage-text, #f5f2f2) 7%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: gatorSkeletonSheen 1.5s ease-in-out infinite;
+}
+
+.gator-skeleton-bar-title {
+  height: 0.75rem;
+  width: 42%;
+  max-width: 14rem;
+}
+
+.gator-skeleton-bar-line {
+  margin-top: 0.6rem;
+  width: 66%;
+  max-width: 26rem;
+}
+
+.gator-skeleton-block {
+  flex: none;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: var(--manage-radius-control, 0.6rem);
+}
+
+.gator-skeleton-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Placeholder for a single card (an editor pane, a detail panel, a chart): same
+   border and radius as the card. */
+.gator-skeleton-panel {
+  border: 1px solid var(--manage-line, rgba(255, 255, 255, 0.08));
+  border-radius: var(--manage-radius-card, 0.9rem);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--manage-text, #f5f2f2) 3.5%, var(--manage-panel, rgba(255, 255, 255, 0.02))) 0%,
+    color-mix(in srgb, var(--manage-text, #f5f2f2) 8%, var(--manage-panel, rgba(255, 255, 255, 0.02))) 50%,
+    color-mix(in srgb, var(--manage-text, #f5f2f2) 3.5%, var(--manage-panel, rgba(255, 255, 255, 0.02))) 100%
+  );
+  background-size: 200% 100%;
+  animation: gatorSkeletonSheen 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gator-skeleton-panel {
+    animation: none;
+    background-position: 50% 0;
+  }
+}
+
+/* Staggered, so the stack reads as one surface breathing rather than six
+   bars flashing in lockstep. */
+.gator-skeleton-row:nth-child(2) .gator-skeleton-bar {
+  animation-delay: 90ms;
+}
+.gator-skeleton-row:nth-child(3) .gator-skeleton-bar {
+  animation-delay: 180ms;
+}
+.gator-skeleton-row:nth-child(4) .gator-skeleton-bar {
+  animation-delay: 270ms;
+}
+.gator-skeleton-row:nth-child(n + 5) .gator-skeleton-bar {
+  animation-delay: 360ms;
+}
+
+@keyframes gatorSkeletonSheen {
+  from {
+    background-position: 140% 0;
+  }
+  to {
+    background-position: -40% 0;
+  }
+}
+
+/* The shape is the point, not the shimmer — it holds the layout either way. */
+@media (prefers-reduced-motion: reduce) {
+  .gator-skeleton-bar {
+    animation: none;
+    background-position: 50% 0;
+  }
+}
+
+/* ── status indicators ──
+
+   One geometry for every state (see indicator.tsx). */
+
+.gator-dot {
+  display: inline-block;
+  flex: none;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--tone-idle);
+}
+
+.gator-dot[data-tone="ok"] {
+  background: var(--tone-ok);
+}
+.gator-dot[data-tone="warn"] {
+  background: var(--tone-warn);
+}
+.gator-dot[data-tone="bad"] {
+  background: var(--tone-bad);
+}
+.gator-dot[data-tone="info"] {
+  background: var(--tone-info);
+}
+
+/* Live state gets a halo rather than a blink: the dot itself never changes
+   size, so a row of them stays on one baseline while one of them is running. */
+.gator-dot-live {
+  position: relative;
+}
+
+.gator-dot-live::after {
+  content: "";
+  position: absolute;
+  inset: -0.25rem;
+  border-radius: 50%;
+  /* Inherits the dot's own tone, so the halo is never a colour of its own. */
+  background: inherit;
+  opacity: 0.35;
+  animation: gatorDotPulse 2s var(--manage-ease, ease) infinite;
+}
+
+@keyframes gatorDotPulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.45;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gator-dot-live::after {
+    animation: none;
+    transform: scale(1.15);
+    opacity: 0.28;
+  }
+}
+
+/* A role's own colour, at the dot's size so a swatch and a status dot in the
+   same row sit on one baseline. */
+.gator-swatch {
+  display: inline-block;
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.gator-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  /* One padding, not two. The 2/1 and 3/1 pills sat side by side in the
+     department workspace and read as two different components. */
+  padding: 0.2rem 0.6rem;
+  background: var(--tone-idle-soft);
+  color: var(--tone-idle);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.gator-pill[data-tone="ok"] {
+  background: var(--tone-ok-soft);
+  color: var(--tone-ok);
+}
+.gator-pill[data-tone="warn"] {
+  background: var(--tone-warn-soft);
+  color: var(--tone-warn);
+}
+.gator-pill[data-tone="bad"] {
+  background: var(--tone-bad-soft);
+  color: var(--tone-bad);
+}
+.gator-pill[data-tone="info"] {
+  background: var(--tone-info-soft);
+  color: var(--tone-info);
+}

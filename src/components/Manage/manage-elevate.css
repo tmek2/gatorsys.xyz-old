@@ -57,7 +57,7 @@
   opacity: 0.5;
 }
 
-/* ── 3 · Gator switch (opt-in via .gator-switch class only) ────────── */
+/* ── 3 · Bot switch (opt-in via .gator-switch class only) ────────── */
 
 .gator-switch {
   -webkit-tap-highlight-color: transparent;

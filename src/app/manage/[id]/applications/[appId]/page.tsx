@@ -17,7 +17,7 @@ export default async function ApplicationEditor({
   const { id, appId } = await params;
   const session = await auth();
 
-  if (!session || session.user?.authError) {
+  if (!session?.user?.id || session.user.authError) {
     redirect(getDiscordSignInUrl(`/manage/${id}/applications/${appId}`));
   }
 
@@ -25,7 +25,7 @@ export default async function ApplicationEditor({
     // `manage-root` declares the `--manage-*` tokens, so the page follows the
     // light theme.
     <main className="manage-root min-h-screen">
-      <ApplicationEditorPage guildId={id} appId={appId} />
+      <ApplicationEditorPage guildId={id} viewerId={session.user.id} appId={appId} />
     </main>
   );
 }

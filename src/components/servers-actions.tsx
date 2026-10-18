@@ -77,7 +77,7 @@ export function ServersActions({ inviteUrl, onRefresh }: ServersActionsProps) {
             onSelect={() => window.open(inviteUrl, "_blank", "noopener,noreferrer")}
           >
             <Send className="h-4 w-4" />
-            Invite Gator
+            Invite Bot
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

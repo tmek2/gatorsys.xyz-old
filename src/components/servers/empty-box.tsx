@@ -14,7 +14,7 @@ import { DiscordLogo } from "@/components/brand-icons";
 import { MODULE_COUNT } from "@/components/site/modules";
 import "./empty-box.css";
 
-/* The two slips behind the button: what adding Gator gives you, named. Not
+/* The two slips behind the button: what adding Bot gives you, named. Not
    buttons. */
 const SLIPS = [
   { key: "modules", title: `${MODULE_COUNT} modules`, sub: "on by default" },
@@ -77,13 +77,13 @@ export function EmptyBox({ inviteUrl }: { inviteUrl?: string }) {
               size="lg"
             >
               <DiscordLogo size={17} />
-              Add Gator
+              Add Bot
               <RippleButtonRipples />
             </RippleButton>
           ) : (
             <span className="g-box-cta g-box-cta-quiet">
               <IconPlus size={16} />
-              Add Gator
+              Add Bot
             </span>
           )}
         </div>
@@ -120,7 +120,7 @@ export function EmptyBox({ inviteUrl }: { inviteUrl?: string }) {
       <h3 className="g-box-title">Nothing in here yet</h3>
       {/* One sentence. */}
       <p className="g-box-say">
-        Add Gator to a server you administer and it shows up here.
+        Add Bot to a server you administer and it shows up here.
       </p>
     </div>
   );

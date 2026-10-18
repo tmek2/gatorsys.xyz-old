@@ -37,7 +37,7 @@ const BLANK = {
 };
 
 /**
- * Global service notices: what every server's GatorAI says while something is
+ * Global service notices: what every server's Assistant says while something is
  * broken ("applications are down for everyone, fix lands Thursday"), set once
  * here. Reversible: while a notice is live the assistant leads with it; delete
  * it and every server goes back to answering from the documentation.
@@ -86,7 +86,7 @@ export function OwnerContext() {
 
   async function save() {
     if (!draft.body.trim()) {
-      setError("A notice needs a body. That's what GatorAI will say.");
+      setError("A notice needs a body. That's what Assistant will say.");
       return;
     }
     if (await send({ action: "save", notice: draft })) setDraft(BLANK);
@@ -99,7 +99,7 @@ export function OwnerContext() {
       <section className="owner-card owner-ctx-form">
         <h3 className="owner-ctx-title">{editing ? "Edit notice" : "New notice"}</h3>
         <p className="owner-ctx-say">
-          Every server&apos;s GatorAI leads with this instead of explaining how
+          Every server&apos;s Assistant leads with this instead of explaining how
           the feature normally works. Remove it and they all go back to the
           documentation immediately.
         </p>
@@ -183,7 +183,7 @@ export function OwnerContext() {
           [0, 1].map((index) => <div key={index} className="owner-skeleton" />)
         ) : notices.length === 0 ? (
           <p className="owner-empty">
-            No notices. GatorAI is answering from the documentation everywhere.
+            No notices. Assistant is answering from the documentation everywhere.
           </p>
         ) : (
           notices.map((notice) => {
@@ -246,7 +246,7 @@ export function OwnerContext() {
                         onClick={() =>
                           setConfirm({
                             title: "Delete notice",
-                            body: "Every server's GatorAI goes back to answering from the documentation right away.",
+                            body: "Every server's Assistant goes back to answering from the documentation right away.",
                             confirmLabel: "Delete",
                             danger: true,
                             onConfirm: () => void send({ action: "delete", id: notice.id }),

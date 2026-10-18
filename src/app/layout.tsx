@@ -1,4 +1,3 @@
-// impeccable-disable overused-font -- These faces are choices inside the document and spreadsheet editors, not the app interface.
 import type { Metadata } from "next";
 import { Inter, Merriweather, Nunito, PT_Serif, Rethink_Sans } from "next/font/google";
 import React, { ReactNode } from "react";
@@ -8,13 +7,11 @@ import "./globals.css";
 import ProgressBarProvider from "./components/ProgressBarProvider";
 import { OverflowScrollGuard } from "./components/overflow-scroll-guard";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/config/site";
+import { getSiteUrl } from "@/utils/site-url";
 import { CommunityNavigation } from "@/components/servers/community-navigation";
 import { OverlayExit } from "@/components/overlay-exit";
 import { THEME_SCRIPT } from "@/components/site/theme";
-import { INTRO_SCRIPT } from "@/components/site/intro";
-import { SiteIntro } from "@/components/site/site-intro";
 import { PerfProbe } from "@/components/perf-probe";
-import { GatorSwim } from "@/components/gator-swim";
 
 // The site's one typeface for every title, label and line: Rethink Sans, a
 // clean grotesque that holds a 44px headline and stays even at 12px. The faces
@@ -30,7 +27,7 @@ const rethink = Rethink_Sans({
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  preload: true,
+  preload: false,
   variable: "--font-inter",
 });
 
@@ -38,7 +35,7 @@ const inter = Inter({
 const nunito = Nunito({
   subsets: ["latin"],
   display: "swap",
-  preload: true,
+  preload: false,
   weight: ["400", "600", "700", "800", "900"],
   variable: "--font-nunito",
 });
@@ -49,7 +46,7 @@ const nunito = Nunito({
 const merriweather = Merriweather({
   subsets: ["latin"],
   display: "swap",
-  preload: true,
+  preload: false,
   weight: ["300", "400", "700", "900"],
   variable: "--font-merriweather",
 });
@@ -57,25 +54,25 @@ const merriweather = Merriweather({
 const ptSerif = PT_Serif({
   subsets: ["latin"],
   display: "swap",
-  preload: true,
+  preload: false,
   weight: ["400", "700"],
   style: ["normal", "italic"],
   variable: "--font-pt-serif",
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.gatorsys.xyz"),
-  // The tab always reads just "Gator" — no page suffixes.
+  metadataBase: new URL(getSiteUrl()),
+  // The tab always reads just "Bot" — no page suffixes.
   title: SITE_NAME,
   description: SITE_DESCRIPTION,
-  icons: { icon: "/gator-logo.png" },
+  icons: { icon: "/icon.svg" },
   openGraph: {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
     siteName: SITE_NAME,
     /* No `images` here: src/app/opengraph-image.tsx generates the card from the
        same constants as the page, and naming a file here would override it. */
-    url: "https://www.gatorsys.xyz",
+    url: getSiteUrl(),
     type: "website",
   },
   twitter: {
@@ -121,14 +118,12 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         {/* Applies the saved appearance before paint (see THEME_SCRIPT in
            site/theme.ts). */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-        <script dangerouslySetInnerHTML={{ __html: INTRO_SCRIPT }} />
       </head>
       <body className="dark">
         <ViewTransitions>
           <SessionProviders>
             <CommunityNavigation>
               <ProgressBarProvider>
-                <SiteIntro />
                 {/* Gives every .gator-overlay an exit animation without each modal
                   having to hoist its own conditional. */}
                 <OverlayExit />
@@ -145,8 +140,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                   }
                 />
                 {children}
-                {/* Type "gator" (see the component). */}
-                <GatorSwim />
               </ProgressBarProvider>
             </CommunityNavigation>
           </SessionProviders>

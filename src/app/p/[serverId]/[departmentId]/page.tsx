@@ -20,7 +20,7 @@ export async function generateMetadata({
     });
     const data = response.ok ? await response.json() : {};
     const department = data.department || {};
-    const title = `${department.name || "Department"} | Gator`;
+    const title = `${department.name || "Department"} | Bot`;
     const description =
       department.description ||
       `View ${department.name || "this department"}, its ranks, public resources, and application link.`;
@@ -28,7 +28,7 @@ export async function generateMetadata({
     // Discord's unfurler reads the OG tags and ignores `robots`, so link
     // previews keep working while search engines skip the page. See `NO_INDEX`.
     robots: NO_INDEX,
-      title: "Gator",
+      title: "Bot",
       description,
       openGraph: {
         title,
@@ -49,7 +49,7 @@ export async function generateMetadata({
     // previews keep working while search engines skip the page. See `NO_INDEX`.
     robots: NO_INDEX,
       title: SITE_NAME,
-      description: "View this department and apply to join through Gator.",
+      description: "View this department and apply to join through Bot.",
     };
   }
 }

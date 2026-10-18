@@ -21,51 +21,22 @@ async function collectSourceFiles(directory: string): Promise<string[]> {
   return files;
 }
 
-test("uses the approved Gator brand contract", async () => {
-  const site = await import("../src/config/site.ts").catch(() => null);
-  assert.ok(site, "shared Gator site configuration must exist");
-  assert.equal(site.SITE_NAME, "Gator");
-  assert.deepEqual(
-    site.NAV_LINKS.map((link: { label: string; href: string }) => [
-      link.label,
-      link.href,
-    ]),
-    [
-      ["Features", "/#features"],
-      ["Dashboard", "/servers"],
-      ["Documentation", "https://docs.gatorsys.xyz"],
-      ["Support", site.SUPPORT_URL],
-    ],
-  );
+test("public configuration defaults to a neutral installation", async () => {
+  const site = await import("../src/config/site.ts");
+  assert.equal(site.SITE_NAME, process.env.NEXT_PUBLIC_SITE_NAME || "Community Dashboard");
+  assert.equal(site.DOCS_URL, process.env.NEXT_PUBLIC_DOCS_URL || "/setup");
+  assert.equal(site.SUPPORT_URL, process.env.NEXT_PUBLIC_SUPPORT_URL || "/setup#support");
+  assert.ok(site.NAV_LINKS.some(link => link.href === "/servers"));
 });
 
-test("contains no visible legacy Birb branding or astrobirb links", async () => {
+test("the application contains no hardcoded community invite or author link", async () => {
   const sourceFiles = await collectSourceFiles(path.join(root, "src"));
   sourceFiles.push(path.join(root, "next.config.js"));
-
-  /* One exemption beyond the old footer's, and it is a credit rather than
-     branding. The Gator story credits Birb in two wrapped lines. They are
-     counted, and everything else in the file is still scanned. */
-  const README = "src/components/site/mac/content.ts";
-  const CREDIT = /^ *".*\bBirb\b.*",$/gm;
-
-  const offenders: string[] = [];
   for (const file of sourceFiles) {
-    const source = await readFile(file, "utf8");
-    const relativePath = path.relative(root, file).replaceAll("\\", "/");
-    let checkedSource = source;
-    if (relativePath === README) {
-      const credits = source.match(CREDIT) ?? [];
-      assert.equal(credits.length, 2, "the Gator story credit changed unexpectedly");
-      checkedSource = source.replace(CREDIT, "");
-    }
-
-    if (/\bbirb\b|astro-?birb|astrobirb\.dev/i.test(checkedSource)) {
-      offenders.push(relativePath);
-    }
+    const contents = await readFile(file, "utf8");
+    assert.doesNotMatch(contents, /https:\/\/discord\.gg\/[A-Za-z0-9]+/, file);
+    assert.doesNotMatch(contents, /https:\/\/discord\.com\/users\/\d+/, file);
   }
-
-  assert.deepEqual(offenders, []);
 });
 
 test("provides direct privacy and terms pages without hash fragments", async () => {

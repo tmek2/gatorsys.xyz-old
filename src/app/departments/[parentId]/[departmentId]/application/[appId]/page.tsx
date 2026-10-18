@@ -23,7 +23,7 @@ export default async function PortalApplicationEditor({
   const { parentId, departmentId, appId } = await params;
   const session = await auth();
 
-  if (!session || session.user?.authError) {
+  if (!session?.user?.id || session.user.authError) {
     redirect(
       getDiscordSignInUrl(
         `/departments/${parentId}/${departmentId}/application/${appId}`,
@@ -35,6 +35,7 @@ export default async function PortalApplicationEditor({
     <main className="min-h-screen bg-[#0a0a0a] text-white">
       <ApplicationEditorPage
         guildId={parentId}
+        viewerId={session.user.id}
         appId={appId}
         portalDepartmentId={departmentId}
       />

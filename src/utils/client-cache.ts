@@ -40,7 +40,13 @@ export type CachedJsonOptions = {
   /** Skip the cache and refill it — for an explicit "Refresh". */
   force?: boolean;
   signal?: AbortSignal;
+  /** Separate authenticated viewers without changing the request URL. */
+  scope?: string;
 };
+
+function storageKey(url: string, scope?: string): string {
+  return scope === undefined ? url : `${url}\u0000${scope}`;
+}
 
 /**
  * GETs `url` as JSON, reusing a fresh cached body. Throws on a non-ok response
@@ -50,8 +56,9 @@ export async function cachedJson<T = unknown>(
   url: string,
   options: CachedJsonOptions = {},
 ): Promise<T> {
-  const { ttlMs = DEFAULT_TTL_MS, force = false, signal } = options;
-  const existing = store.get(url);
+  const { ttlMs = DEFAULT_TTL_MS, force = false, signal, scope } = options;
+  const key = storageKey(url, scope);
+  const existing = store.get(key);
 
   if (!force && existing) {
     if (existing.inFlight) return existing.inFlight as Promise<T>;
@@ -65,7 +72,6 @@ export async function cachedJson<T = unknown>(
     if (!response.ok) {
       // Drop the entry so the next caller retries rather than inheriting a
       // failed promise.
-      store.delete(url);
       const error = new Error(`Request failed: ${response.status}`) as Error & {
         status?: number;
       };
@@ -73,11 +79,11 @@ export async function cachedJson<T = unknown>(
       throw error;
     }
     const body = (await response.json()) as T;
-    remember(url, { value: body, storedAt: Date.now() });
+    remember(key, { value: body, storedAt: Date.now() });
     return body;
   })();
 
-  remember(url, {
+  remember(key, {
     ...(existing?.value !== undefined
       ? { value: existing.value, storedAt: existing.storedAt }
       : { storedAt: Date.now() }),
@@ -87,23 +93,23 @@ export async function cachedJson<T = unknown>(
   try {
     return await request;
   } catch (error) {
-    const current = store.get(url);
-    if (current?.inFlight === request) store.delete(url);
+    const current = store.get(key);
+    if (current?.inFlight === request) store.delete(key);
     throw error;
   }
 }
 
 /** Whether a cached body exists and is still inside `ttlMs`. */
-export function isFresh(url: string, ttlMs: number = DEFAULT_TTL_MS): boolean {
-  const entry = store.get(url);
+export function isFresh(url: string, ttlMs: number = DEFAULT_TTL_MS, scope?: string): boolean {
+  const entry = store.get(storageKey(url, scope));
   return Boolean(
     entry && entry.value !== undefined && Date.now() - entry.storedAt < ttlMs,
   );
 }
 
 /** Read a cached body without triggering a request. */
-export function peekCached<T = unknown>(url: string): T | undefined {
-  return store.get(url)?.value as T | undefined;
+export function peekCached<T = unknown>(url: string, scope?: string): T | undefined {
+  return store.get(storageKey(url, scope))?.value as T | undefined;
 }
 
 /**

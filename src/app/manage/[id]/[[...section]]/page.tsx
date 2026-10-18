@@ -17,7 +17,7 @@ export default async function ManagePage({
   const { id, section } = await params;
   const session = await auth();
 
-  if (!session || session.user?.authError) {
+  if (!session?.user?.id || session.user.authError) {
     redirect(getDiscordSignInUrl(`/manage/${id}/overview`));
   }
 
@@ -27,5 +27,5 @@ export default async function ManagePage({
 
   /* No surface of its own: the shell paints itself, and its pane is the page's
      main landmark. */
-  return <ManageShell guildId={id} initialPath={section.join("/")} />;
+  return <ManageShell guildId={id} viewerId={session.user.id} initialPath={section.join("/")} />;
 }

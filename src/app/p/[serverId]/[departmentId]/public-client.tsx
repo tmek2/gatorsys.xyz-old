@@ -162,7 +162,7 @@ export function PublicDepartmentClient({
               {department.name}
             </h1>
             <p className="cool-text mx-auto mt-2 max-w-2xl text-pretty text-sm leading-6 sm:mx-0">
-              {department.description || "A department on Gator."}
+              {department.description || "A department on Bot."}
             </p>
             <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/[0.06] px-3 py-1 text-xs font-bold text-white/70">

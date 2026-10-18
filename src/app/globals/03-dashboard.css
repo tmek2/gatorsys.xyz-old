@@ -1,0 +1,390 @@
+/* ── editorial dashboard finish ── */
+.manage-root {
+  background: var(--manage-chrome);
+}
+
+.manage-content {
+  max-width: 1500px;
+  margin-inline: auto;
+}
+
+.section-header {
+  gap: 1rem;
+}
+
+.section-header-title {
+  color: var(--gator-text) !important;
+  font-size: clamp(1.75rem, 2.5vw, 2.5rem) !important;
+  line-height: 1;
+  letter-spacing: -0.035em !important;
+}
+
+@media (min-width: 1024px) {
+  .manage-window {
+    min-height: calc(100vh - 1.25rem);
+    margin: 0.625rem 0.625rem 0.625rem 0;
+    overflow: clip;
+    border: 1px solid var(--gator-border) !important;
+    border-radius: 1.1rem;
+    box-shadow: 0.9rem 1rem 2.8rem rgba(2, 0, 1, 0.18);
+  }
+
+}
+
+
+/* ── Bot product system ──
+
+   One visual contract for public pages, the dashboard and the editors: the
+   accent is the identity colour, neutral surfaces do the structure. */
+:root {
+  --gator-canvas: #08090a;
+  --gator-chrome: #0e0e0e;
+  --gator-surface: #121212;
+  --gator-surface-raised: #171717;
+  --gator-border: rgba(255, 255, 255, 0.08);
+  --gator-border-strong: rgba(255, 255, 255, 0.14);
+  --gator-text: #f4f3f5;
+  --gator-muted: rgba(244, 243, 245, 0.58);
+  --gator-accent: var(--accent-peach);
+  --gator-accent-soft: color-mix(in srgb, var(--accent-peach) 13%, transparent);
+  --gator-danger: #ff737c;
+  --gator-success: #72d69a;
+  --gator-radius-sm: 8px;
+  --gator-radius: 10px;
+  --gator-radius-lg: 14px;
+  --gator-control-height: 40px;
+  --gator-motion-fast: 160ms;
+  --gator-motion: 220ms;
+  --gator-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --manage-chrome: var(--gator-chrome);
+}
+
+/* Light: the dashboard's warm paper (manage-restyle.css), not cold white. */
+:root[data-theme="light"] {
+  --gator-canvas: #f7f1e8;
+  --gator-chrome: #ede3d8;
+  --gator-surface: #fdf8f2;
+  --gator-surface-raised: #f4ece1;
+  --gator-border: rgba(60, 42, 30, 0.14);
+  --gator-border-strong: rgba(60, 42, 30, 0.22);
+  --gator-text: #2a1d14;
+  --gator-muted: rgba(42, 29, 20, 0.62);
+  --manage-chrome: var(--gator-chrome);
+}
+
+:where(a, button, [role="button"], [role="option"], [tabindex]):focus-visible {
+  outline: 2px solid var(--gator-accent);
+  outline-offset: 2px;
+}
+
+/* No all-caps captions anywhere: older components still carry Tailwind's
+   `uppercase` and tracking, so they are set back to sentence case, a size up
+   from the tiny caps they were drawn at. Code (`font-mono`) and Discord's own
+   blurple badges keep theirs. Site-wide, so the department portal reads the
+   same as the dashboard it shares components with. */
+.uppercase:not(.font-mono):not([class*="bg-[#5865f2]"]) {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.uppercase.text-\[10px\]:not(.font-mono):not([class*="bg-[#5865f2]"]),
+.uppercase.text-\[11px\]:not(.font-mono):not([class*="bg-[#5865f2]"]) {
+  font-size: 12px;
+}
+
+/* Every interactive element transitions its hover properties by default.
+   `:where()` has zero specificity, so a component's own `transition-*` still
+   wins. Only the properties a hover or press changes are listed (`all` would
+   also animate layout). */
+:where(a, button, [role="button"], [role="option"], [role="tab"], summary, label, .card-menu-item) {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease,
+    box-shadow 180ms ease,
+    transform 180ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+/* And every button gives a little under a press. Zero specificity again, so a
+   button that moves itself (a ripple button, a card, a dragged tab) keeps its
+   own transform; rows in a list and tabs do not shrink, and nor does anything
+   that is only clickable (`role="button"` on text or a card). */
+:where(button:not([role="option"]):not([role="tab"]):not(:disabled):active) {
+  transform: scale(0.97);
+  transition-duration: 90ms;
+}
+
+/* Somebody who has asked their system for less movement has asked for it here
+   too, and a settings page is not worth overriding that for. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:where(button, a, input, textarea) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gator-control {
+  display: inline-flex;
+  min-height: var(--gator-control-height);
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--gator-border-strong);
+  border-radius: var(--gator-radius);
+  background: var(--gator-surface);
+  padding-inline: 1rem;
+  color: var(--gator-text);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  transition:
+    transform var(--gator-motion-fast) var(--gator-ease),
+    border-color var(--gator-motion-fast) var(--gator-ease),
+    background-color var(--gator-motion-fast) var(--gator-ease),
+    color var(--gator-motion-fast) var(--gator-ease);
+}
+
+.gator-control:hover {
+  border-color: color-mix(in srgb, var(--gator-accent) 36%, var(--gator-border-strong));
+  background: var(--gator-surface-raised);
+}
+
+.gator-control:active {
+  transform: scale(0.98);
+}
+
+.gator-control-primary {
+  border-color: color-mix(in srgb, var(--gator-accent) 68%, transparent);
+  background: var(--gator-accent);
+  color: #211517;
+}
+
+.gator-control-primary:hover {
+  border-color: var(--gator-accent);
+  background: var(--accent-peach-strong);
+}
+
+.manage-root {
+  background: var(--gator-chrome);
+  color: var(--gator-text);
+}
+
+.manage-content {
+  margin-inline: auto;
+  max-width: 1280px;
+}
+
+.glass-panel {
+  border-color: var(--gator-border) !important;
+  background: var(--gator-surface) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.cool-text {
+  color: var(--gator-muted);
+}
+
+.manage-root :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]), textarea),
+.app-respond :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]), textarea) {
+  border-radius: var(--gator-radius);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--accent-rgb) / 0.32) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: rgb(var(--accent-rgb) / 0.28);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--accent-rgb) / 0.46);
+  background-clip: padding-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-pop-in {
+  animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Unsaved-changes guard: shake the content and flash the save prompt when a
+   navigation is blocked because there are pending edits. */
+@keyframes gatorShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-9px);
+  }
+  30% {
+    transform: translateX(8px);
+  }
+  45% {
+    transform: translateX(-6px);
+  }
+  60% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
+}
+
+.gator-shake {
+  animation: gatorShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes gatorSaveFlash {
+  0%,
+  100% {
+    border-color: rgb(var(--accent-rgb) / 0.25);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65);
+  }
+  25%,
+  75% {
+    border-color: rgba(248, 113, 113, 0.9);
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.35), 0 24px 70px rgba(0, 0, 0, 0.65);
+  }
+}
+
+.gator-save-flash {
+  animation: gatorSaveFlash 0.6s ease-in-out both;
+}
+
+.ease-premium {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-link {
+  color: rgba(245, 241, 241, 0.72);
+  font-size: 0.825rem;
+  font-weight: 650;
+  font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
+  letter-spacing: 0;
+  transition:
+    color 380ms ease,
+    transform 380ms cubic-bezier(0.16, 1, 0.3, 1),
+    text-shadow 380ms ease;
+}
+
+.nav-link[data-active="true"],
+.nav-link:hover {
+  color: #fffafa;
+  transform: translateY(-1px);
+  text-shadow: 0 0 18px rgb(var(--accent-rgb) / 0.18);
+}
+
+.icon-button {
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)),
+    rgba(0, 0, 0, 0.2);
+  color: rgba(255, 250, 250, 0.72);
+  transition:
+    transform 340ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 340ms ease,
+    background-color 340ms ease,
+    color 340ms ease,
+    box-shadow 340ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.icon-button:hover {
+  transform: translateY(-1px) scale(1.035);
+  border-color: rgb(var(--accent-rgb) / 0.34);
+  background-color: rgb(var(--accent-rgb) / 0.055);
+  color: #fffafa;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.28);
+}
+
+.btn-pop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  font-weight: 650;
+  font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
+  letter-spacing: 0;
+  transition:
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 260ms ease,
+    border-color 260ms ease,
+    color 260ms ease;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.btn-pop:hover {
+  transform: translateY(-2px) scale(1.018);
+}
+
+.btn-pop:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.btn-peach {
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  background-color: #eeeeee;
+  color: #090909;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08),
+    0 8px 20px rgba(0, 0, 0, 0.24);
+}
+
+.btn-peach:hover {
+  background-color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    inset 0 -1px 0 rgba(0, 0, 0, 0.06),
+    0 12px 26px rgba(0, 0, 0, 0.3);
+}

@@ -18,6 +18,7 @@ export type Announcement = {
   delivered_at?: string | null;
   resource_id?: string | null;
   attachment?: { name: string; type: string; data: string };
+  mention_user_ids?: string[];
 };
 
 export const inputClass =

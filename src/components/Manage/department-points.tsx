@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useListKeys } from "@/components/motion";
 import {
   IconAlertTriangle,
   IconArrowDown,
@@ -54,6 +55,7 @@ export function DepartmentPointsSystem({
   onChange: (next: PointsSystem) => void;
 }) {
   const stages = Array.isArray(value.stages) ? value.stages : [];
+  const stageKeys = useListKeys(stages);
   const maximum = Math.max(0, ...stages.map((stage) => Number(stage.points) || 0));
   const [previewPoints, setPreviewPoints] = useState(() =>
     Math.max(0, Math.min(maximum, stages[1]?.points ?? stages[0]?.points ?? 0)),
@@ -116,7 +118,7 @@ export function DepartmentPointsSystem({
         <div className="space-y-3">
           {stages.map((stage, index) => (
             <article
-              key={`${stage.name}-${index}`}
+              key={stageKeys[index]}
               className="group rounded-2xl border border-white/[0.075] bg-white/[0.018] p-4 transition-colors hover:border-white/[0.08] sm:p-4"
             >
               <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_112px_auto] sm:items-center">

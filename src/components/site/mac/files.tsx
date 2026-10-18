@@ -45,17 +45,17 @@ import { ModuleGlyph } from "./module-glyphs";
 type Tab = "gator" | "modules" | "legal";
 
 const TABS: { key: Tab; label: string; Icon: typeof FolderFill }[] = [
-  { key: "gator", label: "Gator", Icon: DocTextFill },
+  { key: "gator", label: "Overview", Icon: DocTextFill },
   { key: "modules", label: "Browse", Icon: FolderFill },
   { key: "legal", label: "Legal", Icon: BuildingColumnsFill },
 ];
 
 /* What the ten folders are, said once. Both views print it as their section's
    footnote, which is where iOS explains a list. */
-const WALL_SAYS = `Ten of the ${MODULE_COUNT}. Not the ten with the biggest numbers, the ten the last bot in your server did not have.`;
+const WALL_SAYS = `Explore ten modules below, or browse the full set of ${MODULE_COUNT}.`;
 
 const TAB_TITLE: Record<Tab, string> = {
-  gator: "Gator",
+  gator: "Overview",
   modules: "Browse",
   legal: "Legal",
 };
@@ -361,7 +361,7 @@ function BrowseRoot({
             {hits.rest.length ? (
               <IosGroup
                 caption="Also on"
-                footnote="On by default, and out of the way until you need them."
+                footnote="Enable the modules your community needs."
               >
                 {hits.rest.map((m) => (
                   <div className="g-ios-row" key={m.key}>
@@ -463,7 +463,7 @@ function BrowseRoot({
 
       <IosGroup
         caption={`${REST.length} more`}
-        footnote="On by default, and out of the way until you need them."
+        footnote="Enable the modules your community needs."
       >
         {REST.map((m) => (
           <div className="g-ios-row" key={m.key}>
@@ -517,7 +517,7 @@ function ModuleRow({
 function AboutRoot({ onOpen }: { onOpen: (file: TextFile) => void }) {
   return (
     <div className="g-ios-body">
-      <IosGroup footnote="The story behind Gator.">
+      <IosGroup footnote="How the dashboard works.">
         <FileRow file={GATOR_FILE} onOpen={onOpen} />
       </IosGroup>
 

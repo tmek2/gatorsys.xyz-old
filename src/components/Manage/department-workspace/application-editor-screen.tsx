@@ -517,23 +517,32 @@ export function ApplicationEditorScreen({
     initialResponseId ? "submissions" : "questions",
   );
   const [saveState, setSaveState] = useState<"saved" | "dirty" | "saving">("saved");
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const resourceRef = useRef(resource);
   resourceRef.current = resource;
   const lastSavedRef = useRef(JSON.stringify(resource));
-  async function saveNow() {
+  async function saveNow(): Promise<boolean> {
     const snapshot = JSON.stringify(resourceRef.current);
-    if (snapshot === lastSavedRef.current) return;
+    if (snapshot === lastSavedRef.current) return true;
     setSaveState("saving");
-    const ok = await onSave();
-    if (ok) {
+    setSaveError(null);
+    try {
+      const ok = await onSave();
+      if (!ok) throw new Error("Could not save this application. Try again.");
       lastSavedRef.current = snapshot;
       setSaveState(
         JSON.stringify(resourceRef.current) === snapshot ? "saved" : "dirty",
       );
-    } else {
+      return JSON.stringify(resourceRef.current) === snapshot;
+    } catch (error) {
       setSaveState("dirty");
+      setSaveError(error instanceof Error ? error.message : "Could not save this application. Try again.");
+      return false;
     }
+  }
+  async function closeEditor() {
+    if (await saveNow()) onClose();
   }
   useEffect(() => {
     if (JSON.stringify(resource) === lastSavedRef.current) return;
@@ -561,10 +570,7 @@ export function ApplicationEditorScreen({
       <header className="flex flex-wrap items-center gap-3 border-b border-white/[0.08] bg-[#131313] px-4 py-3 sm:px-6">
         <button
           type="button"
-          onClick={async () => {
-            await saveNow();
-            onClose();
-          }}
+          onClick={() => void closeEditor()}
           className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] px-3 py-2 text-xs font-semibold text-white/60 hover:text-white"
         >
           <IconArrowLeft size={14} />
@@ -619,16 +625,14 @@ export function ApplicationEditorScreen({
         </button>
         <button
           type="button"
-          onClick={async () => {
-            await saveNow();
-            onClose();
-          }}
+          onClick={() => void closeEditor()}
           className="rounded-xl p-2 text-white/40 hover:bg-white/[0.06] hover:text-white"
           aria-label="Close"
         >
           <IconX size={19} />
         </button>
       </header>
+      {saveError ? <p role="alert" className="px-4 py-2 text-sm text-[var(--tone-bad)]">{saveError} Your changes are still open here.</p> : null}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
         <aside className="flex shrink-0 gap-1 overflow-x-auto border-b border-white/[0.08] bg-[#131415] p-3 lg:w-60 lg:flex-col lg:border-b-0 lg:border-r">
           {tabs.map((item) => (

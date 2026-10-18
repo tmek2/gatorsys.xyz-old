@@ -38,7 +38,7 @@
 @media(max-width: 1100px) { .wf-recipe-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media(max-width: 600px) { .wf-recipe-grid { grid-template-columns: 1fr; } .wf-index header { align-items: start; flex-direction: column; } .wf-workspace-editor .wf-shell-head { flex-wrap: wrap; } .wf-workspace-editor .wf-shell-actions { margin-left: 0; flex-wrap: wrap; } }
 
-/* Gator workflow workspace: the graph is the document, tools float above it.
+/* Bot workflow workspace: the graph is the document, tools float above it.
    Common choices stay in place; detailed port lists open only on request. */
 .wf-workspace-editor .wf-shell-toggle { align-items: center; gap: .5rem; padding: .55rem .8rem; font-size: .8rem; font-weight: 600; color: var(--gs-text, #f5f2f2); }
 .wf-enable-indicator { width: .55rem; height: .55rem; border-radius: 50%; background: #777777; }

@@ -16,8 +16,8 @@ type AiActions = {
 };
 
 /**
- * What GatorAI does inside a ticket when it cannot finish the job. Lives with
- * Tickets because that is where it applies; the GatorAI page keeps what is
+ * What Assistant does inside a ticket when it cannot finish the job. Lives with
+ * Tickets because that is where it applies; the Assistant page keeps what is
  * about the assistant everywhere. Both write to the same record and save
  * through the dashboard's save prompt.
  */

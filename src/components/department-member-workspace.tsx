@@ -82,6 +82,16 @@ export function DepartmentMemberWorkspace({
   parentId: string;
   departmentId: string;
 }) {
+  return <DepartmentMemberWorkspaceContent key={`${parentId}:${departmentId}`} parentId={parentId} departmentId={departmentId} />;
+}
+
+function DepartmentMemberWorkspaceContent({
+  parentId,
+  departmentId,
+}: {
+  parentId: string;
+  departmentId: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab") || "home";
@@ -95,10 +105,12 @@ export function DepartmentMemberWorkspace({
   /** Monotonic id of the newest load, so older responses can be discarded. */
   const loadTicket = useRef(0);
   const [notice, setNoticeState] = useState<Notice | null>(null);
+  const mounted = useRef(true);
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
   const setNotice = useCallback((next: Notice | null) => {
+    if (!mounted.current) return;
     setNoticeState(next);
     clearTimeout(noticeTimer.current);
     if (next) noticeTimer.current = setTimeout(() => setNoticeState(null), 4000);
@@ -107,6 +119,7 @@ export function DepartmentMemberWorkspace({
   // Local optimistic copies of the editable state, layered over the fetch.
   const [feature, setFeature] = useState<Record<string, any>>({});
   const [profile, setProfile] = useState<DepartmentProfile | null>(null);
+  const [saveError, setSaveError] = useState("");
 
   // Debounced auto-save of staged feature/profile edits.
   const pendingSave = useRef<{
@@ -116,6 +129,8 @@ export function DepartmentMemberWorkspace({
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+  const saving = useRef<typeof pendingSave.current | null>(null);
+  const saveAgain = useRef(false);
 
   const load = useCallback(async (tab = activeTab) => {
     // Per-tab responses can overlap when the tab changes mid-request (e.g. back
@@ -142,6 +157,7 @@ export function DepartmentMemberWorkspace({
       );
     }
     if (stale()) return;
+    setError("");
     setData((previous) => {
       if (!previous) return body;
       const next = {
@@ -158,9 +174,9 @@ export function DepartmentMemberWorkspace({
     // Keeps `feature` and `profile` when a tab's payload does not carry them
     // (the render gate is `!data || !profile`, so a null profile would show the
     // spinner forever).
-    if (body.feature) setFeature(body.feature);
+    if (body.feature) setFeature({ ...body.feature, ...saving.current?.feature, ...pendingSave.current.feature });
     const nextProfile = body.profiles?.[0];
-    if (nextProfile) setProfile(nextProfile);
+    if (nextProfile) setProfile({ ...nextProfile, ...saving.current?.profile, ...pendingSave.current.profile });
     loadedTabs.current.add(tab);
   }, [activeTab, departmentId, parentId]);
 
@@ -187,7 +203,11 @@ export function DepartmentMemberWorkspace({
       .catch(() => setMyDepartments([]));
   }, []);
 
-  const flushSave = useCallback(async () => {
+  const flushSave = useCallback(async function flushChanges() {
+    if (saving.current) {
+      saveAgain.current = true;
+      return;
+    }
     const payload = pendingSave.current;
     if (
       !Object.keys(payload.feature).length &&
@@ -195,6 +215,8 @@ export function DepartmentMemberWorkspace({
     )
       return;
     pendingSave.current = { feature: {}, profile: {} };
+    saving.current = payload;
+    let failed = false;
     try {
       const response = await fetch(
         `/api/departments/${parentId}/${departmentId}/feature`,
@@ -207,15 +229,37 @@ export function DepartmentMemberWorkspace({
       const body = await response.json().catch(() => ({}));
       if (!response.ok)
         throw new Error(body.detail || body.message || "Could not save");
-      setNotice({ kind: "saved", text: "Changes saved" });
+      if (mounted.current) setSaveError("");
+      if (!Object.keys(pendingSave.current.feature).length && !Object.keys(pendingSave.current.profile).length) {
+        setNotice({ kind: "saved", text: "Changes saved" });
+      }
     } catch (reason) {
-      setNotice({
-        kind: "error",
-        text: reason instanceof Error ? reason.message : "Could not save",
-      });
-      await load().catch(() => undefined);
+      failed = true;
+      // Preserve the failed patch, with any newer edits taking precedence.
+      pendingSave.current = {
+        feature: { ...payload.feature, ...pendingSave.current.feature },
+        profile: { ...payload.profile, ...pendingSave.current.profile },
+      };
+      if (mounted.current) setSaveError(reason instanceof Error ? reason.message : "Could not save");
+    } finally {
+      saving.current = null;
+      if (saveAgain.current) {
+        saveAgain.current = false;
+        if (!failed) void flushChanges();
+      }
     }
-  }, [departmentId, load, parentId, setNotice]);
+  }, [departmentId, parentId, setNotice]);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      clearTimeout(saveTimer.current);
+      clearTimeout(noticeTimer.current);
+      loadTicket.current += 1;
+      void flushSave();
+    };
+  }, [flushSave]);
 
   const queueSave = useCallback(() => {
     clearTimeout(saveTimer.current);
@@ -453,6 +497,12 @@ export function DepartmentMemberWorkspace({
           />
         </WorkspaceHostProvider>
       </div>
+      {saveError ? (
+        <div role="alert" className="fixed bottom-6 left-1/2 z-[210] flex max-w-[calc(100%-2rem)] -translate-x-1/2 items-center gap-3 rounded-xl border border-[var(--tone-bad-line)] bg-[#131010] px-4 py-3 text-xs text-[var(--tone-bad)]">
+          <p>{saveError}. Your edits are kept here.</p>
+          <button type="button" onClick={() => void flushSave()} className="shrink-0 rounded-lg border border-current px-3 py-2 font-bold">Retry save</button>
+        </div>
+      ) : null}
       {notice ? (
         <div className="pointer-events-none fixed bottom-6 left-1/2 z-[200] -translate-x-1/2">
           <p

@@ -1,10 +1,10 @@
-/* GatorAI (part of manage-window.css) */
+/* Assistant (part of manage-window.css) */
 
-/* ── GatorAI (sections/gator-ai.tsx) ──
+/* ── Assistant (sections/gator-ai.tsx) ──
 
    "How it talks": three dials on the left, each the window's switcher with
    what the chosen setting means under it, and on the right a member asking
-   something and GatorAI answering in that manner. It types for a moment when
+   something and Assistant answering in that manner. It types for a moment when
    a dial moves, then answers a word at a time. */
 .manage-root .gw-ai-studio {
   display: grid;

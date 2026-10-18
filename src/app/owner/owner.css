@@ -435,7 +435,7 @@
 
 /* ------------------------------------------------------------ AI context */
 
-/* Notices for every server's GatorAI (owner-context.tsx): the same cards,
+/* Notices for every server's Assistant (owner-context.tsx): the same cards,
    labels and fields as the rest of the page. */
 .owner-ctx {
   display: grid;

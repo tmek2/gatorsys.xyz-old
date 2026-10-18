@@ -21,7 +21,6 @@ import { FOLDERS, MODULE_BY_KEY, type Folder } from "../modules";
 import { Link } from "next-view-transitions";
 import { Compare } from "./compare";
 import { DiscordAfter, DiscordBefore } from "./discord-scene";
-import { shotFor } from "./shots";
 import { CheckmarkCircleFill, ChevronRight } from "./sf";
 import { ModuleGlyph } from "./module-glyphs";
 
@@ -49,7 +48,6 @@ export function ModuleSheet({
   onOpen: (key: string) => void;
 }) {
   const m = MODULE_BY_KEY.get(folder.key);
-  const shot = shotFor(folder.key);
 
   /* Its neighbours: the ones from the same group first, then whatever is next
      around the wall, so there is always somewhere to go from here. */
@@ -94,7 +92,6 @@ export function ModuleSheet({
              so the seam runs down one rectangle. */}
           <div
             className="g-group-box g-shot"
-            style={shot ? { ["--shot-ratio" as string]: shot.ratio } : undefined}
           >
             <Compare
               className="g-shot-cmp"
@@ -112,8 +109,8 @@ export function ModuleSheet({
                   label={folder.with}
                 />
               }
-              beforeLabel="Without Gator"
-              afterLabel="With Gator"
+              beforeLabel="Without automation"
+              afterLabel="With automation"
             />
           </div>
           {/* One plain paragraph. The before and after sentences are the
@@ -170,7 +167,7 @@ export function ModuleSheet({
           Turn it on
           <ChevronRight size={15} weight={2.6} />
         </Link>
-        <span className="g-act-say">Free, and on in about a minute.</span>
+        <span className="g-act-say">Choose a linked server to configure this module.</span>
       </footer>
     </article>
   );

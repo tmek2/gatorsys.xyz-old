@@ -1,7 +1,7 @@
 "use client";
 
 /* Scrolling the landing on the site's own curve, for the three things that
-   scroll it without a wheel: the "Explore Gator" handle, the parked window, and
+   scroll it without a wheel: the "Explore Bot" handle, the parked window, and
    the runway's resting-place rule. The window's rise is bound to the scroll
    position, so the scroll's curve is the window's curve; `behavior: "smooth"`
    would hand that to each browser's own easing (Chrome's is a fixed 468ms).

@@ -1,4 +1,3 @@
-// impeccable-disable side-tab -- Discord embed previews intentionally reproduce Discord's native accent rail.
 "use client";
 
 import React from "react";
@@ -32,6 +31,7 @@ import {
   type MessageEmbed,
 } from "./types";
 import { describeVariable, groupVariables } from "@/config/variable-registry";
+import { rowButtonColor } from "./message-design/model";
 
 /**
  * Shared Discohook-style embed editing: a Discord-accurate live preview and the
@@ -44,12 +44,12 @@ const ROBLOX_HEADSHOT =
   "https://www.roblox.com/headshot-thumbnail/image?userId=1&width=150&height=150&format=png";
 
 export const PREVIEW_SUBSTITUTIONS: Record<string, string> = {
-  "{staff.mention}": "@Alternative",
-  "{staff.name}": "Alternative",
-  "{author.name}": ".tmek",
-  "{author.mention}": "@.tmek",
-  "{user.mention}": "@.tmek",
-  "{user.name}": ".tmek",
+  "{staff.mention}": "@Sam",
+  "{staff.name}": "Sam",
+  "{author.name}": "Alex",
+  "{author.mention}": "@Alex",
+  "{user.mention}": "@Alex",
+  "{user.name}": "Alex",
   "{action}": "Warning",
   "{reason}": "Being unprofessional on duty",
   "{notes}": "First offence",
@@ -68,7 +68,7 @@ export const PREVIEW_SUBSTITUTIONS: Record<string, string> = {
   "{expiration}": "in 30 days",
   "{guild.name}": "Your Server",
   "{server.name}": "Your Server",
-  "{manager.display_name}": "offser",
+  "{manager.display_name}": "Jordan",
   "{rbx.avatar.url}": ROBLOX_HEADSHOT,
   "{rbx.avatar_url}": ROBLOX_HEADSHOT,
   "{rbx_avatar_url}": ROBLOX_HEADSHOT,
@@ -595,11 +595,11 @@ export function DiscordPreview({
 
 /** Discord's button colour for a stored button, on the surface's classes. */
 function previewButtonStyle(button: { color?: string; style?: string; url?: string }) {
-  const style = button.color || button.style;
-  if (button.url || style === "Link") return "secondary";
+  const style = rowButtonColor(button);
+  if (button.url || button.style === "Link") return "secondary";
   if (style === "Green") return "success";
   if (style === "Red") return "danger";
-  if (style === "Blurple" || style === "Blue") return "primary";
+  if (style === "Blue") return "primary";
   return "secondary";
 }
 

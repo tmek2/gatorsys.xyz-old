@@ -10,7 +10,7 @@ export const metadata: Metadata = {
      the description is this page's own, for search results and link previews. */
   title: SITE_NAME,
   description:
-    "The terms governing access to the Gator website and Discord application.",
+    "The terms governing access to the Bot website and Discord application.",
 };
 
 const sections = [
@@ -18,9 +18,9 @@ const sections = [
     title: "Acceptance",
     content: (
       <p>
-        By inviting Gator, signing in to the dashboard, or using any Gator
+        By inviting Bot, signing in to the dashboard, or using any Bot
         feature, you agree to these Terms of Service and the Privacy Policy. If
-        you do not agree, do not use the service and remove Gator from servers
+        you do not agree, do not use the service and remove Bot from servers
         you control.
       </p>
     ),
@@ -30,7 +30,7 @@ const sections = [
     content: (
       <p>
         You must be at least 13 years old, meet Discord's minimum age for your
-        country, and be legally able to accept these terms. If you use Gator for
+        country, and be legally able to accept these terms. If you use Bot for
         an organization or community, you confirm that you have authority to act
         for it.
       </p>
@@ -41,7 +41,7 @@ const sections = [
     content: (
       <>
         <p>
-          Gator depends on Discord and requires a valid Discord account.
+          Bot depends on Discord and requires a valid Discord account.
           Discord's own terms, policies, permissions, outages, and API changes
           also apply and may affect availability.
         </p>
@@ -58,7 +58,7 @@ const sections = [
     content: (
       <ul>
         <li>
-          Do not use Gator for illegal, deceptive, abusive, or harmful activity.
+          Do not use Bot for illegal, deceptive, abusive, or harmful activity.
         </li>
         <li>
           Do not bypass permissions, security controls, rate limits, or access
@@ -73,7 +73,7 @@ const sections = [
           or attempt unauthorized access.
         </li>
         <li>
-          Do not misrepresent Gator, resell access without permission, or use
+          Do not misrepresent Bot, resell access without permission, or use
           Discord data for advertising or profiling.
         </li>
       </ul>
@@ -85,7 +85,7 @@ const sections = [
       <p>
         You retain responsibility for information, configurations, messages, and
         records submitted through your community. You confirm that you have the
-        rights and permissions needed to process that content and instruct Gator
+        rights and permissions needed to process that content and instruct Bot
         to perform requested actions. You are responsible for reviewing
         automated actions and maintaining appropriate staff oversight.
       </p>
@@ -107,7 +107,7 @@ const sections = [
     title: "Ownership",
     content: (
       <p>
-        Gator's software, branding, design, and original service content remain
+        Bot's software, branding, design, and original service content remain
         the property of the service operator and its licensors. These terms
         grant only a limited, revocable, non-transferable right to use the
         service as provided. Discord and third-party names and materials remain
@@ -122,7 +122,7 @@ const sections = [
         Access may be limited or terminated when these terms, Discord policies,
         or applicable law are violated; when use creates security or operational
         risk; or when required by Discord or lawful authority. You may stop
-        using Gator at any time by removing it from your server and signing out
+        using Bot at any time by removing it from your server and signing out
         of the dashboard.
       </p>
     ),
@@ -131,7 +131,7 @@ const sections = [
     title: "Disclaimers and Liability",
     content: (
       <p>
-        Gator is provided on an "as available" basis to the fullest extent
+        Bot is provided on an "as available" basis to the fullest extent
         permitted by law. We do not make warranties about uninterrupted
         operation, fitness for a particular purpose, or error-free moderation
         outcomes. To the fullest extent permitted by law, the service operator
@@ -145,7 +145,7 @@ const sections = [
     title: "Changes and Contact",
     content: (
       <p>
-        We may update these terms as Gator changes. Continuing to use the
+        We may update these terms as Bot changes. Continuing to use the
         service after an updated version becomes effective means you accept the
         revised terms. Material changes will be communicated through the website
         or support community when appropriate.
@@ -178,7 +178,7 @@ export default async function TermsPage() {
           summary: "Effective date of the terms published on this site.",
         },
       ]}
-      summary="The rules for using Gator's website, dashboard, and Discord bot."
+      summary="The rules for using Bot's website, dashboard, and Discord bot."
       sections={sections}
     />
   );

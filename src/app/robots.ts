@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/utils/site-url";
 
 /**
  * Only the site's own marketing pages are allowed; everything else is
@@ -34,7 +35,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: "https://www.gatorsys.xyz/sitemap.xml",
-    host: "https://www.gatorsys.xyz",
+    sitemap: `${getSiteUrl()}/sitemap.xml`,
+    host: getSiteUrl(),
   };
 }

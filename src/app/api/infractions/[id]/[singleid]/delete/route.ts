@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { withAuth, makeApiRequest } from "@/utils/api-middleware";
 import { hasAdminPanelAccess } from "@/utils/discord-admin";
+import { deleteCached } from "@/utils/redis";
+import { botApiUrl } from "@/server/config";
 
 interface DeleteInfractionParams {
   id: string;
@@ -11,10 +13,10 @@ export const dynamic = "force-dynamic";
 
 async function handleDelete(
   request: Request,
-  context: { params: DeleteInfractionParams }
+  context: { params: Promise<DeleteInfractionParams> }
 ) {
-  return withAuth<DeleteInfractionParams>(async (session, { params }) => {
-    const { id, singleid } = params;
+  return withAuth(async (session) => {
+    const { id, singleid } = await context.params;
     if (!id || !singleid) {
       return NextResponse.json(
         { message: "Missing required parameters" },
@@ -31,19 +33,20 @@ async function handleDelete(
     }
     
     await makeApiRequest(
-      `${
-        process.env.PROD_API_URL || "https://fdny-systems-production.up.railway.app"
-      }/delinfraction?auth=${process.env.API_AUTH}&server=${id}&id=${singleid}`,
+      botApiUrl("delinfraction", { server: id, id: singleid }).toString(),
       {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       }
     );
 
+    await deleteCached(
+      `infraction:${id}:${singleid}`,
+      `infractions:${id}`,
+    );
+
     return NextResponse.json({ message: "Infraction deleted successfully" });
-  }, context);
+  });
 }
 
 export const DELETE = handleDelete;
-export const HEAD = handleDelete;
-export const OPTIONS = handleDelete;

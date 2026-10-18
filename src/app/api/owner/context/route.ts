@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * Global service notices. Owner only (the bot enforces it; this relays). While
- * a notice is live, every server's GatorAI leads with it.
+ * a notice is live, every server's Assistant leads with it.
  */
 export const GET = (request: Request, context: unknown) =>
   withAuth(async (session) => {
@@ -31,7 +31,7 @@ export const POST = (request: Request, context: unknown) =>
     const response = await botDashboardPost(
       "dashboard_globalcontext",
       {},
-      { user: session.user.id, ...body },
+      { ...body, user: session.user.id },
     );
     return relayBotResponse(response);
   }, context as never);

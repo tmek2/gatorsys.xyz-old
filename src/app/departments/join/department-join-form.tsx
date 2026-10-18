@@ -323,7 +323,7 @@ export function DepartmentJoinForm({
           </Link>
         )}
         <div className="flex items-center gap-3">
-          <Image src="/gator-logo.png" alt="Gator" width={42} height={42} />
+          <Image src="/icon.svg" alt="Bot" width={42} height={42} />
           <div>
             <h1 className="text-xl font-extrabold text-[#f5f2f2]">
               Join a department

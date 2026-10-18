@@ -1,25 +1,19 @@
 "use client";
 
+
+import { DOCS_URL } from "@/config/site";
 import React, { useEffect, useRef, useState } from "react";
 import { discordAvatarUrl } from "@/utils/discord-avatar";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { Extension } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";
-import Placeholder from "@tiptap/extension-placeholder";
-import Table from "@tiptap/extension-table";
-import TableRow from "@tiptap/extension-table-row";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
+import { Placeholder, CharacterCount } from "@tiptap/extensions";
+import { Table, TableRow, TableCell, TableHeader } from "@tiptap/extension-table";
 import Highlight from "@tiptap/extension-highlight";
-import TextStyle from "@tiptap/extension-text-style";
-import { Color } from "@tiptap/extension-color";
-import FontFamily from "@tiptap/extension-font-family";
+import { TextStyle, Color, FontFamily } from "@tiptap/extension-text-style";
 import { EDITOR_FONTS } from "@/utils/editor-fonts";
-import CharacterCount from "@tiptap/extension-character-count";
 import {
   IconAlignCenter,
   IconAlignJustified,
@@ -67,6 +61,8 @@ import {
 import { VersionHistory } from "@/components/Manage/version-history";
 import { FieldRow, TextField } from "./fields";
 import { ShareAccessPanel } from "./share-access-panel";
+import { sanitizeDocumentHtml } from "@/utils/document-html";
+import { copyToClipboard } from "@/utils/copy-to-clipboard";
 
 type SubDocument = { id: string; title: string; html: string };
 
@@ -169,6 +165,7 @@ export function DepartmentDocumentEditor({
   const titleRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
   const [activeId, setActiveId] = useState<string>(resource.active_document_id || "root");
+  const [restoredRevision, setRestoredRevision] = useState(0);
   const [menu, setMenu] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [confirmDeleteDoc, setConfirmDeleteDoc] = useState(false);
@@ -184,17 +181,29 @@ export function DepartmentDocumentEditor({
   const [saveState, setSaveState] = useState<"saved" | "dirty" | "saving">(
     "saved",
   );
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [toastKind, setToastKind] = useState<"saved" | "error">("saved");
   const [collaborators, setCollaborators] = useState<any[]>([]);
   const typingRef = useRef(false);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const presenceRef = useRef(onPresence);
   presenceRef.current = onPresence;
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  function flashToast(message: string) {
+  function flashToast(message: string, kind: "saved" | "error" = "saved") {
     setToast(message);
+    setToastKind(kind);
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(null), 2000);
+  }
+  async function copyDocumentLink() {
+    setMenu(null);
+    setToast(null);
+    const copied = await copyToClipboard(documentLink);
+    flashToast(
+      copied ? "Document link copied to clipboard" : "Could not copy this link. Copy it from the address bar.",
+      copied ? "saved" : "error",
+    );
   }
   const [find, setFind] = useState("");
   const [replace, setReplace] = useState("");
@@ -240,15 +249,13 @@ export function DepartmentDocumentEditor({
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
-      StarterKit,
-      Underline,
+      StarterKit.configure({ link: { openOnClick: false, autolink: true } }),
       TextStyle,
       Color,
       FontFamily,
       FontSize,
       Highlight.configure({ multicolor: true }),
       CharacterCount,
-      Link.configure({ openOnClick: false, autolink: true }),
       Image.configure({ allowBase64: true }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Table.configure({ resizable: true }),
@@ -259,8 +266,9 @@ export function DepartmentDocumentEditor({
         placeholder: "Start writing. Select text to format it",
       }),
     ],
-    content: active.html || "",
+    content: sanitizeDocumentHtml(active.html),
     editorProps: {
+      transformPastedHTML: sanitizeDocumentHtml,
       attributes: {
         class:
           "gator-doc mx-auto w-full max-w-[816px] rounded-md border border-white/[0.08] bg-[#1c1c1c] px-16 py-14 max-md:px-6 max-md:py-8 text-[15px] leading-[1.75] text-white/80 shadow-[0_26px_80px_rgba(0,0,0,.38)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gator-accent)] selection:bg-[rgb(var(--accent-rgb)/.28)]",
@@ -312,33 +320,38 @@ export function DepartmentDocumentEditor({
     };
   }, [resource.id]);
 
-  // Load the newly selected page into the editor (never during typing —
-  // only when the page identity changes).
+  // Reload when switching pages or restoring a saved version. Typing changes
+  // the resource too, so HTML itself cannot be an effect dependency.
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
-    if (editor.getHTML() !== (active.html || "")) {
-      editor.commands.setContent(active.html || "", false);
+    const html = sanitizeDocumentHtml(active.html);
+    if (editor.getHTML() !== html) {
+      editor.commands.setContent(html, { emitUpdate: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active.id, editor]);
+  }, [resource.id, active.id, restoredRevision, editor]);
 
   // ── Autosave ──────────────────────────────────────────────────────────
   const onSaveRef = useRef(onSave);
   onSaveRef.current = onSave;
   const lastSavedRef = useRef(JSON.stringify(resource));
 
-  async function saveNow() {
+  async function saveNow(): Promise<boolean> {
     const snapshot = JSON.stringify(resourceRef.current);
-    if (snapshot === lastSavedRef.current) return;
+    if (snapshot === lastSavedRef.current) return true;
     setSaveState("saving");
+    setSaveError(null);
     try {
       await onSaveRef.current();
       lastSavedRef.current = snapshot;
       setSaveState(
         JSON.stringify(resourceRef.current) === snapshot ? "saved" : "dirty",
       );
-    } catch {
+      return JSON.stringify(resourceRef.current) === snapshot;
+    } catch (error) {
       setSaveState("dirty");
+      setSaveError(error instanceof Error ? error.message : "Could not save this document. Try again.");
+      return false;
     }
   }
 
@@ -378,9 +391,7 @@ export function DepartmentDocumentEditor({
   }, []);
 
   async function handleClose() {
-    if (JSON.stringify(resourceRef.current) !== lastSavedRef.current)
-      await saveNow();
-    onClose();
+    if (await saveNow()) onClose();
   }
 
   function chain() {
@@ -388,7 +399,8 @@ export function DepartmentDocumentEditor({
   }
 
   function download(filename: string, type: string, content: string) {
-    const url = URL.createObjectURL(new Blob([content], { type }));
+    const safeContent = type === "text/html" ? sanitizeDocumentHtml(content) : content;
+    const url = URL.createObjectURL(new Blob([safeContent], { type }));
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = filename;
@@ -579,7 +591,7 @@ export function DepartmentDocumentEditor({
       { label: "Download as plain text", icon: <IconDownload size={15} />, action: () => { download(`${active.title}.txt`, "text/plain", editor?.getText() || ""); setMenu(null); } },
       { label: "Download as HTML", icon: <IconDownload size={15} />, action: () => { download(`${active.title}.html`, "text/html", editor?.getHTML() || active.html); setMenu(null); } },
       { label: "Share", icon: <IconUsers size={15} />, action: () => { setShareOpen(true); setMenu(null); } },
-      { label: "Copy doc link", icon: <IconLink size={15} />, action: () => { void navigator.clipboard.writeText(documentLink); setMenu(null); flashToast("Document link copied to clipboard"); } },
+      { label: "Copy doc link", icon: <IconLink size={15} />, action: copyDocumentLink },
       { label: "New Sub Document", icon: <IconFilePlus size={15} />, action: addSubdocument },
       { label: "Rename", icon: <IconFile size={15} />, action: () => { titleRef.current?.focus(); titleRef.current?.select(); setMenu(null); } },
       { label: "Version history", icon: <IconHistory size={15} />, action: () => { setInfo("Version history begins after the first save. Every saved revision is kept with its editor and time."); setMenu(null); } },
@@ -604,7 +616,7 @@ export function DepartmentDocumentEditor({
       { label: "Insert Hint", icon: <IconBulb size={15} />, action: () => { insertHint(); setMenu(null); } },
     ],
     Help: [
-      { label: "Documentation", icon: <IconBook2 size={15} />, action: () => window.open("https://docs.gatorsys.xyz", "_blank") },
+      { label: "Documentation", icon: <IconBook2 size={15} />, action: () => window.open(DOCS_URL, "_blank") },
       { label: "Give Feedback", icon: <IconHelp size={15} />, action: () => window.open("/support", "_blank") },
     ],
   };
@@ -758,6 +770,7 @@ export function DepartmentDocumentEditor({
               onRestored={(restored) => {
                 onChange({ ...resourceRef.current, ...restored });
                 setActiveId(String((restored as any).active_document_id || "root"));
+                setRestoredRevision((revision) => revision + 1);
               }}
             />
           ) : null}
@@ -871,6 +884,7 @@ export function DepartmentDocumentEditor({
           <button type="button" onMouseDown={(event) => { event.preventDefault(); chain()?.unsetAllMarks().clearNodes().run(); }} className={toolButton} title="Clear formatting"><IconClearFormatting size={17} /></button>
         </div>
       </header>
+      {saveError ? <p role="alert" className="border-b border-[var(--tone-bad-line)] px-4 py-2 text-sm text-[var(--tone-bad)]">{saveError} Your changes are still open here.</p> : null}
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
         {outline ? (
           <>
@@ -970,7 +984,7 @@ export function DepartmentDocumentEditor({
           />
         </DocumentModal>
       ) : null}
-      {findOpen ? <DocumentModal title="Find and replace" onClose={() => setFindOpen(false)}><div className="space-y-3"><FieldRow label="Find"><TextField value={find} onChange={setFind} /></FieldRow><FieldRow label="Replace with"><TextField value={replace} onChange={setReplace} /></FieldRow></div><div className="mt-5 flex justify-end"><button type="button" onClick={() => { if (!find || !editor) return; const html = editor.getHTML().split(find).join(replace); editor.commands.setContent(html); patchDocument({ html }); setFindOpen(false); }} className="btn-pop btn-peach px-4 py-2 text-xs">Replace all</button></div></DocumentModal> : null}
+      {findOpen ? <DocumentModal title="Find and replace" onClose={() => setFindOpen(false)}><div className="space-y-3"><FieldRow label="Find"><TextField value={find} onChange={setFind} /></FieldRow><FieldRow label="Replace with"><TextField value={replace} onChange={setReplace} /></FieldRow></div><div className="mt-5 flex justify-end"><button type="button" onClick={() => { if (!find || !editor) return; const html = sanitizeDocumentHtml(editor.getHTML().split(find).join(replace)); editor.commands.setContent(html); patchDocument({ html }); setFindOpen(false); }} className="btn-pop btn-peach px-4 py-2 text-xs">Replace all</button></div></DocumentModal> : null}
       {linkOpen ? <DocumentModal title="Insert link" onClose={() => setLinkOpen(false)}><FieldRow label="URL"><TextField value={link} onChange={setLink} placeholder="https://" /></FieldRow><div className="mt-5 flex justify-end"><button type="button" onClick={() => { if (link) chain()?.extendMarkRange("link").setLink({ href: link }).run(); setLink(""); setLinkOpen(false); }} className="btn-pop btn-peach px-4 py-2 text-xs">Insert link</button></div></DocumentModal> : null}
       {info ? <DocumentModal title="Document information" onClose={() => setInfo(null)}><p className="text-sm leading-6 text-white/60">{info}</p></DocumentModal> : null}
       {contextMenu ? (
@@ -1002,9 +1016,9 @@ export function DepartmentDocumentEditor({
         </div>
       ) : null}
       {toast ? (
-        <div className="pointer-events-none fixed bottom-6 left-1/2 z-[240] -translate-x-1/2 rounded-xl border border-[var(--tone-ok-line)] bg-[#101312]/95 px-4 py-3 shadow-[0_18px_60px_rgba(0,0,0,.6)] backdrop-blur">
-          <p className="inline-flex items-center gap-2 text-xs font-bold text-[var(--tone-ok)]">
-            <IconCheck size={14} />
+        <div role="status" className={`pointer-events-none fixed bottom-6 left-1/2 z-[240] -translate-x-1/2 rounded-xl border ${toastKind === "saved" ? "border-[var(--tone-ok-line)]" : "border-[var(--tone-bad-line)]"} bg-[#101312]/95 px-4 py-3 shadow-[0_18px_60px_rgba(0,0,0,.6)] backdrop-blur`}>
+          <p className={`inline-flex items-center gap-2 text-xs font-bold ${toastKind === "saved" ? "text-[var(--tone-ok)]" : "text-[var(--tone-bad)]"}`}>
+            {toastKind === "saved" ? <IconCheck size={14} /> : <IconX size={14} />}
             {toast}
           </p>
         </div>

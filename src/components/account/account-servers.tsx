@@ -64,7 +64,7 @@ export function AccountServers({
         <p className="account-note">
           <IconAlertTriangle size={15} />
           <span>
-            Gator has to be in a server you administer before it appears here.
+            Bot has to be in a server you administer before it appears here.
           </span>
         </p>
         <div className="account-card-actions">

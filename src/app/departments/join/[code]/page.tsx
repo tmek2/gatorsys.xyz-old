@@ -14,7 +14,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { code } = await params;
   // The link embed shows the department itself — name, logo, description —
-  // not a generic Gator card.
+  // not a generic Bot card.
   try {
     const response = await botDashboardGet("dashboard_departmentjoinpreview", {
       code,
@@ -23,7 +23,7 @@ export async function generateMetadata({
     const data = response.ok ? await response.json() : {};
     const department = data.department || {};
     if (department.name) {
-      const title = `Join ${department.name} | Gator`;
+      const title = `Join ${department.name} | Bot`;
       const memberCount = Number(department.memberCount || 0);
       const description =
         department.description ||
@@ -33,7 +33,7 @@ export async function generateMetadata({
       // previews keep working while search engines skip the page. See
       // `NO_INDEX`.
       robots: NO_INDEX,
-        title: "Gator",
+        title: "Bot",
         description,
         openGraph: {
           title,
@@ -52,10 +52,10 @@ export async function generateMetadata({
   } catch {
     /* fall through to the generic embed */
   }
-  const title = "Join a department | Gator";
-  const description = `Open this Gator department invitation and confirm where you are joining. Invite code: ${code.toUpperCase()}.`;
+  const title = "Join a department | Bot";
+  const description = `Open this Bot department invitation and confirm where you are joining. Invite code: ${code.toUpperCase()}.`;
   return {
-    title: "Gator",
+    title: "Bot",
     description,
     openGraph: { title, description, type: "website" },
     twitter: { card: "summary", title, description },

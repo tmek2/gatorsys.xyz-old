@@ -12,9 +12,9 @@ import { auth } from "~/auth";
  * the edge). localhost and real domain hosts pass through.
  */
 
-const CANONICAL_HOST = "www.gatorsys.xyz";
-
 function hostGuard(request: NextRequest) {
+  const configured = process.env.CANONICAL_URL?.trim();
+  if (!configured) return NextResponse.next();
   const host = (request.headers.get("host") || "").toLowerCase();
 
   // Only intervene for raw Vercel deployment hosts. Every real domain host
@@ -23,10 +23,12 @@ function hostGuard(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const canonical = new URL(configured);
+  if (!['http:', 'https:'].includes(canonical.protocol) || canonical.host === host) return NextResponse.next();
   const url = request.nextUrl.clone();
-  url.host = CANONICAL_HOST;
-  url.protocol = "https:";
-  url.port = "";
+  url.host = canonical.host;
+  url.protocol = canonical.protocol;
+  url.port = canonical.port;
   return NextResponse.redirect(url, 308);
 }
 
@@ -46,6 +48,7 @@ export function middleware(request: NextRequest, event: NextFetchEvent) {
 }
 
 export const config = {
+  runtime: "nodejs",
   // Run on everything except Next internals and static assets. Auth routes are
   // intentionally included so login flows are pulled back to the domain too.
   matcher: ["/((?!_next/static|_next/image|favicon.ico|fonts/|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|woff2?)$).*)"],

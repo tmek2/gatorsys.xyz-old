@@ -161,6 +161,10 @@ export function MarkdownToolbar({
             event.preventDefault();
             run(item.action);
           }}
+          onClick={(event) => {
+            // Keyboard activation has no preceding mouse press.
+            if (event.detail === 0) run(item.action);
+          }}
           className="rounded-lg p-2 text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white"
         >
           {item.icon}

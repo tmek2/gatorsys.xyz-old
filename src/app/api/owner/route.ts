@@ -23,7 +23,7 @@ export const POST = (request: Request, context: unknown) =>
     const response = await botDashboardPost(
       "dashboard_owner",
       {},
-      { user: session.user.id, ...body }
+      { ...body, user: session.user.id }
     );
     return relayBotResponse(response);
   }, context as never);

@@ -54,6 +54,8 @@ import { HoverTip } from "./hover-tip";
 import { ShareAccessPanel } from "./share-access-panel";
 import { MessageObjectEditor, type MessageObjectValue } from "./config-message";
 import { ManageProvider, useManage } from "./manage-context";
+import { serializeDraft } from "./draft-storage";
+import { useApplicationAutosave } from "./use-application-autosave";
 import {
   ApplicationResponses,
   cleanId,
@@ -276,6 +278,7 @@ function EditorInner({
   const router = useRouter();
   const {
     value,
+    pending,
     stage,
     save,
     dirty,
@@ -333,18 +336,12 @@ function EditorInner({
           window.location.origin,
         )
       : "";
-  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (!dirty || loading || saving || !app || deleting) return;
-    if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
-    autosaveTimer.current = setTimeout(() => {
-      void save("Applications");
-    }, 650);
-    return () => {
-      if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
-    };
-  }, [app, dirty, loading, save, saving, deleting]);
+  const autosave = useApplicationAutosave({
+    dirty,
+    paused: loading || saving || !app || deleting,
+    revision: serializeDraft(pending),
+    save: () => save("Applications"),
+  });
 
   // Delete through the config endpoint directly, clear the save prompt and
   // return to the resources list.
@@ -357,6 +354,17 @@ function EditorInner({
     setConfirmDelete(false);
     const remaining = applications.filter((item) => item.id !== app.id);
     try {
+      // Delete the migrated copy first. If cleanup fails, the form remains in
+      // settings and can be retried without an autosave bringing it back.
+      const cleanup = await fetch(`/api/manage/${guildId}/deptresources`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", id: app.id }),
+      });
+      if (!cleanup.ok) {
+        const data = await cleanup.json().catch(() => null);
+        throw new Error(data?.detail || data?.message || "The saved form resource could not be deleted. Try again.");
+      }
       const response = await fetch(configPatchUrl, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -367,22 +375,14 @@ function EditorInner({
         }),
       });
       if (!response.ok) throw new Error("delete failed");
-      // Department applications were migrated from a `department_resource` doc
-      // that still exists; it is removed too, or it would reappear as a legacy
-      // application.
-      await fetch(`/api/manage/${guildId}/deptresources`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", id: app.id }),
-      }).catch(() => undefined);
       await refreshConfig();
       // Staging the now-saved value clears any pending edit for this key so the
       // save prompt never reappears with the deleted application.
       stage("Applications.applications", remaining);
       router.push(backHref);
-    } catch {
+    } catch (error) {
       setDeleting(false);
-      setNotice({ kind: "error", text: "Could not delete this application" });
+      setNotice({ kind: "error", text: error instanceof Error ? error.message : "Could not delete this application" });
     }
   }
 
@@ -428,7 +428,7 @@ function EditorInner({
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
         <Image
-          src="/gator-logo.png"
+          src="/icon.svg"
           alt=""
           width={52}
           height={57}
@@ -499,6 +499,11 @@ function EditorInner({
               )}
             </span>
           </HoverTip>
+          {autosave.failed ? (
+            <button type="button" onClick={autosave.retry} disabled={saving} className="gw-btn text-xs" role="status">
+              Save failed. Retry
+            </button>
+          ) : null}
           {/* Share opens the same access manager as documents and spreadsheets,
              so a form can be restricted to chosen roles or people. */}
           <button
@@ -1320,7 +1325,8 @@ function EditorInner({
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(true)}
-                  disabled={deleting}
+                  disabled={deleting || Boolean(portalBase)}
+                  title={portalBase ? "Delete this application from the server dashboard." : undefined}
                   className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-[var(--tone-bad-line)] bg-[var(--tone-bad-soft)] px-4 py-2 text-xs font-bold text-[var(--tone-bad)] transition-colors hover:bg-[var(--tone-bad-wash)] disabled:opacity-50"
                 >
                   <IconTrash size={14} />
@@ -1502,10 +1508,12 @@ function ApplicationShareModal({
 
 export function ApplicationEditorPage({
   guildId,
+  viewerId,
   appId,
   portalDepartmentId,
 }: {
   guildId: string;
+  viewerId: string;
   appId: string;
   /**
    * When set, the editor runs in the member portal for this department: config,
@@ -1524,7 +1532,7 @@ export function ApplicationEditorPage({
       }
     : undefined;
   return (
-    <ManageProvider guildId={guildId} endpoints={endpoints}>
+    <ManageProvider guildId={guildId} viewerId={viewerId} endpoints={endpoints}>
       <EditorInner guildId={guildId} appId={appId} portalBase={portalBase} />
     </ManageProvider>
   );

@@ -66,14 +66,14 @@ Route: `src/app/manage/[id]/[[...section]]/page.tsx` renders `ManageShell`.
   - unsaved edits are kept in `localStorage`, so a closed tab does not lose
     them;
   - editors that save to their own endpoint (tickets, custom commands, the
-    bot profile, GatorAI, workflows, the message designer) call
+    bot profile, the assistant, workflows, the message designer) call
     `registerExternalDraft()`, so the one save prompt (`save-bar.tsx`) covers
     them too.
 - **Most tabs are declared, not written.** `schema.ts` lists each module's
   settings as fields with a `path` into the bot's config document, and
   `schema-section.tsx` draws them. Only add a path the bot actually reads.
 - **Hand-written tabs** live in `sections/` (overview, permissions, tickets,
-  resources, sessions, custom commands, GatorAI and a few more).
+  resources, sessions, custom commands, the assistant and a few more).
 - **Messages.** `message-design.tsx` is the message designer used across
   modules: embeds, and Discord's container ("Components V2") messages.
   `message-design/model.ts` is the block model, `discord-json.ts` converts to
@@ -114,7 +114,7 @@ and each of those routes sets `NO_INDEX` (`src/utils/no-index.ts`).
 
 ## Working with the bot repository
 
-The bot is `tmek2/gatorsys`. Two things are kept in step by hand:
+The bot is maintained in a separate repository. Two contracts must stay in step:
 
 - **Endpoints.** A new dashboard feature usually needs a bot endpoint first.
 - **The workflow contract.** After changing `workflow/blocks.ts` or
@@ -130,3 +130,9 @@ The bot is `tmek2/gatorsys`. Two things are kept in step by hand:
 A few tests read the bot's source to check that both sides agree; they look
 for the checkout beside this one (`../gatorsys` or `../fdny-systems`), or in
 `GATORSYS_REPO`.
+
+## Installation boundaries
+
+The website has no default production API address or operator identity. Server configuration is read in `src/server/config.ts`; public names and optional links are in `src/config/site.ts`. An absent bot configuration must fail clearly rather than contacting another installation.
+
+`main` always uses Discord authentication and the real bot permission checks. `codex/test-preview` is a separate, offline demonstration branch; its identity and data adapters must never be merged into a live installation.

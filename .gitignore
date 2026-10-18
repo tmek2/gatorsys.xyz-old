@@ -40,17 +40,21 @@ next-env.d.ts
 .idea/misc.xml
 .idea/*.iml
 
-.vercel
 .env.*
+!.env.example
 *.env
 credentials.json
 *.key
 .credentials
 
-# MCP config carries the dashboard API key; the example is the committed one.
+# Local editor and assistant settings do not belong in the application source.
 .mcp.json
+.agents/
+.claude/
+.codex/
+.impeccable/
+skill-observations/
 
-# Python bytecode caches. `server.py` is the source; these are rebuilt from it
-# on every run, which dirtied the tree after any session that touched the tool.
+# Tool caches
 __pycache__/
 *.py[cod]

@@ -1,0 +1,129 @@
+/* ── skeletons, current style ──
+
+   Shaped like what they stand for, and they breathe with a staggered opacity
+   change on the compositor (animating background-position repainted every bar
+   on the main thread and stuttered). */
+.gator-skeleton-row {
+  border: 1px solid var(--mac-hair, rgba(255, 255, 255, 0.07));
+  border-radius: 12px;
+  background: var(--mac-raise, #111112);
+}
+.gator-skeleton-bar,
+.gw-skel-bar {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--g-fill-2, rgba(255, 255, 255, 0.055));
+  animation: gw-skel-breathe 1.6s ease-in-out infinite alternate;
+  will-change: opacity;
+}
+.gator-skeleton-bar-title {
+  height: 12px;
+}
+.gator-skeleton-block {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+.gator-skeleton-panel {
+  border: 1px solid var(--mac-hair, rgba(255, 255, 255, 0.07));
+  border-radius: 12px;
+  background: var(--mac-raise, #111112);
+  animation: gw-skel-breathe 1.6s ease-in-out infinite alternate;
+  will-change: opacity;
+}
+@keyframes gw-skel-breathe {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.45;
+  }
+}
+
+/* A tab, before it has loaded: its title, its line, and a panel of settings
+   rows -- the shape of the page about to replace it. */
+.gw-skel {
+  display: grid;
+  gap: 10px;
+}
+.gw-skel-title {
+  width: min(220px, 60%);
+  height: 26px;
+  border-radius: 8px;
+}
+.gw-skel-say {
+  width: min(360px, 80%);
+  margin-bottom: 18px;
+}
+.gw-skel-panel {
+  overflow: hidden;
+  border: 1px solid var(--mac-hair, rgba(255, 255, 255, 0.07));
+  border-radius: 14px;
+  background: var(--mac-raise, #111112);
+}
+.gw-skel-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  min-height: 64px;
+  padding: 14px 18px;
+}
+.gw-skel-row + .gw-skel-row {
+  border-top: 1px solid var(--mac-hair, rgba(255, 255, 255, 0.07));
+}
+.gw-skel-label {
+  display: grid;
+  gap: 8px;
+}
+.gw-skel-label > :first-child {
+  width: 46%;
+  height: 11px;
+}
+.gw-skel-label > :last-child {
+  width: 78%;
+}
+.gw-skel-control {
+  height: 36px;
+  border-radius: 9px;
+}
+.gw-skel-row:nth-child(2) .gw-skel-bar {
+  animation-delay: 120ms;
+}
+.gw-skel-row:nth-child(3) .gw-skel-bar {
+  animation-delay: 240ms;
+}
+.gw-skel-row:nth-child(4) .gw-skel-bar {
+  animation-delay: 360ms;
+}
+@media (max-width: 640px) {
+  .gw-skel-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gator-skeleton-bar,
+  .gator-skeleton-panel,
+  .gw-skel-bar {
+    animation: none;
+  }
+}
+
+/* ── into the owner page ──
+
+   From the picker's owner banner: the picker sinks back and the owner page
+   rises in from just below. Transform and opacity only. */
+:root[data-leaving="owner"]::view-transition-old(root) {
+  animation: gator-vt-zoom-out 340ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+:root[data-leaving="owner"]::view-transition-new(root) {
+  animation: gator-vt-rise-in 520ms cubic-bezier(0.32, 0.72, 0, 1) 60ms both;
+}
+@keyframes gator-vt-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}

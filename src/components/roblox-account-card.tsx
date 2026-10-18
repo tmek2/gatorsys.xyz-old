@@ -282,7 +282,7 @@ export function RobloxAccountCard({
         ) : (
           <div className="roblox-connect">
             <p className="roblox-connect-copy">
-              Link the Roblox account you use with Gator.
+              Link the Roblox account you use with Bot.
             </p>
             <RippleButton
               onClick={() => verify("start")}

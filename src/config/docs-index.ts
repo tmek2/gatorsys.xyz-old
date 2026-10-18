@@ -1,7 +1,4 @@
-/* What the documentation contains: a copy of `src/content/nav.ts` in the
-   gatorsys-docs repo (a separate deployment, so it cannot be imported), limited
-   to title, path, description and search keywords. Copied word for word; a page
-   added there and not here is simply not findable from the palette. */
+/* Search entries for the optional documentation site. */
 
 import { DOCS_URL } from "./site";
 
@@ -21,14 +18,14 @@ export const DOCS_PAGES: DocsPage[] = [
     title: "Introduction",
     path: "/",
     product: "General",
-    description: "What GatorSys is and how the pieces fit together.",
-    keywords: "overview what is gatorsys discord management platform",
+    description: "What Community Dashboard is and how the pieces fit together.",
+    keywords: "overview discord management platform",
   },
   {
     title: "Frequent questions",
     path: "/frequent-questions",
     product: "General",
-    description: "Frequently asked questions about GatorSys.",
+    description: "Frequently asked questions about Community Dashboard.",
     keywords: "faq questions help dashboard ai support pricing",
   },
   {
@@ -135,6 +132,7 @@ export const DOCS_PAGES: DocsPage[] = [
 
 /** Absolute URL for a documentation path. */
 export function docsUrl(path: string): string {
+  if (!DOCS_URL.startsWith("http")) return DOCS_URL;
   return path === "/" ? DOCS_URL : `${DOCS_URL}${path}`;
 }
 

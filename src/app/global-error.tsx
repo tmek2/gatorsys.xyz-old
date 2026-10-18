@@ -29,7 +29,7 @@ export default function GlobalError({
       >
         <div style={{ maxWidth: "28rem" }}>
           <img
-            src="/gator-logo.png"
+            src="/icon.svg"
             alt=""
             width={44}
             height={44}

@@ -1,0 +1,456 @@
+/* ── `+ New` menu ──
+
+   One button in a fixed place, listing everything that can be made. Each row
+   has an icon, a label and a description, because "Document", "Form" and
+   "Application" sound alike to a newcomer. */
+
+.new-resource-menu {
+  overflow: hidden;
+  padding: 0.3rem;
+  border: 1px solid var(--gator-line, rgba(255, 255, 255, 0.09));
+  border-radius: 0.9rem;
+  background: var(--gator-surface-raised, #181818);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.new-resource-item {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.6rem 0.65rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 150ms var(--gator-ease),
+    color 150ms var(--gator-ease);
+}
+
+.new-resource-item:hover:not(:disabled),
+.new-resource-item:focus-visible {
+  background: rgba(255, 255, 255, 0.055);
+  outline: none;
+}
+
+.new-resource-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.new-resource-item-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--gator-line, rgba(255, 255, 255, 0.08));
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--accent-peach, #f7a8c4);
+}
+
+.new-resource-item-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--gator-text, #f5f2f2);
+}
+
+.new-resource-item-hint {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: rgba(245, 242, 242, 0.5);
+}
+
+/* The per-card overflow menu: plain labels (Duplicate, Delete) with no
+   descriptions. */
+.card-menu {
+  min-width: 9.5rem;
+  overflow: hidden;
+  padding: 0.28rem;
+  border: 1px solid var(--gator-line, rgba(255, 255, 255, 0.09));
+  border-radius: 0.7rem;
+  background: var(--gator-surface-raised, #181818);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.card-menu-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.55rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--gator-text, #f5f2f2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 130ms var(--gator-ease),
+    color 130ms var(--gator-ease);
+}
+
+.card-menu-item:hover,
+.card-menu-item:focus-visible {
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
+
+.card-menu-rule {
+  display: block;
+  height: 1px;
+  margin: 0.28rem 0.15rem;
+  background: var(--gator-line, rgba(255, 255, 255, 0.08));
+}
+
+.card-menu-item-danger {
+  color: rgba(254, 202, 202, 0.9);
+}
+
+.card-menu-item-danger:hover,
+.card-menu-item-danger:focus-visible {
+  background: rgba(239, 68, 68, 0.13);
+  color: #fecaca;
+}
+
+.new-resource-badge {
+  padding: 0.05rem 0.32rem;
+  border-radius: 0.3rem;
+  background: var(--accent-peach, #f7a8c4);
+  color: #241416;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+/* ── resource cards ──
+
+   One card shape for every kind of resource; only the icon and accent change. */
+
+/* Wide tracks (three across on a laptop, four on a wide screen) so previews are
+   big enough to recognise. `auto-fill`, not `auto-fit`, so a single card is not
+   stretched across the page. */
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
+  gap: 1.15rem;
+}
+
+@media (max-width: 640px) {
+  .resource-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.resource-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-height: 11rem;
+  padding: 1.15rem 1.2rem 1.1rem;
+  border: 1px solid var(--gator-line, rgba(255, 255, 255, 0.075));
+  border-radius: 0.95rem;
+  background: var(--gator-surface, rgba(255, 255, 255, 0.02));
+  transition:
+    border-color 180ms var(--gator-ease),
+    background-color 180ms var(--gator-ease),
+    transform 180ms var(--gator-ease);
+}
+
+.resource-item:hover {
+  border-color: rgb(var(--accent-rgb) / 0.38);
+  background: rgba(255, 255, 255, 0.035);
+  transform: translateY(-1px);
+}
+
+.resource-item-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.resource-item-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 1px solid var(--gator-line, rgba(255, 255, 255, 0.08));
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--accent-peach, #f7a8c4);
+}
+
+.resource-item-title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.98rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gator-text, #f5f2f2);
+}
+
+/* No delete on a card: destructive actions live inside the item, next to what
+   they act on. */
+
+/* ── the workspace grid ──
+
+   Each card shows a small render of its content above the title row (the form's
+   heading and accent, the document's first words, the workflow's trigger), so
+   cards can be told apart. */
+
+/* A calm thumbnail: nothing in it clips, and the height is a minimum. */
+.resource-preview {
+  position: relative;
+  /* A column, so `.resource-preview-inner` can fill the height with `flex: 1`
+     (`height: 100%` against a min-height parent resolves to auto). */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Scales with the card. */
+  min-height: 11.5rem;
+  margin: -0.4rem -0.45rem 0.2rem;
+  padding: 0.95rem;
+  border: 1px solid var(--gator-line, rgba(255, 255, 255, 0.06));
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.resource-preview-inner {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-height: 0;
+  padding: 0.95rem 0.9rem;
+  border: 1px solid var(--gator-line, rgba(255, 255, 255, 0.06));
+  border-radius: 0.55rem;
+  background: var(--gator-surface, rgba(255, 255, 255, 0.02));
+}
+
+/* A command preview is the command as Discord shows it. */
+.resource-preview-slash {
+  overflow: hidden;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--accent-peach, #f7a8c4);
+}
+
+.resource-preview-arg {
+  display: inline-block;
+  width: fit-content;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.35rem;
+  background: rgba(255, 255, 255, 0.05);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 0.7rem;
+  color: rgba(245, 242, 242, 0.5);
+}
+
+/* The accent bar an application carries at the top of its real form. */
+.resource-preview-rule {
+  position: absolute;
+  top: 0.9rem;
+  right: 1.35rem;
+  left: 1.35rem;
+  height: 0.3rem;
+  border-radius: 999px 999px 0 0;
+  background: var(--preview-accent, #f7a8c4);
+}
+
+.resource-preview-title {
+  overflow: hidden;
+  /* Line height and padding leave room for descenders. */
+  line-height: 1.35;
+  font-size: 0.82rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gator-text, #f5f2f2);
+}
+
+.resource-preview-underline {
+  width: 78%;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--preview-accent, #f7a8c4);
+}
+
+.resource-preview-body {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: rgba(245, 242, 242, 0.45);
+}
+
+.resource-preview-note {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  color: rgba(245, 242, 242, 0.42);
+}
+
+.resource-preview-note-on {
+  color: #6ee7a8;
+}
+
+.resource-preview-note-off {
+  color: rgba(245, 242, 242, 0.4);
+}
+
+/* A document preview has no chrome of its own — it is a page. */
+.resource-preview-document .resource-preview-inner {
+  justify-content: flex-start;
+  /* Lifted off the card, so the thing behind the text reads as a sheet rather
+     than as another dark panel. */
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+}
+
+/* The document's opening as separate lines; paragraph breaks are what make a
+   page thumbnail recognisable. */
+.resource-preview-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.resource-preview-page-head {
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gator-text, #f5f2f2);
+}
+
+.resource-preview-page-line {
+  overflow: hidden;
+  font-size: 0.64rem;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(245, 242, 242, 0.48);
+}
+
+:root[data-theme="light"] .resource-preview-page-line {
+  color: rgba(16, 14, 14, 0.55);
+}
+
+.resource-preview-empty {
+  font-size: 0.7rem;
+  font-style: italic;
+  color: rgba(245, 242, 242, 0.28);
+}
+
+/* A spreadsheet's shape rather than its unreadable values: how many columns it
+   has. */
+.resource-preview-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  width: 100%;
+}
+
+.resource-preview-sheet-row {
+  display: flex;
+  gap: 0.22rem;
+}
+
+.resource-preview-sheet-cell {
+  flex: 1;
+  height: 0.55rem;
+  border-radius: 0.12rem;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.resource-preview-sheet-cell.is-head {
+  background: var(--accent-peach, #f7a8c4);
+  opacity: 0.55 !important;
+}
+
+/* ── per-card overflow ──
+
+   The card is a link, so its menu button appears only on hover or focus. */
+.resource-item {
+  position: relative;
+}
+
+.resource-item-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.resource-item-menu {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.resource-item:hover .resource-item-menu,
+.resource-item:focus-within .resource-item-menu {
+  opacity: 1;
+}
+
+.resource-item-menu-trigger {
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1px solid var(--gator-line, rgba(255, 255, 255, 0.1));
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(245, 242, 242, 0.65);
+  backdrop-filter: blur(6px);
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.resource-item-menu-trigger:hover {
+  color: var(--gator-text, #f5f2f2);
+  border-color: var(--gator-line-strong, rgba(255, 255, 255, 0.2));
+}
+
+.resource-item-sub {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.1rem;
+  font-size: 0.72rem;
+  color: rgba(245, 242, 242, 0.45);
+}
+
+/* The title row under a preview is a link inside a card that is itself not a
+   link, so it needs its own reset. */
+.resource-item > .resource-item-head {
+  color: inherit;
+  text-decoration: none;
+}

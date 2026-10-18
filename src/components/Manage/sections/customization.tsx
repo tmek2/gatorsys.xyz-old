@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { IconPlus, IconUpload } from "@tabler/icons-react";
 import { FieldRow, SettingsCard, TextField } from "../fields";
 import { useManage } from "../manage-context";
 import { SectionHeader } from "../section-header";
 import { identityFromProfile, publishBotIdentity, settleBotIdentity } from "../bot-identity";
+import { validateProfileImage } from "../message-media";
 
 interface BotProfile {
   display_name: string | null;
@@ -36,6 +37,7 @@ function ImageField({
   uploading,
   onPick,
   onReset,
+  onError,
 }: {
   label: string;
   hint: string;
@@ -45,14 +47,20 @@ function ImageField({
   uploading?: boolean;
   onPick: (dataUrl: string) => void;
   onReset: () => void;
+  onError: (message: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const noun = label.toLowerCase();
 
   async function take(file: File | null | undefined) {
-    if (!file || !file.type.startsWith("image/")) return;
-    onPick(await readImageFile(file));
+    if (!file) return;
+    try {
+      validateProfileImage(file);
+      onPick(await readImageFile(file));
+    } catch (error) {
+      onError(error instanceof Error ? error.message : "That picture could not be read.");
+    }
   }
 
   return (
@@ -119,31 +127,35 @@ function ImageField({
 }
 
 export function CustomizationSection() {
-  const { guildId, meta, registerExternalDraft, setExternalDraftDirty } = useManage();
+  const { guildId, meta, setNotice, registerExternalDraft, setExternalDraftDirty } = useManage();
   const [profile, setProfile] = useState<BotProfile | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
   const [resets, setResets] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`/api/manage/${guildId}/botprofile`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => {
-        if (!cancelled && json?.profile) {
-          setProfile(json.profile);
-          setDisplayName(json.profile.display_name || "");
-          setAvatar(json.profile.avatar || null);
-          setBanner(json.profile.banner || null);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
+  const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const response = await fetch(`/api/manage/${guildId}/botprofile`);
+      const json = await response.json().catch(() => null);
+      if (!response.ok || !json?.profile) throw new Error("Could not load the bot's profile.");
+      setProfile(json.profile);
+      setDisplayName(json.profile.display_name || "");
+      setAvatar(json.profile.avatar || null);
+      setBanner(json.profile.banner || null);
+    } catch {
+      setLoadError("Could not load the bot's saved profile. Retry before editing or saving.");
+    } finally {
+      setLoading(false);
+    }
   }, [guildId]);
+
+  useEffect(() => { void load(); }, [load]);
 
   /* Every preview on the dashboard signs with this profile, so edits show there
      before saving. Leaving without saving restores the saved one. */
@@ -157,11 +169,11 @@ export function CustomizationSection() {
   }, [guildId, profile, displayName, avatar]);
   useEffect(() => () => publishBotIdentity(guildId, null), [guildId]);
 
-  const dirty =
-    displayName !== (profile?.display_name || "") ||
+  const dirty = profile !== null && (
+    displayName !== (profile.display_name || "") ||
     (avatar || null) !== (profile?.avatar || null) ||
     (banner || null) !== (profile?.banner || null) ||
-    resets.size > 0;
+    resets.size > 0);
 
   function markReset(field: string, clearedPreview: () => void) {
     setResets((current) => new Set(current).add(field));
@@ -171,6 +183,7 @@ export function CustomizationSection() {
   /* Saved through the dashboard's save prompt with everything else: an edit
      here raises it, Save writes it, Discard restores the saved profile. */
   async function persist() {
+    if (!profile || loading || loadError || saving) return false;
     setSaving(true);
     try {
       const payload: Record<string, unknown> = { reset_fields: Array.from(resets) };
@@ -187,11 +200,17 @@ export function CustomizationSection() {
         throw new Error(err?.detail || err?.message || "The bot's profile could not be updated");
       }
       setResets(new Set());
-      const refreshed = await fetch(`/api/manage/${guildId}/botprofile`).then((r) => r.json());
-      if (refreshed?.profile) {
-        setProfile(refreshed.profile);
-        settleBotIdentity(guildId, identityFromProfile(refreshed.profile));
+      const refresh = await fetch(`/api/manage/${guildId}/botprofile`);
+      const refreshed = await refresh.json().catch(() => null);
+      if (!refresh.ok || !refreshed?.profile) {
+        setLoadError("The profile was saved, but its latest values could not be loaded. Retry before making another change.");
+        return false;
       }
+      setProfile(refreshed.profile);
+      setDisplayName(refreshed.profile.display_name || "");
+      setAvatar(refreshed.profile.avatar || null);
+      setBanner(refreshed.profile.banner || null);
+      settleBotIdentity(guildId, identityFromProfile(refreshed.profile));
       return true;
     } finally {
       setSaving(false);
@@ -219,8 +238,20 @@ export function CustomizationSection() {
     setExternalDraftDirty("bot-profile", dirty);
   }, [dirty, setExternalDraftDirty]);
 
-  return (
+  if (loading || loadError) return (
     <div className="space-y-5">
+      <SectionHeader title="Customization" />
+      <SettingsCard title="Bot server profile">
+        {loading ? <p role="status">Loading profile…</p> : <>
+          <p role="alert" className="cool-text text-sm">{loadError}</p>
+          <button type="button" className="gw-btn mt-3" onClick={() => void load()}>Retry loading profile</button>
+        </>}
+      </SettingsCard>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5" inert={saving}>
       <SectionHeader
         title="Customization"
       />
@@ -267,6 +298,7 @@ export function CustomizationSection() {
               });
             }}
             onReset={() => markReset("avatar", () => setAvatar(null))}
+            onError={(text) => setNotice({ kind: "error", text })}
           />
           <ImageField
             label="Banner"
@@ -282,6 +314,7 @@ export function CustomizationSection() {
               });
             }}
             onReset={() => markReset("banner", () => setBanner(null))}
+            onError={(text) => setNotice({ kind: "error", text })}
           />
         </div>
       </SettingsCard>

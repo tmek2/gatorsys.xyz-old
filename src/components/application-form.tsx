@@ -18,6 +18,7 @@ import { PreviewText } from "@/components/Manage/embed-editor";
 import { createIntegrityTracker } from "@/components/application-integrity";
 import { ConfirmModal, type ConfirmState } from "@/components/confirm-modal";
 import { getDiscordSignInUrl } from "@/utils/discord-links";
+import { useApplicationDraft } from "@/components/use-application-draft";
 import {
   FormQuestionCard,
   type FormQuestion,
@@ -152,7 +153,7 @@ export function ApplicationForm({
   const [status, setStatus] = useState<"loading" | "ok" | "error" | "notfound">(
     "loading",
   );
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const { key: draftKey, answers, setAnswers, clearDraft } = useApplicationDraft(viewer.id, guildId, appId);
   // Per-question authorship signals in a ref, so typing does not re-render the
   // form on every keystroke.
   const integrity = useRef(createIntegrityTracker());
@@ -165,43 +166,28 @@ export function ApplicationForm({
   const [robloxLoading, setRobloxLoading] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
 
-  // Autosave draft answers so a refresh / accidental tab close never loses work.
-  const draftKey = `gator-app-draft-${guildId}-${appId}`;
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(draftKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === "object") setAnswers(parsed);
-      }
-    } catch {
-      /* ignore malformed drafts */
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    integrity.current = createIntegrityTracker();
+    setPageIndex(-1);
+    setSubmitted(null);
+    setSubmittedMessage(null);
+    setError(null);
   }, [draftKey]);
-  useEffect(() => {
-    try {
-      if (Object.keys(answers).length)
-        localStorage.setItem(draftKey, JSON.stringify(answers));
-    } catch {
-      /* storage full / unavailable — ignore */
-    }
-  }, [answers, draftKey]);
 
   // Clear the saved draft for people who don't want their progress kept.
   const resetProgress = () => {
-    setAnswers({});
-    try {
-      localStorage.removeItem(draftKey);
-    } catch {
-      /* ignore */
-    }
+    clearDraft();
+    integrity.current = createIntegrityTracker();
     setPageIndex(-1);
   };
 
   useEffect(() => {
+    let active = true;
+    setData(null);
+    setStatus("loading");
     fetch(`/api/application/${guildId}/${appId}`, { cache: "no-store" })
       .then(async (res) => {
+        if (!active) return null;
         if (res.status === 404) {
           setStatus("notfound");
           return null;
@@ -210,13 +196,14 @@ export function ApplicationForm({
         return res.json();
       })
       .then((json) => {
-        if (json) {
+        if (active && json) {
           setData(json);
           setStatus("ok");
         }
       })
-      .catch(() => setStatus("error"));
-  }, [guildId, appId]);
+      .catch(() => { if (active) setStatus("error"); });
+    return () => { active = false; };
+  }, [guildId, appId, viewer.id]);
 
   const accent = data?.application.accent_color || "#f7a8c4";
   // Pick readable text for the accent so themed buttons work for light (peach)
@@ -482,11 +469,7 @@ export function ApplicationForm({
       if (!res.ok)
         throw new Error(json?.detail || json?.message || "Submission failed");
       setSubmitted(json.submissionStatus || "pending");
-      try {
-        localStorage.removeItem(draftKey);
-      } catch {
-        /* ignore */
-      }
+      clearDraft();
       if (json.submittedMessage)
         setSubmittedMessage(String(json.submittedMessage));
     } catch (err) {
@@ -507,7 +490,7 @@ export function ApplicationForm({
     return (
       <div className={`flex flex-col items-center justify-center gap-3 text-center ${embedded ? "min-h-48" : "min-h-[60vh]"}`}>
         <Image
-          src="/gator-logo.png"
+          src="/icon.svg"
           alt=""
           width={44}
           height={44}
@@ -710,7 +693,7 @@ export function ApplicationForm({
                 // or a date has nothing meaningful to measure.
                 if (typeof next === "string") {
                   const before = typeof value === "string" ? value.length : 0;
-                  integrity.current.typed(q.id, next.length - before);
+                  integrity.current.input(q.id, next.length - before);
                 }
                 setAnswers((prev) => ({ ...prev, [q.id]: next }));
               };
@@ -718,9 +701,6 @@ export function ApplicationForm({
                 onPaste: (event: React.ClipboardEvent) => {
                   const text = event.clipboardData?.getData("text") || "";
                   integrity.current.paste(q.id, text.length);
-                  // The paste also fires onChange, which would count the same
-                  // characters as typed. Discount them there.
-                  integrity.current.typed(q.id, -text.length);
                 },
                 onFocus: () => integrity.current.focus(q.id),
                 onBlur: () => integrity.current.blur(q.id),

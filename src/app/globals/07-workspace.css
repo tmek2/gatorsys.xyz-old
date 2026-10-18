@@ -1,0 +1,288 @@
+/* ── manage shell ──
+
+   One accent for every group; module state is shown with contrast. */
+.manage-root {
+  --nav-accent: var(--gator-accent);
+}
+
+:root:not([data-theme="light"]) .manage-root {
+  --gator-canvas: #08090a;
+  --gator-chrome: #131415;
+  --gator-surface: #121212;
+  --gator-surface-raised: #181818;
+  --manage-chrome: #131415;
+}
+
+:root:not([data-theme="light"]) .manage-window {
+  background: #08090a !important;
+}
+
+.swapy-list-slot {
+  position: relative;
+  min-height: 2.5rem;
+}
+
+.swapy-list-slot[data-swapy-highlighted]::after {
+  content: "";
+  position: absolute;
+  inset: -0.35rem 0 auto;
+  z-index: 20;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--accent-peach);
+  box-shadow:
+    0 0 0 3px var(--accent-peach-soft),
+    0 0 18px rgba(232, 137, 98, 0.65);
+  pointer-events: none;
+  animation: swapyPlacementIn 180ms ease-out both;
+}
+
+.swapy-list-item {
+  transform-origin: 50% 50%;
+  transition:
+    filter 180ms ease,
+    opacity 180ms ease;
+}
+
+.swapy-list-item[data-swapy-dragging] {
+  z-index: 30;
+  opacity: 0.92;
+  filter: drop-shadow(0 22px 32px rgba(0, 0, 0, 0.34));
+}
+
+[data-swapy-handle] {
+  touch-action: none;
+}
+
+@keyframes swapyPlacementIn {
+  from {
+    opacity: 0;
+    transform: scaleX(0.82);
+  }
+}
+
+.module-marquee {
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+  border-block: 1px solid rgba(242, 169, 133, 0.2);
+  background: linear-gradient(90deg, rgba(232, 137, 98, 0.94), #f2a985 50%, rgba(232, 137, 98, 0.94));
+  color: #26150f;
+  box-shadow: 0 18px 70px rgba(232, 137, 98, 0.09);
+}
+
+.module-marquee::before,
+.module-marquee::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  z-index: 2;
+  width: clamp(2rem, 8vw, 8rem);
+  pointer-events: none;
+}
+
+.module-marquee::before {
+  left: 0;
+  background: linear-gradient(90deg, rgba(232, 137, 98, 1), transparent);
+}
+
+.module-marquee::after {
+  right: 0;
+  background: linear-gradient(-90deg, rgba(232, 137, 98, 1), transparent);
+}
+
+.module-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: gatorMarquee 34s linear infinite;
+}
+
+.module-marquee:hover .module-marquee-track {
+  animation-play-state: paused;
+}
+
+.module-marquee-set {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: clamp(2.5rem, 5vw, 5.5rem);
+  padding: 1rem clamp(1.25rem, 3vw, 3rem);
+}
+
+.module-marquee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: clamp(0.88rem, 1.1vw, 1rem);
+  font-weight: 780;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+}
+
+@keyframes gatorMarquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+:root[data-theme="light"] .module-marquee {
+  border-color: rgba(157, 76, 47, 0.16);
+  background: linear-gradient(90deg, #d97852, #efab85 50%, #d97852);
+  color: #2c1710;
+}
+
+:root[data-theme="light"] .module-marquee::before {
+  background: linear-gradient(90deg, rgba(217, 120, 82, 1), transparent);
+}
+
+:root[data-theme="light"] .module-marquee::after {
+  background: linear-gradient(-90deg, rgba(217, 120, 82, 1), transparent);
+}
+
+@keyframes landingProductIn {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.975);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes heroGatorIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0) rotate(-3deg);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0);
+  }
+}
+
+@keyframes heroGatorFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-1deg);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0) rotate(1deg);
+  }
+}
+
+@media (max-width: 767px) {
+  .manage-content {
+    padding-block: 1.5rem !important;
+    padding-inline: 1rem !important;
+  }
+
+  .resource-workspace-hero {
+    top: 4rem;
+    margin-inline: -1rem;
+    padding: 0.25rem 1rem 0.85rem;
+  }
+
+}
+
+/* The theme toggle is scoped in theme-toggle.tsx: data-theme="light" is only
+   set on routes that have a light design. */
+
+/* The save cloud while saving: a slow breath, since the button label already
+   says "Saving…". */
+@keyframes gatorSaveCloudBreathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.gator-save-cloud[data-state="saving"] {
+  animation: gatorSaveCloudBreathe 1.15s ease-in-out infinite;
+}
+
+.gator-save-cloud path {
+  transition: d 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gator-save-cloud[data-state="saving"] {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+@keyframes routeLoadingSpin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* A count on a tab. Here rather than in manage-restyle.css because the
+   department workspace also renders in the member portal, which loads neither
+   that sheet nor `.manage-root`. */
+.sidebar-badge {
+  display: inline-flex;
+  min-width: 1.1rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--accent-peach, #f7a8c4);
+  padding: 0 0.3rem;
+  color: #1b1010;
+  font-size: 0.625rem;
+  font-weight: 800;
+  line-height: 1.1rem;
+}
+
+/* ── roster drop indicator ──
+
+   While dragging a member, the held row fades and the hovered rank grows a
+   ghost row where it would land. */
+
+.roster-drop-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.75rem;
+  margin-top: 0.35rem;
+  border: 1px dashed
+    color-mix(in srgb, var(--accent-peach, #f7a8c4) 45%, transparent);
+  border-radius: 0.75rem;
+  padding: 0 0.9rem;
+  background: color-mix(in srgb, var(--accent-peach, #f7a8c4) 6%, transparent);
+  color: var(--accent-peach, #f7a8c4);
+  font-size: 12px;
+  font-weight: 700;
+  animation: rosterDropIn 140ms ease-out;
+}
+
+/* The rank's own colour, the same dot the rank header uses, so the row you are
+   about to join is identified the way it is identified everywhere else. */
+.roster-drop-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 999px;
+}
+
+@keyframes rosterDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roster-drop-hint {
+    animation: none;
+  }
+}

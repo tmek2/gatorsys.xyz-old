@@ -920,7 +920,7 @@ export const MODULE_SECTIONS: ModuleSchema[] = [
         hint: "The message posted when a giveaway starts. Join and participant buttons are added automatically.",
         previewOverrides: {
           "{prize}": "1000 Robux",
-          "{host}": "@Alternative",
+          "{host}": "@Sam",
           "{ends}": "in 24 hours",
           "{winners}": "2",
           "{entries}": "48",
@@ -1551,7 +1551,7 @@ export const MODULE_TOGGLES: {
   { key: "Forums", label: "Forums", description: "Forms people fill in, sent to the right channel.", category: "Community" },
   { key: "PRC", label: "ERLC", description: "Link your ER:LC server: alerts, the queue, and who is on.", sectionId: "prc", category: "Integrations" },
   { key: "Sessions", label: "Sessions", description: "Announce a session and let people join from the post.", category: "Community" },
-  { key: "GatorAI", label: "GatorAI", description: "Answers questions in tickets and from /ask.", sectionId: "ai", category: "Integrations" },
+  { key: "GatorAI", label: "Assistant", description: "Answers questions in tickets and from /ask.", sectionId: "ai", category: "Integrations" },
   { key: "customcommands", label: "Commands & Templates", description: "Your own commands and saved messages.", sectionId: "custom-commands", category: "Content" },
 ];
 

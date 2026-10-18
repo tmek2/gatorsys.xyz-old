@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IconAlertTriangle, IconRefresh, IconSearch } from "@tabler/icons-react";
 import { PresenceList } from "@/components/motion";
-import { GatorLogo } from "@/components/site/gator-logo";
+import { AppLogo } from "@/components/site/app-logo";
 import { ChannelPicker, FieldRow, OptionCard, OptionCards, SettingsCard, Stepper } from "../fields";
 import { configValuesEqual, useManage } from "../manage-context";
 import { SectionHeader } from "../section-header";
@@ -75,7 +75,7 @@ const FILTERS: { id: Filter; label: string; blurb: string }[] = [
 /* ── the preview ──
 
    What the three dials add up to, shown rather than described: a member asks
-   something and GatorAI answers in the picked manner, again each time a dial
+   something and Assistant answers in the picked manner, again each time a dial
    moves. The answers follow the bot's own precedence: the filter is a ceiling
    on what may be said, the personality is the stance taken under it, and the
    voice is the register it is said in. So each question has an answer per
@@ -85,7 +85,7 @@ type Answers = Record<Personality, Record<Filter, string>>;
 
 const ASKS: { who: string; text: string; answers: Answers }[] = [
   {
-    who: ".tmek",
+    who: "Alex",
     text: "is my staff application any good? be honest",
     answers: {
       friendly: {
@@ -106,8 +106,8 @@ const ASKS: { who: string; text: string; answers: Answers }[] = [
     },
   },
   {
-    who: "Alternative",
-    text: "can you ban offser for me",
+    who: "Sam",
+    text: "can you ban Jordan for me",
     answers: {
       friendly: {
         strict: "I can't ban anyone myself, but staff can! Want me to point you to where to report it?",
@@ -115,9 +115,9 @@ const ASKS: { who: string; text: string; answers: Answers }[] = [
         relaxed: "I can't ban anyone myself, but staff can! Want me to point you to where to report it?",
       },
       balanced: {
-        strict: "I can't ban people. If offser broke a rule, report it and staff will handle it.",
-        standard: "I can't ban people. If offser broke a rule, report it and staff will handle it.",
-        relaxed: "Not my call. If offser actually broke a rule, report it and staff will deal with it.",
+        strict: "I can't ban people. If Jordan broke a rule, report it and staff will handle it.",
+        standard: "I can't ban people. If Jordan broke a rule, report it and staff will handle it.",
+        relaxed: "Not my call. If Jordan actually broke a rule, report it and staff will deal with it.",
       },
       unfiltered: {
         strict: "Nice try. I don't ban people. Report it like everyone else.",
@@ -127,7 +127,7 @@ const ASKS: { who: string; text: string; answers: Answers }[] = [
     },
   },
   {
-    who: "offser",
+    who: "Jordan",
     text: "who's the best staff member here?",
     answers: {
       friendly: {
@@ -246,7 +246,7 @@ export function GatorAiSection({ onNavigate }: { onNavigate?: (next: string) => 
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.settings) {
-        throw new Error(json?.detail || json?.message || "Couldn't load GatorAI settings.");
+        throw new Error(json?.detail || json?.message || "Couldn't load Assistant settings.");
       }
       setSaved(readSettings(json.settings));
       setDraft(readSettings(json.settings));
@@ -266,7 +266,7 @@ export function GatorAiSection({ onNavigate }: { onNavigate?: (next: string) => 
       }
     } catch (caught) {
       const text =
-        caught instanceof Error ? caught.message : "Couldn't load GatorAI settings.";
+        caught instanceof Error ? caught.message : "Couldn't load Assistant settings.";
       setLoadError(text);
       setNotice?.({ kind: "error", text });
     }
@@ -301,13 +301,23 @@ export function GatorAiSection({ onNavigate }: { onNavigate?: (next: string) => 
         if (!res.ok) throw new Error(json.detail || json.message || "Save failed");
         // The bot clamps and validates, so what it returns is the truth.
         if (json.settings) {
-          setSaved(readSettings(json.settings));
-          setDraft(readSettings(json.settings));
+          const accepted = readSettings(json.settings);
+          savedRef.current = accepted;
+          setSaved(accepted);
+          // A reply acknowledges the submitted snapshot, not later typing.
+          if (configValuesEqual(draftRef.current, current)) {
+            draftRef.current = accepted;
+            setDraft(accepted);
+          }
+        } else {
+          savedRef.current = current;
+          setSaved(current);
         }
         return true;
       },
       discard: () => setDraft(savedRef.current),
-      label: "GatorAI's settings",
+      hasChanges: () => !configValuesEqual(draftRef.current, savedRef.current),
+      label: "Assistant's settings",
     });
   }, [guildId, registerExternalDraft]);
 
@@ -340,7 +350,7 @@ export function GatorAiSection({ onNavigate }: { onNavigate?: (next: string) => 
     if (loadError) {
       return (
         <div className="space-y-4">
-          <SectionHeader title="GatorAI" />
+          <SectionHeader title="Assistant" />
           <div className="settings-card space-y-3 p-5">
             <p className="flex items-center gap-2 text-sm font-semibold text-[var(--tone-warn)]">
               <IconAlertTriangle size={15} />
@@ -376,13 +386,13 @@ export function GatorAiSection({ onNavigate }: { onNavigate?: (next: string) => 
        module shows the gate instead of its settings. */
     <ModuleGate
       moduleKey="GatorAI"
-      moduleLabel="GatorAI"
+      moduleLabel="Assistant"
       onGoBack={() => onNavigate?.("modules")}
     >
     <div className="space-y-5 gw-ai">
       <SectionHeader
-        title="GatorAI"
-        actions={<PluginToggleButton moduleKey="GatorAI" moduleLabel="GatorAI" />}
+        title="Assistant"
+        actions={<PluginToggleButton moduleKey="GatorAI" moduleLabel="Assistant" />}
       />
 
       {/* Three dials and what they sound like together, side by side. */}
@@ -675,7 +685,7 @@ function Dial<T extends string>({
   );
 }
 
-/** A member asks, GatorAI answers in the picked manner. It types for a moment
+/** A member asks, Assistant answers in the picked manner. It types for a moment
  *  whenever a dial moves, then answers a word at a time. */
 function AiPreview({
   personality,
@@ -716,11 +726,11 @@ function AiPreview({
       </div>
       <div className="gw-ai-line" data-bot="true">
         <span className="gw-ai-face" data-bot="true" aria-hidden="true">
-          <GatorLogo size={18} title="" />
+          <AppLogo size={18} title="" />
         </span>
         <div className="gw-ai-said" aria-live="polite">
           <span className="gw-ai-who">
-            GatorAI <span className="gw-ai-tag">App</span>
+            Assistant <span className="gw-ai-tag">App</span>
           </span>
           {typing ? (
             <p className="gw-ai-typing" aria-label="Typing">

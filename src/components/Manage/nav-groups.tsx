@@ -92,7 +92,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: "modmail", label: "Modmail", icon: <IconMail size={16} />, moduleKey: "Modmail" },
       { id: "suggestions", label: "Suggestions", icon: <IconMessageCircleQuestion size={16} />, moduleKey: "suggestions" },
       { id: "auto-response", label: "Auto Response", icon: <IconMessage2Bolt size={16} />, moduleKey: "Auto Responder" },
-      { id: "ai", label: "GatorAI", icon: <IconMessageChatbot size={16} />, moduleKey: "GatorAI" },
+      { id: "ai", label: "Assistant", icon: <IconMessageChatbot size={16} />, moduleKey: "GatorAI" },
     ],
   },
   {

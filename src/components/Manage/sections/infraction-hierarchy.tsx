@@ -448,10 +448,12 @@ export function InfractionHierarchyCard() {
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json.detail || json.message || "Save failed");
+        savedRef.current = current;
         setLoaded((previous) => (previous ? { ...previous, types: current } : previous));
         return true;
       },
       discard: () => setDraft(savedRef.current),
+      hasChanges: () => !configValuesEqual(draftRef.current, savedRef.current),
       label: "the infraction types",
     });
   }, [guildId, registerExternalDraft]);

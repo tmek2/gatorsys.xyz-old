@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { withAuth, makeApiRequest } from "@/utils/api-middleware";
 import { deleteCached } from "@/utils/redis";
 import { hasAdminPanelAccess } from "@/utils/discord-admin";
+import { botApiUrl } from "@/server/config";
 
 
 export const dynamic = "force-dynamic";
@@ -10,9 +11,14 @@ async function handleUpdate(
   request: Request,
   context: { params: Promise<{ id: string; singleid: string }> }
 ) {
-  return withAuth(async (session, { params }) => {
-    const { id, singleid } = await params;
-    const body = await request.json();
+  return withAuth(async (session) => {
+    const { id, singleid } = await context.params;
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ message: "Invalid JSON" }, { status: 400 });
+    }
 
     if (!id || !singleid || !body) {
       return NextResponse.json(
@@ -30,11 +36,7 @@ async function handleUpdate(
     }
 
     const data = await makeApiRequest(
-      `${
-        process.env.PROD_API_URL || "https://fdny-systems-production.up.railway.app"
-      }/UpdateInfraction?auth=${
-        process.env.API_AUTH
-      }&server=${id}&id=${singleid}`,
+      botApiUrl("UpdateInfraction", { server: id, id: singleid }).toString(),
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -43,12 +45,13 @@ async function handleUpdate(
     );
 
     // Invalidate related caches
-    await deleteCached(`infraction:${id}:${singleid}`, `infractions:${id}`);
+    await deleteCached(
+      `infraction:${id}:${singleid}`,
+      `infractions:${id}`,
+    );
 
     return NextResponse.json(data);
-  }, context);
+  });
 }
 
 export const PUT = handleUpdate;
-export const HEAD = handleUpdate;
-export const OPTIONS = handleUpdate;

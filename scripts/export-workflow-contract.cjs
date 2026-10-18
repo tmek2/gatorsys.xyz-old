@@ -4,11 +4,13 @@ const path = require('node:path');
 const ts = require('typescript');
 const Module = require('node:module');
 const root = path.resolve(__dirname, '..');
-function readModule(name) {
-  const file = path.join(root, 'src/components/Manage/workflow', name + '.ts');
+function readModule(name, directory = path.join(root, 'src/components/Manage/workflow')) {
+  const file = path.resolve(directory, name + '.ts');
   const m = new Module(file, module);
   m.filename = file; m.paths = module.paths;
-  m.require = name => name === './blocks' ? readModule('blocks') : require(name);
+  m.require = name => name.startsWith('./') || name.startsWith('../')
+    ? readModule(name, path.dirname(file))
+    : require(name);
   m._compile(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText, file);
   return m.exports;
 }

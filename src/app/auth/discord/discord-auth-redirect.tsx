@@ -47,7 +47,7 @@ export function DiscordAuthRedirect({ action }: DiscordAuthRedirectProps) {
 
   return (
     <StatusScreen title="Continue with Discord">
-      <p>Gator uses your Discord account to know who you are.</p>
+      <p>Bot uses your Discord account to know who you are.</p>
       <form ref={formRef} action={action} className="gs-status-form">
         <SignInButton auto={autoTried} />
       </form>

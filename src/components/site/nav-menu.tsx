@@ -39,7 +39,7 @@ const ROWS = [
     label: "Documentation",
     detail: "Every module, written up",
     Icon: BookClosed,
-    external: true,
+    external: DOCS_URL.startsWith("http"),
   },
   {
     href: "/servers",
@@ -53,7 +53,7 @@ const ROWS = [
     label: "Support",
     detail: "The Discord server",
     Icon: Lifepreserver,
-    external: true,
+    external: SUPPORT_URL.startsWith("http"),
   },
 ];
 

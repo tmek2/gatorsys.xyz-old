@@ -16,7 +16,7 @@ export function isModuleEnabled(
     );
   }
   if (moduleKey === "GatorAI") {
-    // GatorAI predates the Modules map and has its own enabled flag: a stored
+    // Assistant predates the Modules map and has its own enabled flag: a stored
     // Modules value wins; otherwise the assistant's own setting decides, as the
     // bot resolves it.
     const stored = value("Modules.GatorAI");

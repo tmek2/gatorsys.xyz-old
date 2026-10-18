@@ -83,7 +83,7 @@ function pages(signedIn: boolean): PaletteEntry[] {
     {
       id: "home",
       title: "Homepage",
-      note: "What Gator does, and what it costs.",
+      note: "What Bot does, and what it costs.",
       href: "/",
       external: false,
       Icon: IconHome,
@@ -162,7 +162,7 @@ function pages(signedIn: boolean): PaletteEntry[] {
     {
       id: "terms",
       title: "Terms",
-      note: "The terms of using Gator.",
+      note: "The terms of using Bot.",
       href: "/terms",
       external: false,
       Icon: IconFileText,
@@ -371,6 +371,7 @@ export function CommandPalette({
 
   useEffect(() => {
     if (!open) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setQuery("");
     setCursor(0);
     /* Locks page scroll under the sheet (setting `overflow: hidden` on <body>
@@ -378,7 +379,11 @@ export function CommandPalette({
        see scroll-lock.ts). The numbers are this sheet's entrance and exit
        durations from command-palette.css plus a frame, so the lock's expensive
        style recalculation never lands mid-animation. */
-    return lockScroll({ arriving: 270, leaving: 200 });
+    const release = lockScroll({ arriving: 270, leaving: 200 });
+    return () => {
+      release();
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
+    };
   }, [open]);
 
   // A new query is a new list, so the cursor resets.
@@ -430,6 +435,7 @@ export function CommandPalette({
         event.preventDefault();
         setCursor(Math.max(0, ordered.length - 1));
       } else if (event.key === "Enter") {
+        if (!(event.target instanceof Element) || !event.target.closest('input, [role="option"]')) return;
         event.preventDefault();
         const hit = ordered[cursor];
         if (hit) go(hit);
@@ -459,7 +465,7 @@ export function CommandPalette({
       </button>
 
       {mounted ? (
-        <Sheet state={state} onClose={() => setOpen(false)} onKeyDown={onKey}>
+        <Sheet active={open} state={state} onClose={() => setOpen(false)} onKeyDown={onKey}>
           <div className="g-cmd-field">
             <IconSearch size={17} stroke={1.9} />
             <input
@@ -468,7 +474,7 @@ export function CommandPalette({
               onChange={(event) => setQuery(event.target.value)}
               placeholder={
                 narrow
-                  ? "Search Gator"
+                  ? "Search Bot"
                   : extra?.length
                     ? `Search ${extraSection ?? "settings"}, pages and docs`
                     : "Search pages, documentation, and modules"
@@ -516,6 +522,7 @@ export function CommandPalette({
                       data-cursor={seat === cursor ? "true" : "false"}
                       className="g-cmd-row"
                       onPointerMove={() => setCursor(seat)}
+                      onFocus={() => setCursor(seat)}
                       onClick={() => go(entry)}
                     >
                       <span className="g-cmd-icon" aria-hidden="true">
@@ -564,16 +571,47 @@ export function CommandPalette({
 /* The sheet in a portal: the header has its own stacking context, and a dialog
    inside it cannot reliably sit above the page. */
 function Sheet({
+  active,
   state,
   onClose,
   onKeyDown,
   children,
 }: {
+  active: boolean;
   state: "from" | "to";
   onClose: () => void;
   onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
   children: ReactNode;
 }) {
+  const dialog = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!active) return;
+    const focusable = () => Array.from(dialog.current?.querySelectorAll<HTMLElement>(
+      'input:not(:disabled), button:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])',
+    ) || []).filter((node) => !node.closest("[hidden], [inert]") &&
+      getComputedStyle(node).display !== "none" && getComputedStyle(node).visibility !== "hidden");
+    const contain = (event: FocusEvent) => {
+      if (!dialog.current?.contains(event.target as Node)) focusable()[0]?.focus();
+    };
+    const tab = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+      const nodes = focusable();
+      const first = nodes[0], last = nodes.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+    document.addEventListener("focusin", contain);
+    document.addEventListener("keydown", tab, true);
+    return () => {
+      document.removeEventListener("focusin", contain);
+      document.removeEventListener("keydown", tab, true);
+    };
+  }, [active]);
   /* Read directly rather than set after an effect, so the portal's contents
      exist on the frame the field takes focus. Nothing renders on the server:
      the sheet only exists once opened. */
@@ -582,7 +620,9 @@ function Sheet({
   return createPortal(
     <div className="g-cmd-scrim" data-state={state} onPointerDown={onClose}>
       <div
+        ref={dialog}
         className="g-cmd"
+        inert={!active}
         role="dialog"
         aria-modal="true"
         aria-label="Search"

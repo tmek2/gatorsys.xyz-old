@@ -15,18 +15,25 @@ export interface BotIdentity {
   avatar: string;
 }
 
-const FALLBACK: BotIdentity = { name: "Gator", avatar: "/gator-logo.png" };
+const FALLBACK: BotIdentity = { name: "Bot", avatar: "/icon.svg" };
 
-type Entry = { saved: BotIdentity; live: BotIdentity | null; loading: boolean };
+const RETRY_COOLDOWN_MS = 30_000;
+
+type Entry = {
+  saved: BotIdentity;
+  live: BotIdentity | null;
+  loading: boolean;
+  loaded: boolean;
+  retryAfter: number;
+};
 const store = new Map<string, Entry>();
-const loaded = new Set<string>();
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((listener) => listener());
 
 function entryFor(guildId: string): Entry {
   let entry = store.get(guildId);
   if (!entry) {
-    entry = { saved: FALLBACK, live: null, loading: false };
+    entry = { saved: FALLBACK, live: null, loading: false, loaded: false, retryAfter: 0 };
     store.set(guildId, entry);
   }
   return entry;
@@ -44,23 +51,32 @@ export function identityFromProfile(profile: {
   };
 }
 
-function load(guildId: string) {
+async function load(guildId: string, force = false) {
   const entry = entryFor(guildId);
-  if (entry.loading || loaded.has(guildId)) return;
+  if (entry.loading || (!force && (entry.loaded || Date.now() < entry.retryAfter))) return;
   entry.loading = true;
-  fetch(`/api/manage/${guildId}/botprofile`)
-    .then((response) => (response.ok ? response.json() : null))
-    .then((json) => {
-      if (json?.profile) {
-        entry.saved = identityFromProfile(json.profile);
-        emit();
-      }
-    })
-    .catch(() => {})
-    .finally(() => {
-      entry.loading = false;
-      loaded.add(guildId);
-    });
+  try {
+    const response = await fetch(`/api/manage/${guildId}/botprofile`);
+    if (!response.ok) throw new Error("Profile unavailable");
+    const json = await response.json();
+    if (!json?.profile || typeof json.profile !== "object" || Array.isArray(json.profile)) {
+      throw new Error("Profile unavailable");
+    }
+    entry.saved = identityFromProfile(json.profile);
+    entry.loaded = true;
+    entry.retryAfter = 0;
+    emit();
+  } catch {
+    // Refocusing or reopening a preview can retry without hammering an outage.
+    entry.retryAfter = Date.now() + RETRY_COOLDOWN_MS;
+  } finally {
+    entry.loading = false;
+  }
+}
+
+/** Explicit refresh after a profile changes outside the current editor. */
+export function refreshBotIdentity(guildId: string) {
+  return load(guildId, true);
 }
 
 /** Customization's draft, shown everywhere until it is saved or dropped. */
@@ -75,6 +91,8 @@ export function settleBotIdentity(guildId: string, saved: BotIdentity) {
   const entry = entryFor(guildId);
   entry.saved = saved;
   entry.live = null;
+  entry.loaded = true;
+  entry.retryAfter = 0;
   emit();
 }
 
@@ -90,7 +108,11 @@ export function useBotIdentity(guildId: string | undefined): BotIdentity {
   }, [guildId]);
   const identity = React.useSyncExternalStore(subscribe, read, () => FALLBACK);
   React.useEffect(() => {
-    if (guildId) load(guildId);
+    if (!guildId) return;
+    const retry = () => { void load(guildId); };
+    retry();
+    window.addEventListener("focus", retry);
+    return () => window.removeEventListener("focus", retry);
   }, [guildId]);
   return identity;
 }

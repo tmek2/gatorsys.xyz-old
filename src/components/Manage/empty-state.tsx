@@ -57,7 +57,7 @@ export function EmptyState({
         <DoodleMark name={doodle} size={52} className="gator-empty-doodle" />
       ) : (
         <Image
-          src="/gator-logo.png"
+          src="/icon.svg"
           alt=""
           width={34}
           height={37}

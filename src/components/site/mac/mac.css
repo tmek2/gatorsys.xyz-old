@@ -4,8 +4,8 @@
    Unlayered, like the rest of the landing: Tailwind v3's preflight is unlayered
    and beats every layered rule.
 
-   A window you scroll up into, laid out as a file browser of everything Gator
-   does. The chrome is Gator's own rather than macOS's: a shallow left-aligned
+   A window you scroll up into, laid out as a file browser of everything Bot
+   does. The chrome is Bot's own rather than macOS's: a shallow left-aligned
    top bar, plain icon buttons that get a soft squircle on hover, window
    controls as a quiet cluster at the trailing end, a compact channel-list
    sidebar, and one charcoal ladder from navigation (dark) to content (light).
@@ -55,7 +55,7 @@
 
    How much of the window shows before scrolling. On a phone the hero's content
    is sized by width and ends about 440px down, so the window takes the
-   remaining height (up to 320px) and the "Explore Gator" handle stays just
+   remaining height (up to 320px) and the "Explore Bot" handle stays just
    above it on every phone size. The floor still gives way on short phones so
    the preview never covers a control. */
 @media (max-width: 640px) {

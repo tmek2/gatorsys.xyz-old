@@ -215,7 +215,7 @@ function ActionEditor({
             <TextField
               value={step.emoji || ""}
               maxLength={100}
-              placeholder="Emoji, e.g. ✅ or :gator:"
+              placeholder="Emoji, e.g. ✅ or :wave:"
               onChange={(next) => onChange({ ...step, emoji: next })}
             />
           </div>
@@ -633,7 +633,7 @@ export function AutoResponseSection({ onNavigate }: { onNavigate?: (next: string
       ) : responders.length === 0 && !editing ? (
         <EmptyState
           title="No auto responses yet"
-          hint="Add a trigger and the gator replies the moment someone says it."
+          hint="Add a trigger to reply automatically when a message matches it."
         />
       ) : (
         <PresenceList

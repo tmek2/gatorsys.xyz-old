@@ -11,7 +11,7 @@ import {
 } from "@tabler/icons-react";
 import { UserMenu } from "@/components/user-menu";
 import { ThemeToggle } from "@/components/Manage/theme-toggle";
-import { NAV_LINKS, SITE_NAME, SUPPORT_URL } from "@/config/site";
+import { NAV_LINKS, SITE_NAME, SUPPORT_URL, DOCS_URL } from "@/config/site";
 
 type HeaderShellProps = {
   user?: {
@@ -79,8 +79,8 @@ export function HeaderShell({ user, pinned = false }: HeaderShellProps) {
             className="flex min-w-0 items-center gap-2 justify-self-start"
           >
             <img
-              src="/gator-logo.png"
-              alt="Gator"
+              src="/icon.svg"
+              alt="Bot"
               className="h-8 w-7 shrink-0 object-contain"
             />
             <span
@@ -242,19 +242,19 @@ export function HeaderShell({ user, pinned = false }: HeaderShellProps) {
               [
                 "Dashboard",
                 "/servers",
-                "Manage the communities connected to Gator.",
+                "Manage the communities connected to Bot.",
               ],
               [
                 "Features",
                 "/#features",
-                "Explore Gator's moderation and staff tools.",
+                "Explore Bot's moderation and staff tools.",
               ],
               [
                 "Documentation",
-                "https://docs.gatorsys.xyz",
-                "Read the full Gator documentation.",
+                DOCS_URL,
+                "Read the full Bot documentation.",
               ],
-              ["Support", SUPPORT_URL, "Get help from the Gator team."],
+              ["Support", SUPPORT_URL, "Get help from the Bot team."],
             ].filter(
               ([label, , description]) =>
                 !term || `${label} ${description}`.toLowerCase().includes(term),
@@ -263,7 +263,7 @@ export function HeaderShell({ user, pinned = false }: HeaderShellProps) {
               <div
                 role="dialog"
                 aria-modal="true"
-                aria-label="Search Gator"
+                aria-label="Search Bot"
                 onClick={() => setSearchOpen(false)}
                 className="fixed inset-0 z-[60] flex cursor-default items-center justify-center bg-black/60 px-4 backdrop-blur-md"
               >

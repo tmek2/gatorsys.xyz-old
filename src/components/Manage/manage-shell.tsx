@@ -49,7 +49,6 @@ import { ConnectionRolesSection } from "./sections/connection-roles";
 import { DailyQuestionsSection } from "./sections/daily-questions";
 import { PermissionsSection } from "./sections/permissions";
 import { RobloxSection } from "./sections/roblox";
-import { GATOR_JOKES, GATOR_SECRETS, randomGatorSecret } from "./gator-lines";
 import { NAV_GROUPS } from "./nav-groups";
 import { travel, warmTrip } from "@/utils/travel";
 import { burstFrom } from "@/components/site/burst";
@@ -59,7 +58,7 @@ import { useSafeOutsidePress } from "./safe-area";
 import { useDragDismiss } from "./drag-dismiss";
 import { PhoneDock } from "./phone-dock";
 import { SectionIdentityContext } from "./section-identity";
-import { GatorLogo } from "@/components/site/gator-logo";
+import { AppLogo } from "@/components/site/app-logo";
 import {
   CommandPalette,
   type PaletteEntry,
@@ -515,89 +514,8 @@ function shakePane(node: HTMLElement | null) {
 }
 
 /* ↑ ↑ ↓ ↓ ← → ← → B A, anywhere on the dashboard that is not a field. */
-const KONAMI = ["arrowup", "arrowup", "arrowdown", "arrowdown", "arrowleft", "arrowright", "arrowleft", "arrowright", "b", "a"];
 
-function GatorPun() {
-  const [index, setIndex] = useState(0);
-  // Somebody setting up their server after midnight is greeted as such.
-  const [text, setText] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    const hour = new Date().getHours();
-    return hour < 5 ? "Up late? So is the gator." : null;
-  });
-  const [clicks, setClicks] = useState(0);
-  const [spin, setSpin] = useState(false);
 
-  useEffect(() => {
-    let at = 0;
-    const onKey = (event: KeyboardEvent) => {
-      const el = event.target as HTMLElement | null;
-      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
-      const key = event.key.toLowerCase();
-      at = key === KONAMI[at] ? at + 1 : key === KONAMI[0] ? 1 : 0;
-      if (at === KONAMI.length) {
-        at = 0;
-        setSpin(true);
-        setText("Cheat code accepted. Nothing unlocked, but the gator is impressed.");
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  function next() {
-    const count = clicks + 1;
-    setClicks(count);
-    if (count % 25 === 0) setSpin(true);
-    if (Math.random() < 1 / 12) {
-      setText(GATOR_SECRETS[Math.floor(Math.random() * GATOR_SECRETS.length)]);
-    } else {
-      setText(null);
-      setIndex((current) => (current + 1) % GATOR_JOKES.length);
-    }
-  }
-
-  /* Keyed on the press, so each joke rises in out of a blur. Hyphenated words
-     stay whole ("Gator-ade" is the joke). */
-  const line = text ?? GATOR_JOKES[index];
-  return (
-    <HoverTip
-      label={
-        <span key={clicks} className="gw-joke">
-          {line.split(" ").map((word, i) =>
-            word.includes("-") ? (
-              <React.Fragment key={i}>
-                <span className="gw-joke-whole">{word}</span>{" "}
-              </React.Fragment>
-            ) : (
-              `${word} `
-            ),
-          )}
-        </span>
-      }
-      side="top"
-      align="end"
-    >
-      <button
-        type="button"
-        className="gw-pun"
-        aria-label="Another gator pun"
-        onClick={next}
-      >
-        <Image
-          src="/gator-logo.png"
-          alt=""
-          // The mark is 323x352, not square; declared square, the stylesheet's
-          // `height: auto` stretched it and Next warned on every page.
-          width={15}
-          height={16}
-          onAnimationEnd={() => setSpin(false)}
-          className={spin ? "gator-barrel-roll" : ""}
-        />
-      </button>
-    </HoverTip>
-  );
-}
 
 /** Whether a window has been shown in this visit yet (see the rail). */
 let shellShown = false;
@@ -748,13 +666,7 @@ function ShellInner({
   useEffect(() => {
     shellShown = true;
     setRail(railWanted());
-    try {
-      // eslint-disable-next-line no-console
-      console.log(
-        `%c${randomGatorSecret()}`,
-        "color:#f7a8c4;font-weight:700;font-size:12px",
-      );
-    } catch {}
+
   }, []);
 
   /* Cmd/Ctrl+S saves (instead of the browser's "save page as"). */
@@ -764,7 +676,7 @@ function ShellInner({
       event.preventDefault();
       if (dirty && !saving) void save(SECTION_LABELS[section] || "Overview");
       // A habit, pressed with nothing to save: say so rather than do nothing.
-      else if (!dirty && !saving) setNotice({ kind: "saved", text: "Already saved. The gator checked twice.", id: "already-saved" });
+      else if (!dirty && !saving) setNotice({ kind: "saved", text: "Already saved.", id: "already-saved" });
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -953,16 +865,16 @@ function ShellInner({
   const chrome = (
     <div className="gw-bar">
       <div className="gw-zone">
-        <HoverTip label="Gator" side="bottom" align="start">
+        <HoverTip label="Bot" side="bottom" align="start">
           <Link
             className="gw-mark"
             href="/"
-            aria-label="Gator"
+            aria-label="Bot"
             onClick={leaveHome}
             onPointerEnter={() => warmTrip(router, "/")}
             onFocus={() => warmTrip(router, "/")}
           >
-            <GatorLogo size={22} />
+            <AppLogo size={22} />
           </Link>
         </HoverTip>
         <ServerTab />
@@ -1027,7 +939,7 @@ function ShellInner({
         <div className="gw" data-rail="false" data-guild={shownGuild}>
           {chrome}
           <div className="gw-stop">
-            <Image src="/gator-logo.png" alt="" width={46} height={50} className="opacity-40" />
+            <Image src="/icon.svg" alt="" width={46} height={50} className="opacity-40" />
             <h2>{forbidden ? "No access to this server" : "Can't reach the bot"}</h2>
             <p>
               {forbidden
@@ -1170,7 +1082,7 @@ function ShellInner({
             aria-haspopup="dialog"
             aria-expanded={sheet}
           >
-            <span className="gw-path-server">{meta?.guild.name ?? "Gator"}</span>
+            <span className="gw-path-server">{meta?.guild.name ?? "Bot"}</span>
             <span className="gw-path-sep" aria-hidden="true" />
             <span className="gw-path-here">{activeLabel}</span>
             <IconSelector className="gw-path-chev" size={13} stroke={2.2} />
@@ -1186,7 +1098,6 @@ function ShellInner({
               {/* Every module on is a server using all of it, and gets said so. */}
               {modulesOn === MODULE_TOGGLES.length ? "All on" : `${modulesOn}/${MODULE_TOGGLES.length} on`}
             </span>
-            <GatorPun />
           </span>
         </div>
       </div>
@@ -1224,9 +1135,11 @@ let arrivedByTransition = "";
 
 export function ManageShell({
   guildId,
+  viewerId,
   initialPath,
 }: {
   guildId: string;
+  viewerId: string;
   initialPath: string;
 }) {
   const [sectionPath, setSectionPath] = useState(initialPath || "overview");
@@ -1293,7 +1206,7 @@ export function ManageShell({
   }, []);
 
   return (
-    <ManageProvider guildId={guildId}>
+    <ManageProvider guildId={guildId} viewerId={viewerId}>
       <ShellInner sectionPath={sectionPath} onNavigate={navigate} />
     </ManageProvider>
   );

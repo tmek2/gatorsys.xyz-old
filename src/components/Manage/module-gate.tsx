@@ -99,7 +99,7 @@ export function ModuleGate({
   }
   return (
     <div className="relative">
-      <div aria-hidden className="gw-gate-behind pointer-events-none select-none">
+      <div aria-hidden inert className="gw-gate-behind pointer-events-none select-none">
         {children}
       </div>
       {card(false)}

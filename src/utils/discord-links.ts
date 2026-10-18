@@ -1,4 +1,4 @@
-const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || "1438857340588916766";
+import { BOT_CLIENT_ID } from "@/config/site";
 const BOT_PERMISSIONS = "429765553360";
 
 export function getDiscordBotInviteUrl(options: {
@@ -6,8 +6,9 @@ export function getDiscordBotInviteUrl(options: {
   redirectUri?: string;
   state?: string;
 } = {}) {
+  if (!BOT_CLIENT_ID) return "/setup#discord";
   const params = new URLSearchParams({
-    client_id: DISCORD_CLIENT_ID,
+    client_id: BOT_CLIENT_ID,
     permissions: BOT_PERMISSIONS,
     scope: "bot applications.commands",
   });

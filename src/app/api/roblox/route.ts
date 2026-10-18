@@ -1,22 +1,44 @@
 import { NextResponse } from "next/server";
+import { fetchWithRetry } from "@/utils/api-helpers";
 
-export async function GET(req: Request) {
-    try {
-        const { searchParams } = new URL(req.url);
-        const userId = searchParams.get("id");
+type RobloxUser = { name?: unknown };
+type Headshots = { data?: Array<{ state?: string; imageUrl?: unknown }> };
 
-        if (!userId) {
-            return NextResponse.json({ error: "Missing user ID" }, { status: 400 });
-        }
+export async function GET(request: Request) {
+  const userId = new URL(request.url).searchParams.get("id") || "";
+  if (!/^[1-9]\d{0,19}$/.test(userId)) {
+    return NextResponse.json({ error: "A numeric Roblox user ID is required" }, { status: 400 });
+  }
 
-        const userResponse = await fetch(`https://users.roblox.com/v1/users/${userId}`);
-        const userData = await userResponse.json();
-
-        const avatarResponse = await fetch(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=png`);
-        const avatarData = await avatarResponse.json();
-
-        return NextResponse.json({ username: userData.name, avatarUrl: avatarData.data[0].imageUrl });
-    } catch (error) {
-        return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 });
+  try {
+    const user = await fetchWithRetry<RobloxUser>(
+      `https://users.roblox.com/v1/users/${userId}`,
+      { cache: "no-store" }, 1, { timeoutMs: 4000 },
+    );
+    if (typeof user?.name !== "string" || !user.name.trim()) {
+      return NextResponse.json({ error: "Roblox returned an invalid user" }, { status: 502 });
     }
+
+    // A delayed or unavailable headshot must not hide an otherwise valid user.
+    let avatarUrl: string | null = null;
+    try {
+      const avatars = await fetchWithRetry<Headshots>(
+        `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=png`,
+        { cache: "no-store" }, 1, { timeoutMs: 4000 },
+      );
+      const image = Array.isArray(avatars?.data) ? avatars.data[0]?.imageUrl : null;
+      if (typeof image === "string" && /^https:\/\//i.test(image)) avatarUrl = image;
+    } catch {
+      // The client renders an initial when no avatar is available.
+    }
+    return NextResponse.json({ username: user.name, avatarUrl });
+  } catch (error) {
+    const status = Number((error as { status?: number })?.status);
+    if (status === 404) return NextResponse.json({ error: "Roblox user not found" }, { status: 404 });
+    const timedOut = (error as Error)?.name === "AbortError";
+    return NextResponse.json(
+      { error: timedOut ? "Roblox took too long to respond" : "Could not load this Roblox user" },
+      { status: timedOut ? 504 : status === 429 ? 503 : 502 },
+    );
+  }
 }

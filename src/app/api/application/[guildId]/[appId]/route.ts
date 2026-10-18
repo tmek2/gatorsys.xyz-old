@@ -52,7 +52,6 @@ export const POST = (request: Request, context: { params: Promise<Params> }) =>
         appId,
         userId: session.user.id,
         status: response.status,
-        detail: (await response.clone().text()).slice(0, 500),
       });
     }
     return relayBotResponse(response);

@@ -1,4 +1,4 @@
-/* Astryx in Gator's colours. Nothing here restyles an Astryx component: it
+/* Astryx in Bot's colours. Nothing here restyles an Astryx component: it
    rebinds the semantic tokens they read (per Astryx's own principles).
 
    The neutral theme is scoped as `@scope ([data-astryx-theme="neutral"]) to
@@ -62,7 +62,7 @@
 /* Preflight shim: Astryx styles live in `@layer astryx-base`, and Tailwind v3's
    unlayered preflight overrides every layered rule, resetting colours, fills,
    margins, padding and font size on Astryx buttons. `revert-layer` removes the
-   unlayered values inside a Gator root so the component styles apply. The list
+   unlayered values inside a Bot root so the component styles apply. The list
    is preflight's own reset list; update it if Tailwind's grows. */
 .g-root :where([class*="astryx-"]) {
   /* the form-control reset */

@@ -32,7 +32,7 @@ export const GET = (request: Request) =>
         {
           error:
             error instanceof BotUnreachableError
-              ? "Gator's bot is restarting or unreachable right now. Try again in a minute."
+              ? "Bot's bot is restarting or unreachable right now. Try again in a minute."
               : 'Failed to fetch mutual servers',
           details: error.message,
         },

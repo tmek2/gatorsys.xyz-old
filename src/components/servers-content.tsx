@@ -510,7 +510,7 @@ export function ServersContent({
           <div className="servers-section-heading servers-section-heading-row">
             <div>
               <h2>Departments</h2>
-              <p>Gator departments you are in.</p>
+              <p>Bot departments you are in.</p>
             </div>
             <RippleButton
               onClick={() => setJoinOpen(true)}
@@ -551,7 +551,7 @@ export function ServersContent({
           </button>
         )}
         <a href={SUPPORT_URL} target="_blank" rel="noreferrer">
-          Need a hand? Gator support <IconArrowRight size={14} />
+          Need a hand? Bot support <IconArrowRight size={14} />
         </a>
       </section>
       {joinOpen ? (

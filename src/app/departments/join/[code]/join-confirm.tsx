@@ -175,7 +175,7 @@ export function JoinConfirmClient({
               <div className="p-4 pt-8">
                 <h2 className="text-base font-extrabold text-white">{department.name}</h2>
                 <p className="cool-text mt-1 line-clamp-2 text-xs">
-                  {department.description || "A department on Gator."}
+                  {department.description || "A department on Bot."}
                 </p>
                 <p className="cool-text mt-3 inline-flex items-center gap-2 text-xs">
                   <IconUsers size={13} />

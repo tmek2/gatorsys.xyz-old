@@ -14,7 +14,7 @@ interface Params {
 
 const MIN_GATORAI_COOLDOWN_SECONDS = 30;
 
-/** GatorAI's per-server behaviour: the personality and filter dials, where it
+/** Assistant's per-server behaviour: the personality and filter dials, where it
  *  is allowed to answer, and the incident banner. */
 export const GET = (request: Request, context: { params: Promise<Params> }) =>
   withAuth<Params>(async (session) => {

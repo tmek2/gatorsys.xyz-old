@@ -361,6 +361,7 @@ function PickerShell({
   repositionOnScroll = true,
   refreshable = false,
   noun = "option",
+  disabled = false,
 }: {
   options: PickerOption[];
   selected: string[];
@@ -376,8 +377,10 @@ function PickerShell({
   refreshable?: boolean;
   /** What one option is called, for the count in the foot. */
   noun?: string;
+  disabled?: boolean;
 }) {
   const { open, setOpen, ref, menuRef } = usePopover();
+  useEffect(() => { if (disabled) setOpen(false); }, [disabled, setOpen]);
   const phone = usePhoneSheet();
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => {
@@ -453,6 +456,7 @@ function PickerShell({
       ?.scrollIntoView({ block: "nearest" });
   }, [active, open]);
   function pick(option: PickerOption) {
+    if (disabled) return;
     onToggle(option.id);
     if (!multi) setOpen(false);
   }
@@ -490,6 +494,7 @@ function PickerShell({
     <div className="relative" ref={ref}>
       <button
         type="button"
+        disabled={disabled}
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-haspopup="listbox"
@@ -572,7 +577,7 @@ function PickerShell({
           <IconChevronDown size={16} className="gw-picker-chev" aria-hidden="true" />
         </span>
       </button>
-      {open ? (
+      {open && !disabled ? (
         <PortalMenu
           anchorRef={ref}
           menuRef={menuRef}
@@ -896,6 +901,7 @@ export function SelectField({
   searchPosition = "top",
   repositionOnScroll = true,
   placeholder = "Select…",
+  disabled = false,
 }: {
   value: string | null | undefined;
   onChange: (next: string | null) => void;
@@ -908,6 +914,7 @@ export function SelectField({
   placeholder?: string;
   searchPosition?: "top" | "bottom";
   repositionOnScroll?: boolean;
+  disabled?: boolean;
 }) {
   const pickerOptions: PickerOption[] = options.map((option) => ({
     id: option.value,
@@ -917,6 +924,7 @@ export function SelectField({
   }));
   return (
     <PickerShell
+      disabled={disabled}
       options={pickerOptions}
       selected={value ? [String(value)] : []}
       multi={false}

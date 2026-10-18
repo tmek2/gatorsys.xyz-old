@@ -5,6 +5,7 @@ import { isLive, viewerFromSession } from "@/utils/viewer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { RobloxAccountCard } from "@/components/roblox-account-card";
 import { TidyUrl } from "@/components/tidy-url";
+import { localRedirectTarget } from "@/utils/local-redirect";
 import { DotField } from "@/components/site/dot-field";
 import "@/components/site/tokens.css";
 import "@/components/site/astryx-theme.css";
@@ -20,9 +21,7 @@ export default async function RobloxAccountPage({
 }) {
   const session = await auth();
   const params = await searchParams;
-  const callbackUrl = params.callbackUrl?.startsWith("/")
-    ? params.callbackUrl
-    : "/servers";
+  const callbackUrl = localRedirectTarget(params.callbackUrl);
   if (!session?.user?.id || !isLive(session))
     redirect(
       `/auth/discord?callbackUrl=${encodeURIComponent(`/account/roblox?callbackUrl=${callbackUrl}`)}`,

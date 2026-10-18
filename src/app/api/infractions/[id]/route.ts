@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth, makeApiRequest } from "@/utils/api-middleware";
 import { hasAdminPanelAccess } from "@/utils/discord-admin";
+import { botApiUrl } from "@/server/config";
 
 export const dynamic = "force-dynamic";
 
@@ -26,9 +27,7 @@ export const GET = (request: Request, context: { params: Promise<{ id: string }>
 
    
     const data = await makeApiRequest(
-      `${
-        process.env.PROD_API_URL || "https://fdny-systems-production.up.railway.app"
-      }/infractions?auth=${process.env.API_AUTH}&server=${id}`,
+      botApiUrl("infractions", { server: id }).toString(),
       {
         method: "GET" ,
         headers: { "Content-Type": "application/json" }

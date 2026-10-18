@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { invalidateManageCache } from "@/utils/manage-cache";
 import { quoteLongIntegers } from "./long-ids";
+import { botApiUrl } from "@/server/config";
 
 /**
  * Server-side helpers for the guild dashboard. Every call proxies to the bot's
@@ -8,27 +9,8 @@ import { quoteLongIntegers } from "./long-ids";
  * manage the guild.
  */
 
-const BOT_API_BASE =
-  process.env.PROD_API_URL || "https://fdny-systems-production.up.railway.app";
-
-function botAuth(): string {
-  const auth = process.env.API_AUTH?.trim();
-  if (!auth || auth.startsWith("#")) {
-    throw new Error("API_AUTH is not configured");
-  }
-  return auth;
-}
-
-// Hard ceiling on every bot API call, so a slow, sleeping or restarting bot
-// gives a fast, catchable 504 instead of a function that hangs until the
-// platform kills it.
-//
-// It must sit above the worst real read: on a throttled shared database tier a
-// large config document (about 1.1MB) takes around 11.5s to read. A timeout
-// below that aborts the very read that would warm the bot's cache, so the guild
-// fails forever. Above it, the first load is slow once and later loads are
-// cached. The bot's own `socketTimeoutMS` (20s) still surfaces a truly hung
-// connection as a bot-side error.
+// Leave room for cold bot reads while returning a recoverable error before the
+// hosting platform's request limit. Keep this above the bot's database timeout.
 const BOT_API_TIMEOUT_MS = 25_000;
 
 async function botFetch(
@@ -38,11 +20,17 @@ async function botFetch(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), BOT_API_TIMEOUT_MS);
   try {
-    return await fetch(url, {
+    const response = await fetch(url, {
       ...init,
       cache: "no-store",
       signal: controller.signal,
     });
+    // The deadline includes the body, not only the arrival of response headers.
+    const body = [204, 205, 304].includes(response.status) ? null : await response.arrayBuffer();
+    const headers = new Headers(response.headers);
+    headers.delete("content-length");
+    headers.delete("content-encoding");
+    return new Response(body, { status: response.status, statusText: response.statusText, headers });
   } catch (error) {
     // Normalize aborts/network failures into a 504 the caller can relay
     // cleanly instead of throwing an unhandled error up the request.
@@ -68,11 +56,7 @@ export async function botDashboardGet(
   path: string,
   params: Record<string, string>,
 ): Promise<Response> {
-  const url = new URL(`${BOT_API_BASE}/${path}`);
-  url.searchParams.set("auth", botAuth());
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.set(key, value);
-  }
+  const url = botApiUrl(path, params);
   return botFetch(url.toString());
 }
 
@@ -87,11 +71,7 @@ export async function botDashboardPost(
   params: Record<string, string>,
   body: unknown,
 ): Promise<Response> {
-  const url = new URL(`${BOT_API_BASE}/${path}`);
-  url.searchParams.set("auth", botAuth());
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.set(key, value);
-  }
+  const url = botApiUrl(path, params);
   const response = await botFetch(url.toString(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -131,6 +111,7 @@ export async function relayBotResponse(
   { idsAsText = false }: { idsAsText?: boolean } = {},
 ) {
   const raw = await response.text();
+  let status = response.status;
   let data: unknown;
   try {
     data = raw ? JSON.parse(idsAsText ? quoteLongIntegers(raw) : raw) : {};
@@ -139,7 +120,6 @@ export async function relayBotResponse(
       status: response.status,
       url: response.url?.split("?")[0],
       contentType: response.headers.get("content-type"),
-      body: raw.slice(0, 500),
     });
     data = {
       message:
@@ -147,6 +127,10 @@ export async function relayBotResponse(
           ? "The bot API failed while processing this request. Please try again."
           : "The bot API returned an invalid response.",
     };
+    if (response.ok) status = 502;
   }
-  return NextResponse.json(data, { status: response.status });
+  if ([204, 205, 304].includes(response.status)) {
+    return new Response(null, { status: response.status });
+  }
+  return NextResponse.json(data, { status });
 }

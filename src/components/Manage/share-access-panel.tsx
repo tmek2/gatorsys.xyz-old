@@ -89,9 +89,11 @@ export function ShareAccessPanel({
             type: "user" as const,
           }),
         );
-        setOptions([...roleOptions, ...memberOptions]);
+        setOptions([...new Map<string, Option>(
+          [...roleOptions, ...memberOptions].map((option) => [option.id, option]),
+        ).values()]);
       } catch {
-        /* the picker still works with free-typed people */
+        /* Existing grants remain editable if the directory is unavailable. */
       }
     })();
     return () => {
@@ -110,9 +112,10 @@ export function ShareAccessPanel({
 
   const chosen = new Set(entries.map((entry) => entry.id));
   const results = useMemo(() => {
-    const term = query.trim().toLowerCase();
+    const term = query.trim().toLowerCase().replace(/^@/, "");
     const list = options.filter(
-      (option) => !chosen.has(option.id) && (!term || option.name.toLowerCase().includes(term)),
+      (option) => !chosen.has(option.id) &&
+        (!term || `${option.name} ${option.handle || ""}`.toLowerCase().includes(term)),
     );
     return list.slice(0, 8);
   }, [options, query, entries]);
@@ -136,7 +139,6 @@ export function ShareAccessPanel({
     // Closes the list after adding, so it does not cover the new grant.
     setQuery("");
     setFocused(false);
-    setQuery("");
   }
 
   // Grants only come from the list of real roles and members; typed text never
@@ -164,7 +166,6 @@ export function ShareAccessPanel({
               if (event.key === "Enter") {
                 event.preventDefault();
                 if (results.length) addEntry(results[0]);
-                else if (results.length) addEntry(results[0]);
               }
             }}
             placeholder="Search people and roles"
@@ -177,7 +178,7 @@ export function ShareAccessPanel({
             {results.length ? (
               <>
                 <p className="px-3 pb-1 pt-1 text-[10px] font-bold uppercase tracking-wider text-white/50">
-                  Discord Roles
+                  People and roles
                 </p>
                 {results.map((option) => (
                   <button
@@ -186,6 +187,9 @@ export function ShareAccessPanel({
                     onMouseDown={(event) => {
                       event.preventDefault();
                       addEntry(option);
+                    }}
+                    onClick={(event) => {
+                      if (event.detail === 0) addEntry(option);
                     }}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-white/80 hover:bg-white/[0.06]"
                   >
@@ -242,7 +246,7 @@ export function ShareAccessPanel({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-white/85">{entry.name}</p>
                 <p className="text-[11px] text-white/50">
-                  {entry.type === "user" ? "Person" : entry.type === "gator" ? "Gator role" : "Discord role"}
+                  {entry.type === "user" ? "Person" : entry.type === "gator" ? "Bot role" : "Discord role"}
                 </p>
               </div>
               {/* Each grant says what it allows. */}

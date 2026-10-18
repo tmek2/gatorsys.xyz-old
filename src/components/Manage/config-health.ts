@@ -40,7 +40,7 @@ export function fieldProblem(
   const channels = meta?.channels;
   const roles = meta?.roles;
 
-  if ((type === "channel" || type === "channels") && channels?.length) {
+  if ((type === "channel" || type === "channels") && Array.isArray(channels)) {
     const gone = missing(value, idSet(channels));
     if (!gone.length) return null;
     const one = gone.length === 1;
@@ -52,7 +52,7 @@ export function fieldProblem(
     };
   }
 
-  if ((type === "role" || type === "roles" || type === "ladder") && roles?.length) {
+  if ((type === "role" || type === "roles" || type === "ladder") && Array.isArray(roles)) {
     const gone = missing(value, idSet(roles));
     if (!gone.length) return null;
     const one = gone.length === 1;

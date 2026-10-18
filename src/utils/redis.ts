@@ -18,13 +18,14 @@ async function getRedisClient() {
     return null;
   }
 
-  if (redisClient?.isOpen) {
+  if (redisClient?.isReady) {
     return redisClient;
   }
 
   if (!redisConnection) {
     const client = createClient({
       url: process.env.REDIS_URL,
+      disableOfflineQueue: true,
       socket: {
         connectTimeout: 3000,
         // Bounded reconnect: give up after a few tries instead of looping and
@@ -55,19 +56,22 @@ async function getRedisClient() {
 /** Race a Redis op against a timeout so a stalled server can never hang the
  *  request. Any failure resolves to the fallback. */
 async function withTimeout<T>(op: Promise<T>, fallback: T): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
       op,
-      new Promise<T>((resolve) => setTimeout(() => resolve(fallback), OP_TIMEOUT_MS)),
+      new Promise<T>((resolve) => { timer = setTimeout(() => resolve(fallback), OP_TIMEOUT_MS); }),
     ]);
   } catch (error) {
     console.error("[redis] op failed:", (error as Error)?.message || error);
     return fallback;
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
 export async function getCached<T>(key: string): Promise<T | null> {
-  const client = await getRedisClient().catch(() => null);
+  const client = await withTimeout(getRedisClient(), null);
   if (!client) {
     return null;
   }
@@ -80,8 +84,8 @@ export async function getCached<T>(key: string): Promise<T | null> {
   }
 }
 
-export async function setCached(key: string, data: any, expirationSeconds = 3600) {
-  const client = await getRedisClient().catch(() => null);
+export async function setCached(key: string, data: unknown, expirationSeconds = 3600) {
+  const client = await withTimeout(getRedisClient(), null);
   if (!client) {
     return;
   }
@@ -89,7 +93,7 @@ export async function setCached(key: string, data: any, expirationSeconds = 3600
 }
 
 export async function deleteCached(...keys: string[]) {
-  const client = await getRedisClient().catch(() => null);
+  const client = await withTimeout(getRedisClient(), null);
   if (!client || keys.length === 0) {
     return;
   }
@@ -104,7 +108,7 @@ export async function deleteCached(...keys: string[]) {
  * fine since there is no cache to serve from then.
  */
 export async function readGeneration(key: string): Promise<number> {
-  const client = await getRedisClient().catch(() => null);
+  const client = await withTimeout(getRedisClient(), null);
   if (!client) return 0;
   const raw = await withTimeout(client.get(key), null);
   const parsed = Number(raw);
@@ -113,7 +117,7 @@ export async function readGeneration(key: string): Promise<number> {
 
 /** Bump a generation. INCR so two saves landing together cannot lose one. */
 export async function bumpGeneration(key: string, expirationSeconds = 86_400) {
-  const client = await getRedisClient().catch(() => null);
+  const client = await withTimeout(getRedisClient(), null);
   if (!client) return;
   const next = await withTimeout(client.incr(key), null);
   // Kept alive only as long as anything could still be keyed off it. Without

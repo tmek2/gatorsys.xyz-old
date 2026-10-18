@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { absoluteLink, resourceLink } from "@/utils/short-links";
 import {
   IconCheck,
@@ -32,7 +33,7 @@ const DEFAULT_COLUMNS = 26;
 const MUTATION = 2;
 
 // Univer renders with darkMode off so cell fills stay exactly as picked: a
-// white Excel-style sheet with visible gridlines and the accent, inside Gator's
+// white Excel-style sheet with visible gridlines and the accent, inside Bot's
 // chrome.
 function applyGatorSheetStyle(snapshot: any) {
   if (!snapshot?.sheets) return snapshot;
@@ -164,6 +165,9 @@ export function DepartmentSpreadsheetEditor({
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [saveState, setSaveState] = useState<"saved" | "dirty" | "saving">("saved");
+  const [saveError, setSaveError] = useState("");
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [collaborators, setCollaborators] = useState<{ client_id: string; name: string }[]>([]);
   // Follows the site's theme and updates live when it changes.
@@ -175,7 +179,7 @@ export function DepartmentSpreadsheetEditor({
   const shareUrl =
     typeof window === "undefined"
       ? ""
-      : absoluteLink(resourceLink("document", guildId, resource.id), window.location.origin);
+      : absoluteLink(resourceLink("spreadsheet", guildId, resource.id), window.location.origin);
 
   // Live collaboration state: this editor is one client; local mutations are
   // relayed and remote ones re-applied (skipping our own).
@@ -190,6 +194,23 @@ export function DepartmentSpreadsheetEditor({
   const departmentId = resource?.department;
   const viewerName = viewer?.name || "";
   const collabReady = Boolean(guildId && departmentId && resource?.id);
+
+  function captureSnapshot() {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = null;
+    const snapshot = workbookRef.current?.save?.();
+    if (!snapshot) return;
+    const serialized = JSON.stringify(snapshot);
+    if (serialized === snapshotRef.current) return;
+    snapshotRef.current = serialized;
+    const next = {
+      ...resourceRef.current,
+      spreadsheet_snapshot: snapshot,
+      spreadsheet_data: gridFromWorkbook(snapshot),
+    };
+    resourceRef.current = next;
+    onChange(next);
+  }
 
   // Keep the spreadsheet theme in lock-step with the site theme toggle.
   useEffect(() => {
@@ -303,14 +324,7 @@ export function DepartmentSpreadsheetEditor({
           // Coalesced on idle, since snapshotting a large sheet per frame is
           // expensive.
           if (saveTimer.current) clearTimeout(saveTimer.current);
-          saveTimer.current = setTimeout(() => {
-            saveTimer.current = null;
-            const snapshot = workbook.save();
-            const serialized = JSON.stringify(snapshot);
-            if (serialized === snapshotRef.current) return;
-            snapshotRef.current = serialized;
-            onChange({ ...resourceRef.current, spreadsheet_snapshot: snapshot, spreadsheet_data: gridFromWorkbook(snapshot) });
-          }, 700);
+          saveTimer.current = setTimeout(captureSnapshot, 700);
         };
         // Relay local data mutations to the other editors (batched).
         const relay = (event: any) => {
@@ -425,13 +439,15 @@ export function DepartmentSpreadsheetEditor({
     setSaveState("dirty");
     const timer = window.setTimeout(async () => {
       setSaveState("saving");
+      setSaveError("");
       const snapshot = JSON.stringify(resourceRef.current);
       try {
-        await onSave();
+        await onSaveRef.current();
         savedRef.current = snapshot;
         setSaveState(JSON.stringify(resourceRef.current) === snapshot ? "saved" : "dirty");
-      } catch {
+      } catch (error) {
         setSaveState("dirty");
+        setSaveError(error instanceof Error ? error.message : "Could not save this spreadsheet. Try again.");
       }
     }, 350);
     return () => window.clearTimeout(timer);
@@ -445,14 +461,28 @@ export function DepartmentSpreadsheetEditor({
   }
 
   async function closeEditor() {
-    if (saveState !== "saved") await onSave();
-    onClose();
+    // Commit the latest cells before the parent save callback reads its state.
+    // Closing can happen before the normal 700ms snapshot timer fires.
+    flushSync(captureSnapshot);
+    const snapshot = JSON.stringify(resourceRef.current);
+    try {
+      if (snapshot !== savedRef.current) {
+        setSaveState("saving");
+        setSaveError("");
+        await onSaveRef.current();
+        savedRef.current = snapshot;
+      }
+      if (JSON.stringify(resourceRef.current) === snapshot) onClose();
+    } catch (error) {
+      setSaveState("dirty");
+      setSaveError(error instanceof Error ? error.message : "Could not save this spreadsheet. Try again.");
+    }
   }
 
   return (
     <div className="fixed inset-0 z-[170] flex flex-col bg-[#0e0e0e] text-white">
       <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importCsv(file); event.currentTarget.value = ""; }} />
-      {/* Gator's own chrome: slim identity bar with quiet pill actions —
+      {/* Bot's own chrome: slim identity bar with quiet pill actions —
           the sheet itself sits in a framed, rounded workspace below. */}
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.08] bg-[#131313] px-4">
         {/* The spreadsheet icon itself returns to resources (like documents). */}
@@ -509,6 +539,7 @@ export function DepartmentSpreadsheetEditor({
         <button type="button" onClick={() => setConfirmDelete(true)} className="rounded-xl p-2 text-white/35 transition-colors hover:bg-[var(--tone-bad-soft)] hover:text-[var(--tone-bad)]" aria-label="Delete spreadsheet"><IconTrash size={16} /></button>
         <button type="button" onClick={() => void closeEditor()} className="rounded-xl p-2 text-white/35 transition-colors hover:bg-white/[0.04] hover:text-white" aria-label="Close"><IconX size={17} /></button>
       </header>
+      {saveError ? <p role="alert" className="px-4 py-2 text-sm text-[var(--tone-bad)]">{saveError} Your changes are still open here.</p> : null}
       <div className="gator-spreadsheet relative mx-3 mb-3 min-h-[60vh] flex-1 overflow-hidden rounded-2xl border border-white/[0.08] shadow-[0_24px_70px_rgba(0,0,0,.45)]">
         {!ready && !loadError ? <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#161616]"><IconLoader2 className="animate-spin text-[var(--accent-peach)]" size={24} /></div> : null}
         {loadError ? <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-[#161616] px-6 text-center"><p className="font-bold text-white/80">Spreadsheet editor unavailable</p><p className="max-w-lg text-sm text-white/45">{loadError}</p></div> : null}

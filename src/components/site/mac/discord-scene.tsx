@@ -1,4 +1,4 @@
-/* A drawing per module, in two states (before and after Gator).
+/* A drawing per module, in two states (before and after Bot).
 
    - Each module has its own objects, drawn from what it replaces:
        sessions     a pinned message and people asking, vs a panel
@@ -13,7 +13,7 @@
        erlc         two windows fighting, vs one with a panel beside it
    - The window's greys plus one accent per side: red for what is missing or
      wrong, pink for what the bot does.
-   - The byline says who does the work: a person before, Gator (mark, name, app
+   - The byline says who does the work: a person before, Bot (mark, name, app
      tag) after.
    - Before and after are one function taking `on`, so everything sits at the
      same coordinates and the wipe lines up.
@@ -22,9 +22,7 @@
      stay here as the fallback. */
 
 import type { ReactNode } from "react";
-import { GatorLogo } from "../gator-logo";
-import { pairFor, shotFor, type Frame } from "./shots";
-import { useAppearance } from "../appearance";
+import { AppLogo } from "../app-logo";
 
 const W = 640;
 const H = 420;
@@ -231,10 +229,10 @@ function Win({ children, on }: { children: ReactNode; on: boolean }) {
       {on ? (
         <>
           <g transform="translate(41, 55)" style={{ color: SHELL }}>
-            <GatorLogo size={22} />
+            <AppLogo size={22} />
           </g>
           <text x="82" y="62" fontFamily={FONT} fontSize="16" fontWeight="600" fill={INK}>
-            Gator
+            Bot
           </text>
           <rect x="131" y="50" width="53" height="17" rx="4" fill={BLURPLE} />
           <path d="M138 58.6 l2.6 2.6 l4.6 -5.4" stroke="#ffffff" strokeWidth="1.9" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -808,50 +806,11 @@ const SCENES: Record<string, { draw: Draw; alt: [string, string] }> = {
 const FALLBACK = "sessions";
 const pick = (scene?: string) => SCENES[scene && SCENES[scene] ? scene : FALLBACK];
 
-/* -------------------------------------------------------- the photographs */
-
-/* A module with a capture in shots.ts shows it (the drawing remains as the
-   fallback). - `draggable={false}`: the image sits inside the drag control, and
-   a native image drag would take the gesture. - The still is a `<source>`
-   rather than a swapped `<img>`: a GIF cannot be paused, so reduced motion must
-   be answered before the animated file is fetched, and only a media query runs
-   early enough. */
-function Photo({ frame, className, alt }: { frame: Frame; className?: string; alt: string }) {
-  const img = (
-    <img
-      src={frame.src}
-      alt={alt}
-      className={className}
-      loading="lazy"
-      decoding="async"
-      draggable={false}
-    />
-  );
-  if (!frame.still) return img;
-  return (
-    <picture className="g-shot-pic">
-      <source media="(prefers-reduced-motion: reduce)" srcSet={frame.still} />
-      {img}
-    </picture>
-  );
-}
-
 /* ----------------------------------------------------------- the exports */
 
 export function DiscordBefore({ className, label, scene }: { className?: string; label?: string; scene?: string }) {
   const s = pick(scene);
-  const shot = shotFor(scene);
-  const appearance = useAppearance();
-  const alt = `Before Gator: ${label || s.alt[0]}`;
-  if (shot) {
-    return (
-      <Photo
-        frame={pairFor(shot, appearance).before}
-        className={className}
-        alt={alt}
-      />
-    );
-  }
+  const alt = `Before Bot: ${label || s.alt[0]}`;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className={className} role="img" aria-label={alt}>
       <Win on={false}>{s.draw(false)}</Win>
@@ -861,18 +820,7 @@ export function DiscordBefore({ className, label, scene }: { className?: string;
 
 export function DiscordAfter({ className, label, scene }: { className?: string; label?: string; scene?: string }) {
   const s = pick(scene);
-  const shot = shotFor(scene);
-  const appearance = useAppearance();
-  const alt = `With Gator: ${label || s.alt[1]}`;
-  if (shot) {
-    return (
-      <Photo
-        frame={pairFor(shot, appearance).after}
-        className={className}
-        alt={alt}
-      />
-    );
-  }
+  const alt = `With Bot: ${label || s.alt[1]}`;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className={className} role="img" aria-label={alt}>
       <Win on>{s.draw(true)}</Win>

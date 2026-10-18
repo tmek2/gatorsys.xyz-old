@@ -1,4 +1,3 @@
-// impeccable-disable side-tab -- Discord container previews intentionally reproduce Discord's native accent rail.
 "use client";
 
 import React, { useState } from "react";
@@ -11,15 +10,17 @@ import {
   ContainerRowButton,
   SystemComponentPreview,
   toEditorLayout,
+  rowButtonColor,
 } from "./model";
 
 /* How a container message looks in Discord: the read-only preview of its blocks and buttons. */
 
 /** Discord's four button colours, by the names this dashboard stores. */
 export function dcButtonStyle(style?: string): "primary" | "secondary" | "success" | "danger" {
-  if (style === "Green") return "success";
-  if (style === "Red") return "danger";
-  if (style === "Grey") return "secondary";
+  const color = rowButtonColor({ style: style ?? "Blue" });
+  if (color === "Green") return "success";
+  if (color === "Red") return "danger";
+  if (color === "Grey") return "secondary";
   return "primary";
 }
 
@@ -108,7 +109,7 @@ export function PreviewButton({ button }: { button: ContainerRowButton }) {
   return (
     <span
       className="dc-btn"
-      data-style={type === "link" ? "secondary" : dcButtonStyle(button.color || "Grey")}
+      data-style={type === "link" ? "secondary" : dcButtonStyle(rowButtonColor(button))}
       data-disabled={button.disabled ? "true" : undefined}
       aria-disabled={button.disabled ? "true" : undefined}
     >

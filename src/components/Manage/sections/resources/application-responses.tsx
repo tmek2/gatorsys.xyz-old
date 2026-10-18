@@ -19,7 +19,6 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
-import { randomGatorLine } from "../../gator-lines";
 import { ConfirmModal, type ConfirmState } from "@/components/confirm-modal";
 import {
   type AiDetection,
@@ -532,6 +531,8 @@ export function ApplicationResponses({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [decisionError, setDecisionError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const loadSequence = React.useRef(0);
   const [statusFilter, setStatusFilter] = useState<SubmissionState>("pending");
   const [publishing, setPublishing] = useState(false);
   /** Free-text filter over the submission list. */
@@ -549,32 +550,28 @@ export function ApplicationResponses({
   const [scans, setScans] = useState<Record<string, AiDetection>>({});
   const [scanning, setScanning] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
-  // A gator pun to keep the empty state friendly (another place to find them).
-  const emptyHint = useMemo(() => randomGatorLine(), []);
+  const emptyHint = "New submissions appear here when an application is completed.";
 
   const fetchUrl =
     endpoint ||
     `/api/manage/${guildId}/applicationresponses?application=${encodeURIComponent(appId)}`;
 
-  const load = useCallback(() => {
-    setResponses(null);
-    fetch(fetchUrl)
-      .then((res) => (res.ok ? res.json() : { responses: [] }))
-      .then((json) => setResponses(json.responses || []))
-      .catch(() => setResponses([]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const load = useCallback(async () => {
+    const sequence = ++loadSequence.current;
+    setLoadError(null);
+    try {
+      const response = await fetch(fetchUrl, { cache: "no-store" });
+      const json = await response.json().catch(() => null);
+      if (!response.ok || !Array.isArray(json?.responses)) {
+        throw new Error(json?.detail || json?.message || "Could not load submissions.");
+      }
+      if (sequence === loadSequence.current) setResponses(json.responses);
+    } catch (error) {
+      if (sequence === loadSequence.current) setLoadError(error instanceof Error ? error.message : "Could not load submissions.");
+    }
   }, [fetchUrl]);
 
-  // Reconcile with the server without flashing the skeleton — used after an
-  // optimistic update so the UI already reflects the change.
-  const silentRefresh = useCallback(() => {
-    fetch(fetchUrl)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => {
-        if (json) setResponses(json.responses || []);
-      })
-      .catch(() => {});
-  }, [fetchUrl]);
+  const silentRefresh = load;
 
   // Approve and deny run the same decision flow as the Discord review buttons.
   // The department portal passes its own department-gated endpoint, so it gets
@@ -582,6 +579,10 @@ export function ApplicationResponses({
   const decisionUrl =
     decisionEndpoint || `/api/manage/${guildId}/applicationdecision`;
   const canDecide = !endpoint || Boolean(decisionEndpoint);
+  // Department routes support individual decisions. These other actions use
+  // manager-only endpoints and must not be offered in the member portal.
+  const canManageSubmissions = !endpoint;
+  const reviewBusy = deciding !== null || bulkBusy || publishing || deletingId !== null;
 
   /** Release every held decision for this application in one pass. */
   async function publishStaged() {
@@ -618,11 +619,15 @@ export function ApplicationResponses({
     }
   }
   async function decide(id: string, decision: "approve" | "deny") {
+    if (reviewBusy) return;
+    const previousStatus = responses?.find((response) => response.id === id)?.status || "pending";
     setDeciding(`${id}:${decision}`);
     setDecisionError(null);
     // Optimistic: the decision flow (roles, DM, audit) is slow, so reflect the
     // new status immediately and reconcile in the background.
-    const nextStatus = decision === "approve" ? "approved" : "denied";
+    const nextStatus = stagingEnabled
+      ? decision === "approve" ? "staged_approved" : "staged_denied"
+      : decision === "approve" ? "approved" : "denied";
     setResponses((prev) =>
       prev ? prev.map((r) => (r.id === id ? { ...r, status: nextStatus } : r)) : prev,
     );
@@ -638,7 +643,8 @@ export function ApplicationResponses({
       silentRefresh();
     } catch (error) {
       setDecisionError(error instanceof Error ? error.message : "Could not process the decision");
-      load(); // revert the optimistic change to server truth
+      // Restore locally even if the follow-up read is also unavailable.
+      setResponses((current) => current?.map((response) => response.id === id ? { ...response, status: previousStatus } : response) ?? current);
     } finally {
       setDeciding(null);
     }
@@ -652,7 +658,9 @@ export function ApplicationResponses({
     if (!ids.length) return;
     setBulkBusy(true);
     setDecisionError(null);
-    const nextStatus = decision === "approve" ? "approved" : "denied";
+    const nextStatus = stagingEnabled
+      ? decision === "approve" ? "staged_approved" : "staged_denied"
+      : decision === "approve" ? "approved" : "denied";
     const snapshot = responses;
     setResponses((prev) =>
       prev
@@ -673,6 +681,8 @@ export function ApplicationResponses({
       }
       const failed: { id: string; error?: string }[] = json.failed || [];
       if (failed.length) {
+        const failedIds = new Set(failed.map((entry) => entry.id));
+        setResponses((current) => current?.map((response) => failedIds.has(response.id) ? snapshot?.find((entry) => entry.id === response.id) || response : response) ?? current);
         setDecisionError(
           `${failed.length} of ${ids.length} could not be processed: ${
             failed[0]?.error || "unknown error"
@@ -757,7 +767,9 @@ export function ApplicationResponses({
   }
 
   useEffect(() => {
+    setResponses(null);
     load();
+    return () => { loadSequence.current++; };
   }, [load]);
 
   /**
@@ -770,13 +782,13 @@ export function ApplicationResponses({
     let timer: ReturnType<typeof setTimeout>;
     let active = true;
     const tick = () => {
-      const busy = deciding !== null || bulkBusy || selected.size > 0;
+      const busy = deciding !== null || bulkBusy || publishing || deletingId !== null || selected.size > 0;
       if (!document.hidden && !busy) void load();
       if (active) timer = setTimeout(tick, 20_000);
     };
     timer = setTimeout(tick, 20_000);
     const onVisible = () => {
-      if (!document.hidden) void load();
+      if (!document.hidden && deciding === null && !bulkBusy && !publishing && deletingId === null && selected.size === 0) void load();
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
@@ -784,7 +796,7 @@ export function ApplicationResponses({
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [load, deciding, bulkBusy, selected]);
+  }, [load, deciding, bulkBusy, publishing, deletingId, selected]);
 
   function questionLabel(id: string): string {
     return questions.find((q) => q.id === id)?.question || id;
@@ -793,9 +805,16 @@ export function ApplicationResponses({
   return (
     <>
     <div className="responses-tab">
-      {responses === null ? (
+      {decisionError ? <p role="alert" className="mb-4 rounded-xl border border-[var(--tone-bad-line)] bg-[var(--tone-bad-soft)] px-4 py-3 text-sm text-[var(--tone-bad)]">{decisionError}</p> : null}
+      {loadError ? (
+        <div role="alert" className="mb-4 space-y-3">
+          <p className="text-sm text-[var(--tone-warn)]">{loadError}</p>
+          <button type="button" className="gw-btn" onClick={() => void load()}>Retry loading submissions</button>
+        </div>
+      ) : null}
+      {responses === null ? (loadError ? null : (
         <SkeletonRows rows={3} lead={false} label="Loading submissions…" />
-      ) : responses.length === 0 ? (
+      )) : responses.length === 0 ? (
         <div className="py-2">
           <p className="cool-text text-sm">No submissions yet.</p>
           <p className="mt-1 text-xs text-white/30">{emptyHint}</p>
@@ -867,10 +886,10 @@ export function ApplicationResponses({
                     </p>
                     {/* Publishing staged decisions is tab-wide, so it sits at
                        the top of the tab. */}
-                    {canDecide && counts.staging > 0 ? (
+                    {canManageSubmissions && counts.staging > 0 ? (
                       <button
                         type="button"
-                        disabled={publishing}
+                        disabled={reviewBusy}
                         onClick={publishStaged}
                         className="btn-pop btn-peach inline-flex items-center gap-2 px-4 py-2 text-xs"
                       >
@@ -946,7 +965,7 @@ export function ApplicationResponses({
               {/* Bulk review only in filters with something to decide
                  (re-approving an approved submission would resend the DM and
                  reapply roles). */}
-              {canDecide && decidableFilter && selectedOnPage > 0 ? (
+              {canManageSubmissions && decidableFilter && selectedOnPage > 0 ? (
                 <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--accent-peach)_28%,transparent)] bg-[color-mix(in_srgb,var(--accent-peach)_7%,transparent)] px-3 py-2">
                   <span className="text-xs font-bold text-white/80">
                     {selectedOnPage} selected
@@ -961,6 +980,7 @@ export function ApplicationResponses({
                   <div className="ml-auto flex items-center gap-2">
                     <button
                       type="button"
+                      disabled={reviewBusy}
                       onClick={() => setBulkDecision("approve")}
                       className="inline-flex items-center gap-2 rounded-xl border border-[var(--tone-ok-line)] bg-[var(--tone-ok-wash)] px-3 py-2 text-xs font-bold text-[var(--tone-ok)] transition-colors hover:bg-[var(--tone-ok-wash)]"
                     >
@@ -969,6 +989,7 @@ export function ApplicationResponses({
                     </button>
                     <button
                       type="button"
+                      disabled={reviewBusy}
                       onClick={() => setBulkDecision("deny")}
                       className="inline-flex items-center gap-2 rounded-xl border border-[var(--tone-bad-line)] bg-[var(--tone-bad-wash)] px-3 py-2 text-xs font-bold text-[var(--tone-bad)] transition-colors hover:bg-[var(--tone-bad-wash)]"
                     >
@@ -989,7 +1010,7 @@ export function ApplicationResponses({
                   {/* Left: response list. Hidden on mobile once a submission is
                       opened (the detail takes over). */}
                   <div className={`space-y-2 lg:max-h-[calc(100vh-16rem)] lg:overflow-y-auto ${explicitlyOpen ? "hidden lg:block" : "block"}`}>
-                    {canDecide && filtered.length > 1 ? (
+                    {canManageSubmissions && decidableFilter && filtered.length > 1 ? (
                       <label className="mb-1 flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white/45 transition-colors hover:text-white/70">
                         <input
                           type="checkbox"
@@ -1021,7 +1042,7 @@ export function ApplicationResponses({
                         className={`flex w-full items-center gap-2 rounded-xl border pr-1 transition-colors ${chosen?.id === response.id ? "border-white/20 bg-white/[0.04]" : "border-white/[0.08] bg-white/[0.02] hover:border-white/15"}`}
                       >
                         {/* No checkboxes where nothing can be decided. */}
-                        {canDecide && decidableFilter ? (
+                        {canManageSubmissions && decidableFilter ? (
                           <label
                             className="flex shrink-0 cursor-pointer items-center py-4 pl-4"
                             onClick={(event) => event.stopPropagation()}
@@ -1091,17 +1112,17 @@ export function ApplicationResponses({
                           ) : null}
                           {/* No status chip: the tab's filter already shows the
                              state. */}
-                          <AiScanButton
+                          {canManageSubmissions ? <AiScanButton
                             busy={scanning === chosen.id}
                             scanned={Boolean(
                               scans[chosen.id] || chosen.aiDetection,
                             )}
                             onScan={() => void scanForAi(chosen.id)}
-                          />
-                          {canDecide ? (
+                          /> : null}
+                          {canManageSubmissions ? (
                             <button
                               type="button"
-                              disabled={deletingId === chosen.id}
+                              disabled={reviewBusy}
                               onClick={() =>
                                 setConfirm({
                                   title: "Delete response",
@@ -1166,7 +1187,7 @@ export function ApplicationResponses({
                               <button
                                 key={verdict}
                                 type="button"
-                                disabled={deciding !== null}
+                                disabled={reviewBusy}
                                 aria-pressed={stagedVerdict(chosen.status) === verdict}
                                 onClick={() =>
                                   decide(
@@ -1189,7 +1210,7 @@ export function ApplicationResponses({
                         <div className="flex flex-wrap items-center gap-2 border-t border-white/[0.08] p-4 sm:p-5">
                           <button
                             type="button"
-                            disabled={deciding !== null}
+                            disabled={reviewBusy}
                             onClick={() => decide(chosen.id, "approve")}
                             className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--tone-ok-line)] bg-[var(--tone-ok-wash)] px-3 py-2 text-sm font-bold text-[var(--tone-ok)] transition-colors hover:bg-[var(--tone-ok-wash)] disabled:opacity-40"
                           >
@@ -1202,7 +1223,7 @@ export function ApplicationResponses({
                           </button>
                           <button
                             type="button"
-                            disabled={deciding !== null}
+                            disabled={reviewBusy}
                             onClick={() => decide(chosen.id, "deny")}
                             className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--tone-bad-line)] bg-[var(--tone-bad-soft)] px-3 py-2 text-sm font-bold text-[var(--tone-bad)] transition-colors hover:bg-[var(--tone-bad-wash)] disabled:opacity-40"
                           >

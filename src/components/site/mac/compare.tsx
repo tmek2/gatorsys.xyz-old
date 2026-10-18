@@ -85,6 +85,8 @@ export function Compare({
     else if (event.key === "End") setAt(100);
     else return;
     event.preventDefault();
+    // The surrounding feature browser also uses arrows to switch modules.
+    event.stopPropagation();
   };
 
   return (

@@ -7,13 +7,13 @@ import {
 interface NoServersFoundProps {
   title?: string;
   description?: string;
-  /** When provided, shows an "Add Gator" button linking to the bot invite. */
+  /** When provided, shows an "Add Bot" button linking to the bot invite. */
   inviteUrl?: string;
 }
 
 export function NoServersFound({
   title = "No Servers Found",
-  description = "It looks like Gator isn't in any of your servers yet. Add it to get started.",
+  description = "It looks like Bot isn't in any of your servers yet. Add it to get started.",
   inviteUrl,
 }: NoServersFoundProps) {
   return (
@@ -31,7 +31,7 @@ export function NoServersFound({
           rel="noreferrer"
         >
           <IconPlus size={16} />
-          Add Gator to a server
+          Add Bot to a server
           <RippleButtonRipples />
         </RippleButton>
       ) : null}

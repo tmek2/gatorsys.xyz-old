@@ -358,6 +358,7 @@ export function FormQuestionField({
     return (
       <div className="max-w-md">
         <SelectField
+          disabled={disabled}
           value={typeof value === "string" ? value : ""}
           placeholder="Select an option…"
           onChange={(next) => set(next || "")}

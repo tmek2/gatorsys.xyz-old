@@ -1,0 +1,276 @@
+/* ── a file arriving ──
+
+   Shared by every place a picture or file can be set (several render outside
+   the dashboard's stylesheet): a picture develops in from a blur, a drop zone
+   leans in under a held file, and a file added to a list settles in. The caller
+   keys on the source, so only a new picture replays it. */
+.g-develop {
+  animation: g-develop 760ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes g-develop {
+  from {
+    opacity: 0;
+    transform: scale(1.1);
+    filter: blur(12px) saturate(0.3);
+  }
+  55% {
+    opacity: 1;
+  }
+}
+.g-arrive {
+  animation: g-arrive 420ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes g-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.94);
+    filter: blur(3px);
+  }
+}
+.g-drop {
+  transition:
+    transform 320ms cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 200ms ease;
+}
+.g-drop[data-over="true"] {
+  transform: scale(1.015);
+  box-shadow: 0 0 0 3px var(--g-accent-soft, rgb(var(--accent-rgb) / 0.16));
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-develop,
+  .g-arrive {
+    animation: none;
+  }
+  .g-drop[data-over="true"] {
+    transform: none;
+  }
+}
+
+.g-develop-load {
+  transition:
+    opacity 520ms cubic-bezier(0.32, 0.72, 0, 1),
+    filter 760ms cubic-bezier(0.32, 0.72, 0, 1),
+    transform 760ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.g-develop-load[data-ready="false"] {
+  opacity: 0;
+  transform: scale(1.06);
+  filter: blur(12px) saturate(0.3);
+}
+/* A picture put into a document settles in the same way. */
+.ProseMirror img {
+  animation: g-develop 760ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-develop-load {
+    transition: none;
+  }
+  .ProseMirror img {
+    animation: none;
+  }
+}
+
+/* ── a row arriving and leaving ──
+
+   A list row unrolls in and folds away through its own height. The outer box is
+   a one-row grid whose track animates between 0fr and 1fr (no measuring); the
+   inner box clips, so padding and borders fold to nothing. */
+.g-li {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+.g-li > .g-li-clip {
+  min-height: 0;
+  min-width: 0;
+}
+.g-li[data-state="enter"] > .g-li-clip,
+.g-li[data-state="leave"] > .g-li-clip {
+  overflow: clip;
+}
+.g-li[data-state="enter"] {
+  animation: g-li-in 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.g-li[data-state="leave"] {
+  animation: g-li-out 260ms cubic-bezier(0.4, 0, 1, 1) both;
+  pointer-events: none;
+}
+@keyframes g-li-in {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(-4px) scale(0.985);
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}
+@keyframes g-li-out {
+  to {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: scale(0.985);
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}
+/* In a line -- chips -- a row shrinks away where it stands. */
+.g-li[data-inline="true"] {
+  display: inline-grid;
+}
+.g-li[data-inline="true"][data-state="enter"] {
+  animation: g-li-pop-in 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.g-li[data-inline="true"][data-state="leave"] {
+  animation: g-li-pop-out 200ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+@keyframes g-li-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+    filter: blur(3px);
+  }
+}
+@keyframes g-li-pop-out {
+  to {
+    opacity: 0;
+    transform: scale(0.82);
+    filter: blur(3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-li[data-state="enter"],
+  .g-li[data-state="leave"] {
+    animation-duration: 1ms;
+  }
+}
+
+/* ── out to every server ──
+
+   From the picker's "All servers": the page draws back, smaller and fainter,
+   and the server grid settles in from slightly larger. Transform and opacity
+   only. */
+:root[data-leaving="servers"]::view-transition-old(root) {
+  animation: gator-vt-zoom-out 360ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+:root[data-leaving="servers"]::view-transition-new(root) {
+  animation: gator-vt-zoom-in 520ms cubic-bezier(0.32, 0.72, 0, 1) 70ms both;
+}
+@keyframes gator-vt-zoom-out {
+  to {
+    opacity: 0;
+    transform: scale(0.93);
+  }
+}
+@keyframes gator-vt-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(1.035);
+  }
+}
+
+/* ── to another server ──
+
+   From the server picker in the dashboard's tab (`travel(..., "switch")`):
+   the window stays where it is, as it does for a change of tab. Its bar and
+   rail cross-fade in place, so only what differs (the server's name and mark,
+   the counts) changes; the page itself draws back and the next server's page
+   settles in from slightly larger, the movement of going out to every
+   server. Transform and opacity only. */
+:root[data-leaving="switch"] .gw-bar {
+  view-transition-name: gw-switch-bar;
+}
+:root[data-leaving="switch"] .gw-side {
+  view-transition-name: gw-switch-side;
+}
+:root[data-leaving="switch"] .gw-pane {
+  view-transition-name: gw-switch-page;
+}
+:root[data-leaving="switch"]::view-transition-old(root),
+:root[data-leaving="switch"]::view-transition-new(root) {
+  animation: none;
+}
+:root[data-leaving="switch"]::view-transition-group(gw-switch-bar),
+:root[data-leaving="switch"]::view-transition-group(gw-switch-side),
+:root[data-leaving="switch"]::view-transition-group(gw-switch-page) {
+  animation: none;
+}
+:root[data-leaving="switch"]::view-transition-old(gw-switch-bar),
+:root[data-leaving="switch"]::view-transition-old(gw-switch-side) {
+  animation: gator-vt-out 220ms ease both;
+}
+:root[data-leaving="switch"]::view-transition-new(gw-switch-bar),
+:root[data-leaving="switch"]::view-transition-new(gw-switch-side) {
+  animation: gator-vt-in 320ms ease 60ms both;
+}
+:root[data-leaving="switch"]::view-transition-old(gw-switch-page) {
+  animation: gator-vt-zoom-out 320ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+:root[data-leaving="switch"]::view-transition-new(gw-switch-page) {
+  animation: gator-vt-zoom-in 520ms cubic-bezier(0.32, 0.72, 0, 1) 70ms both;
+}
+
+/* ── the sliding selection (useJellyThumb in motion.tsx) ──
+
+   Three slices on the compositor: a round cap, a 1px bar scaled to the gap, a
+   round cap, so a stretched thumb keeps round corners. Opaque, so the slices
+   can overlap at their seams without a hairline. */
+.g-jelly {
+  --jelly-r: 8px;
+  --jelly-fill: #1d1d1d;
+  --jelly-rim: rgba(255, 255, 255, 0.08);
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.g-jelly[data-ready="true"] {
+  opacity: 1;
+}
+.g-jelly > i {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--jelly-fill);
+  transform-origin: 0 50%;
+  will-change: transform;
+}
+.g-jelly > i[data-p="l"] {
+  width: var(--jelly-r);
+  border-radius: var(--jelly-r) 0 0 var(--jelly-r);
+  box-shadow:
+    inset 1px 0 0 var(--jelly-rim),
+    inset 0 1px 0 var(--jelly-rim),
+    inset 0 -1px 0 var(--jelly-rim);
+}
+.g-jelly > i[data-p="m"] {
+  width: 1px;
+  box-shadow:
+    inset 0 1px 0 var(--jelly-rim),
+    inset 0 -1px 0 var(--jelly-rim);
+}
+.g-jelly > i[data-p="r"] {
+  width: var(--jelly-r);
+  border-radius: 0 var(--jelly-r) var(--jelly-r) 0;
+  box-shadow:
+    inset -1px 0 0 var(--jelly-rim),
+    inset 0 1px 0 var(--jelly-rim),
+    inset 0 -1px 0 var(--jelly-rim);
+}
+:root[data-theme="light"] .g-jelly {
+  --jelly-fill: #fffaf2;
+  --jelly-rim: rgba(74, 36, 49, 0.13);
+}
+
+/* Never wider than the screen. On a phone, anything briefly past the edge zooms
+   the layout viewport out and leaves it there, and browsers abandon a view
+   transition when the viewport size changes. Horizontal overflow is clipped at
+   the root; vertical scrolling is untouched. */
+html,
+body {
+  overflow-x: clip;
+}

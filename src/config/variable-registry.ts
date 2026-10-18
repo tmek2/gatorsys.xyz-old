@@ -52,12 +52,12 @@ export const VARIABLE_EXAMPLES: Record<string, string> = {
   // the {author.*} spellings are here: {user.mention} is built by individual
   // modules, not the global resolver, so an example would imply it works
   // everywhere. Enforced by tests/test_variable_documentation.py in the bot.
-  "{author.mention}": "@.tmek",
-  "{author.name}": ".tmek",
-  "{author.display}": ".tmek",
-  "{author.id}": "824914801108156447",
-  "{guild.name}": "Gator HQ",
-  "{guild.id}": "1438995853996986439",
+  "{author.mention}": "@Alex",
+  "{author.name}": "Alex",
+  "{author.display}": "Alex",
+  "{author.id}": "100000000000000001",
+  "{guild.name}": "Bot HQ",
+  "{guild.id}": "100000000000000101",
   // `str(member_count)` in the resolver — a bare integer, no separator.
   "{guild.members}": "1204",
 };

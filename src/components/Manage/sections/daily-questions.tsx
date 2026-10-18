@@ -25,17 +25,22 @@ interface QotdDoc {
 /* "Go back" goes to the module list, not `history.back()` (which could return
    to this same gate). */
 export function DailyQuestionsSection({ onNavigate }: { onNavigate?: (next: string) => void } = {}) {
-  const { guildId, meta, setNotice } = useManage();
+  const { guildId, meta, setNotice, registerExternalDraft, setExternalDraftDirty } = useManage();
   const [saved, setSaved] = useState<QotdDoc | null>(null);
   const [draft, setDraft] = useState<QotdDoc>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch(`/api/manage/${guildId}/qotd`);
-      const json = res.ok ? await res.json() : { qotd: null };
+      if (!res.ok) throw new Error("Could not load Daily Questions.");
+      const json = await res.json();
+      if (!json || !Object.prototype.hasOwnProperty.call(json, "qotd"))
+        throw new Error("The Daily Questions response was incomplete.");
       const doc: QotdDoc = {
         channel_id: json.qotd?.channel_id != null ? String(json.qotd.channel_id) : null,
         pingrole: json.qotd?.pingrole != null ? String(json.qotd.pingrole) : null,
@@ -45,8 +50,7 @@ export function DailyQuestionsSection({ onNavigate }: { onNavigate?: (next: stri
       setSaved(doc);
       setDraft(doc);
     } catch {
-      setSaved({});
-      setDraft({});
+      setLoadError("Could not load the saved settings. Retry before editing or saving.");
     } finally {
       setLoading(false);
     }
@@ -58,14 +62,15 @@ export function DailyQuestionsSection({ onNavigate }: { onNavigate?: (next: stri
 
   const dirty = useMemo(
     () =>
-      !configValuesEqual(
+      !loading && saved !== null && !configValuesEqual(
         { ...draft, nextdate: null },
         { ...(saved || {}), nextdate: null },
       ),
-    [draft, saved]
+    [draft, saved, loading]
   );
 
-  async function persist() {
+  async function persist(): Promise<boolean> {
+    if (loading || loadError || saved === null || saving) return false;
     setSaving(true);
     try {
       const res = await fetch(`/api/manage/${guildId}/qotd`, {
@@ -82,18 +87,37 @@ export function DailyQuestionsSection({ onNavigate }: { onNavigate?: (next: stri
       if (!res.ok) throw new Error();
       setNotice({ kind: "saved", text: "Daily Questions saved" });
       await load();
+      return true;
     } catch {
       setNotice({ kind: "error", text: "Could not save Daily Questions" });
+      return false;
     } finally {
       setSaving(false);
     }
   }
 
+  const persistRef = React.useRef(persist);
+  persistRef.current = persist;
+  const discardRef = React.useRef(() => setDraft(saved || {}));
+  discardRef.current = () => setDraft(saved || {});
+
+  useEffect(
+    () => registerExternalDraft("daily-questions", {
+      save: () => persistRef.current(),
+      discard: () => discardRef.current(),
+      label: "Daily Questions",
+    }),
+    [registerExternalDraft],
+  );
+  useEffect(() => {
+    setExternalDraftDirty("daily-questions", dirty);
+  }, [dirty, setExternalDraftDirty]);
+
   const webhookSection = findSection("daily-questions");
 
   return (
     <ModuleGate moduleKey="QOTD" moduleLabel="Daily Questions" onGoBack={() => onNavigate?.("modules")}>
-    <div className="space-y-5">
+    <div className="space-y-5" inert={saving}>
       <SectionHeader
         title="Daily Questions"
       />
@@ -103,6 +127,13 @@ export function DailyQuestionsSection({ onNavigate }: { onNavigate?: (next: stri
         <div className="glass-panel rounded-2xl py-12 text-center">
           <p className="cool-text text-sm">Loading…</p>
         </div>
+      ) : loadError ? (
+        <SettingsCard title="Posting">
+          <p role="alert" className="cool-text text-sm">{loadError}</p>
+          <button type="button" className="gw-btn mt-3" onClick={() => void load()}>
+            Retry loading settings
+          </button>
+        </SettingsCard>
       ) : (
         <SettingsCard
           title="Posting"
@@ -126,7 +157,7 @@ export function DailyQuestionsSection({ onNavigate }: { onNavigate?: (next: stri
               <button
                 type="button"
                 disabled={!dirty || saving}
-                onClick={persist}
+                onClick={() => void persist()}
                 className="btn-pop btn-peach inline-flex h-8 items-center gap-2 px-3 text-xs disabled:opacity-50"
               >
                 <SaveCloudIcon size={14} state={saving ? "saving" : "idle"} />

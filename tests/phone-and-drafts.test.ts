@@ -237,8 +237,8 @@ test("the audit log is grouped by day, in the window's parts", async () => {
 
 /* ── Sample people ──────────────────────────────────────────────────────── */
 
-test("previews only ever name .tmek, Alternative or offser", async () => {
-  const allowed = new Set([".tmek", "Alternative", "offser"]);
+test("previews only ever name Alex, Sam or Jordan", async () => {
+  const allowed = new Set(["Alex", "Sam", "Jordan"]);
   const people = [
     "{author.name}",
     "{author.mention}",
@@ -336,13 +336,7 @@ test("the server picker's blur starts on the press itself", async () => {
   assert.match(picker, /data-open=\{open \? "true" : showing \? "false" : "idle"\}/);
 });
 
-test("the intro's logo is the header's lockup, scaled", async () => {
-  const css = await source("src/components/site/intro.css");
-  const intro = await source("src/components/site/site-intro.tsx");
-  assert.match(intro, /<span className="g-intro-letters">/);
-  assert.match(css, /\.g-intro-word \{[^}]*align-items: center;[^}]*gap: 0\.47em;/);
-  assert.match(css, /\.g-intro-mark svg \{[^}]*height: 1\.72em;/);
-});
+
 
 test("each tab's mark has a gesture of its own", async () => {
   const css = await source("src/components/Manage/manage-window.css");
@@ -572,8 +566,6 @@ test("the invite is the one that works, everywhere", async () => {
 test("a page is never wider than the screen, so view transitions are not abandoned", async () => {
   const globals = await source("src/app/globals.css");
   assert.match(globals, /html,\s*\r?\nbody \{\s*overflow-x: clip;\s*\}/);
-  const intro = await source("src/components/site/intro.css");
-  assert.match(intro, /\.g-intro-field \{\s*inset: 7%;\s*\}/);
 });
 
 test("a tab brought in by a transition does not enter a second time", async () => {

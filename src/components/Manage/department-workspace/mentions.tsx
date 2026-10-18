@@ -7,6 +7,9 @@ import { IconDeviceGamepad2, IconUsers } from "@tabler/icons-react";
 import { DiscordLogo } from "@/components/brand-icons";
 import { MemberAvatar } from "../member-avatar";
 import { parseServerDate } from "./shared";
+import { memberMentions } from "./mention-tokens";
+
+export { mentionedMemberIds } from "./mention-tokens";
 
 /* @-mentions in announcements: the text area that inserts them, how they render, and the card a mention opens. */
 
@@ -134,63 +137,44 @@ export function MentionText({
   members,
   departmentName,
   accentColor,
+  mentionUserIds = [],
 }: {
   text: string;
   /** Roster rows (id/name/username/avatar/rankName/robloxId/joinedAt). */
   members: any[];
   departmentName?: string;
   accentColor?: string | null;
+  mentionUserIds?: string[];
 }) {
   const [popover, setPopover] = useState<{
     member: any;
     anchor: { x: number; y: number };
   } | null>(null);
-  const sorted = [...members].sort(
-    (a, b) => String(b.name || "").length - String(a.name || "").length,
-  );
   const parts: React.ReactNode[] = [];
-  let rest = text;
-  let key = 0;
-  while (rest.length) {
-    const at = rest.indexOf("@");
-    if (at < 0) {
-      parts.push(rest);
-      break;
-    }
-    const match = sorted.find(
-      (member) =>
-        member.name &&
-        rest
-          .slice(at + 1)
-          .toLowerCase()
-          .startsWith(String(member.name).toLowerCase()),
-    );
-    if (!match) {
-      parts.push(rest.slice(0, at + 1));
-      rest = rest.slice(at + 1);
-      continue;
-    }
-    if (at > 0) parts.push(rest.slice(0, at));
-    const label = rest.slice(at + 1, at + 1 + String(match.name).length);
+  let previous = 0;
+  for (const { start, end, member } of memberMentions(text, members, mentionUserIds)) {
+    if (start > previous) parts.push(text.slice(previous, start));
+    const label = text[start] === "<" ? `@${member.name}` : text.slice(start, end);
     parts.push(
       <button
-        key={key++}
+        key={start}
         type="button"
         onClick={(event) => {
           event.stopPropagation();
           const rect = event.currentTarget.getBoundingClientRect();
           setPopover({
-            member: match,
+            member,
             anchor: { x: rect.left + rect.width / 2, y: rect.bottom },
           });
         }}
         className="rounded bg-[color-mix(in_srgb,var(--accent-peach)_18%,transparent)] px-1 font-semibold text-[var(--accent-peach)] transition-colors hover:bg-[color-mix(in_srgb,var(--accent-peach)_30%,transparent)]"
       >
-        @{label}
+        {label}
       </button>,
     );
-    rest = rest.slice(at + 1 + String(match.name).length);
+    previous = end;
   }
+  if (previous < text.length) parts.push(text.slice(previous));
   return (
     <>
       {parts}
@@ -303,6 +287,9 @@ export function MentionTextArea({
                 event.preventDefault();
                 pick(member);
               }}
+              onClick={(event) => {
+                if (event.detail === 0) pick(member);
+              }}
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-white/75 hover:bg-white/[0.06] hover:text-white"
             >
               {member.avatar ? (
@@ -317,15 +304,4 @@ export function MentionTextArea({
       ) : null}
     </div>
   );
-}
-
-/** Which roster members are @mentioned in a piece of text. */
-export function mentionedMemberIds(
-  text: string,
-  members: { id: string; name: string }[],
-): string[] {
-  return members
-    .filter((member) => text.toLowerCase().includes(`@${member.name.toLowerCase()}`))
-    .map((member) => member.id)
-    .slice(0, 20);
 }

@@ -10,15 +10,14 @@ import { getDiscordBotInviteUrl } from "@/utils/discord-links";
 export default function Page({ searchParams }: { searchParams: Promise<{ u?: string }> }) {
   // A promise in this version of Next; read synchronously it warned on every
   // visit and will stop working in the next.
-  const query = use(searchParams).u || "";
-  const u = decodeURIComponent(query);
+  const u = use(searchParams).u || "";
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [username, setUsername] = useState<string>("");
 
   useEffect(() => {
     async function fetchRobloxData() {
       try {
-        const response = await fetch(`/api/roblox?id=${u}`);
+        const response = await fetch(`/api/roblox?id=${encodeURIComponent(u)}`);
         const data = await response.json();
         if (data.error) return;
         setUsername(data.username || "");
@@ -41,7 +40,7 @@ export default function Page({ searchParams }: { searchParams: Promise<{ u?: str
         ) : undefined
       }
       actions={[
-        { label: "Add Gator to a server", href: getDiscordBotInviteUrl() },
+        { label: "Add Bot to a server", href: getDiscordBotInviteUrl() },
         { label: "Your servers", href: "/servers" },
       ]}
     >

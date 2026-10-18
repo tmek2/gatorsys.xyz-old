@@ -1,4 +1,5 @@
-import { type FlowStep } from "../container-flow-builder";
+import type { FlowStep } from "../container-flow-builder";
+import type { MessageEmbed } from "../types";
 
 /* The container (Components v2) block model: types, Discord's limits, ids, summaries and validation. No React. */
 
@@ -31,6 +32,15 @@ export interface ContainerRowButton {
   reward_type?: string;
   role_ids?: string[];
   [key: string]: any;
+}
+
+/** Imported Discord styles and saved dashboard colors use the same four choices. */
+export function rowButtonColor(button: { color?: string; style?: string | number }): "Blue" | "Grey" | "Green" | "Red" {
+  const value = String(button.color ?? button.style ?? "Grey").toLowerCase();
+  if (["1", "blue", "blurple", "primary"].includes(value)) return "Blue";
+  if (["3", "green", "success"].includes(value)) return "Green";
+  if (["4", "red", "danger"].includes(value)) return "Red";
+  return "Grey";
 }
 
 export interface ContainerBlock {
@@ -76,6 +86,49 @@ export interface SystemComponentPreview {
   disabled?: boolean;
   placeholder?: string;
   options?: { label?: string; description?: string; emoji?: string }[];
+}
+
+export interface ContainerTemplateValue {
+  layout: ContainerBlock[];
+  color?: string;
+  content?: string;
+}
+
+/** Give an editor its own copy, including text outside the container. */
+export function copyContainerTemplate(template: Partial<ContainerTemplateValue>): ContainerTemplateValue {
+  return structuredClone({
+    layout: template.layout || [],
+    color: template.color || "none",
+    content: template.content || "",
+  });
+}
+
+export interface MessageTemplateValue {
+  content: string;
+  embed: MessageEmbed;
+  embeds?: MessageEmbed[];
+  render_mode: "legacy" | "v2";
+  v2_layout: ContainerBlock[];
+  v2_explicit_layout: boolean;
+  v2_color: string;
+  components: ContainerRowButton[];
+}
+
+/** Read both the current message template and the older content-only form. */
+export function messageTemplateValue(template: Record<string, any>): MessageTemplateValue {
+  const message = template.message || {};
+  const embeds: MessageEmbed[] = Array.isArray(message.embeds) ? message.embeds : [];
+  const firstEmbed = message.embed || embeds[0] || {};
+  return structuredClone({
+    content: message.content ?? template.content ?? "",
+    embed: firstEmbed,
+    embeds: embeds.length > 1 ? [firstEmbed, ...embeds.slice(1)] : undefined,
+    render_mode: message.render_mode === "v2" ? "v2" : "legacy",
+    v2_layout: message.v2_layout || [],
+    v2_explicit_layout: Boolean(message.v2_explicit_layout),
+    v2_color: message.v2_color || "none",
+    components: message.components || [],
+  });
 }
 
 /**
@@ -371,7 +424,8 @@ export function containerValidationError(blocks: ContainerBlock[]): string | nul
     for (const [index, block] of nodes.entries()) {
       const position = prefix ? `${prefix}, block ${index + 1}` : `Block ${index + 1}`;
       if (block.type === "container") {
-        const nested = walk(block.blocks || [], `Container ${index + 1}`);
+        if (!block.blocks?.length) return `${position} needs at least one block inside its container`;
+        const nested = walk(block.blocks, prefix ? position : `Container ${index + 1}`);
         if (nested) return nested;
         continue;
       }
@@ -381,6 +435,18 @@ export function containerValidationError(blocks: ContainerBlock[]): string | nul
         if (content.length > CONTAINER_LIMITS.text)
           return `${position} is over Discord’s 4,000 character limit`;
       }
+      if (block.type === "button_row") {
+        const width = (block.buttons || []).length;
+        if (width < 1 || width > CONTAINER_LIMITS.rowWidth)
+          return `${position} needs between 1 and ${CONTAINER_LIMITS.rowWidth} buttons`;
+      }
+      if (block.type === "media_gallery") {
+        const urls = block.urls || [];
+        if (!urls.length || urls.length > CONTAINER_LIMITS.galleryItems || urls.some((url) => !String(url || "").trim()))
+          return `${position} needs between 1 and ${CONTAINER_LIMITS.galleryItems} image URLs`;
+      }
+      if (block.type === "message_dropdown" && (block.templates || []).length > CONTAINER_LIMITS.selectOptions)
+        return `${position} cannot have more than ${CONTAINER_LIMITS.selectOptions} options`;
     }
     return null;
   };
@@ -414,7 +480,7 @@ export function injectLegacyModuleButton(
   inline = false,
 ): ContainerBlock[] {
   if (!systemButtons || !systemButtons.length) return blocks;
-  if (blocks.some((block) => block.type === "system_button")) return blocks;
+  if (layoutHasSystemButton(blocks)) return blocks;
   if (buttonAfter === undefined || buttonAfter === null || buttonAfter === "") return blocks;
   const index =
     typeof buttonAfter === "number"

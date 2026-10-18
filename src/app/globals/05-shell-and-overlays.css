@@ -1,0 +1,478 @@
+.topbar-frame {
+  transition:
+    padding 1350ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.topbar-shell {
+  width: 100%;
+  max-width: 100vw;
+  border-color: rgba(255, 255, 255, 0.1);
+  border-left-width: 0;
+  border-right-width: 0;
+  border-top-width: 0;
+  border-radius: 0;
+  background-color: rgba(5, 5, 5, 0.58);
+  box-shadow: none;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition:
+    max-width 600ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 600ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 600ms ease,
+    box-shadow 600ms ease,
+    border-color 600ms ease;
+}
+
+.topbar-frame .topbar-nav-link.nav-link:hover {
+  background-color: transparent;
+}
+
+.topbar-shell[data-scrolled="true"] {
+  max-width: 80rem;
+  border-left-width: 1px;
+  border-right-width: 1px;
+  border-top-width: 1px;
+  border-radius: 9999px;
+  background-color: rgba(5, 5, 5, 0.82);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+}
+
+.topbar-logo-text {
+  transition:
+    max-width 600ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Bot easter egg: a full barrel roll on the sidebar mascot. */
+@keyframes gatorBarrelRoll {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.25);
+  }
+  to {
+    transform: rotate(360deg) scale(1);
+  }
+}
+.gator-barrel-roll {
+  animation: gatorBarrelRoll 620ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gator-barrel-roll {
+    animation: none;
+  }
+}
+
+/* ── Save prompt + toast entrances (spring pop, animate-ui style) ─────────── */
+@keyframes saveBarPop {
+  0% {
+    opacity: 0;
+    transform: translateY(140%) scale(0.94);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-6%) scale(1.015);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes toastPop {
+  0% {
+    opacity: 0;
+    transform: translateX(24px) scale(0.96);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(-3px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+/* Reusable pop for modals/popovers. */
+@keyframes popupIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.popup-in {
+  animation: popupIn 240ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* A card added to the builder rises and fades in once. Keyed list items only
+   run this on mount. */
+@keyframes cardIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.card-in {
+  animation: cardIn 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.option-in {
+  animation: cardIn 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-in,
+  .option-in {
+    animation: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .popup-in {
+    animation: none;
+  }
+}
+
+
+
+@keyframes serverRefreshIn {
+  from {
+    opacity: 0.35;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cool-text {
+  color: rgba(232, 221, 221, 0.68);
+}
+
+.glass-panel {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
+    rgba(8, 8, 8, 0.74);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-fade-up,
+  .page-enter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .btn-pop,
+  .icon-button,
+  .topbar-frame,
+  .topbar-shell,
+  .topbar-logo-text,
+  .nav-link {
+    transition: none;
+  }
+}
+
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+
+/* Performance: respect reduced motion and stop infinite repaints */
+@media (prefers-reduced-motion: reduce) {
+  .glow {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+.topbar-nav-link {
+  display: inline-flex;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  padding-inline: 0.75rem;
+  color: rgba(245, 241, 241, 0.64);
+  font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  transition: background-color 240ms ease, color 240ms ease, transform 240ms ease;
+}
+
+.topbar-nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #fffafa;
+  transform: translateY(-1px);
+}
+
+@keyframes departmentModalIn {
+  from { opacity: 0; transform: translateY(18px) scale(.975); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes departmentStepIn {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes departmentCardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes departmentPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--accent-rgb) / .16); }
+  50% { box-shadow: 0 0 0 7px rgb(var(--accent-rgb) / 0); }
+}
+
+.animate-department-step {
+  animation: departmentStepIn 320ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-department-step {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ── dialogs and popovers ──
+
+   Scale-and-fade for popups and a matching backdrop fade. Add `.dialog-pop` to
+   the panel and `.dialog-backdrop` to the scrim. */
+@keyframes dialogPop {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.93);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.012);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes dialogBackdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.dialog-pop {
+  animation: dialogPop 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.dialog-backdrop {
+  animation: dialogBackdropIn 260ms ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dialog-pop,
+  .dialog-backdrop {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ═══ Motion system ═══
+
+   Shared tokens and transform/opacity-only primitives. Everything below
+   respects prefers-reduced-motion via the gate at the end of this block. */
+:root {
+  --motion-fast: 160ms;
+  --motion-base: 280ms;
+  --motion-slow: 520ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.44, 1);
+}
+
+/* Staggered list entrance: apply to a container; children rise in sequence.
+   Capped at 14 children so long tables never queue a parade. */
+.list-stagger > * {
+  animation: fadeUp var(--motion-slow) var(--ease-out-expo) both;
+}
+.list-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.list-stagger > *:nth-child(2) { animation-delay: 40ms; }
+.list-stagger > *:nth-child(3) { animation-delay: 80ms; }
+.list-stagger > *:nth-child(4) { animation-delay: 120ms; }
+.list-stagger > *:nth-child(5) { animation-delay: 160ms; }
+.list-stagger > *:nth-child(6) { animation-delay: 200ms; }
+.list-stagger > *:nth-child(7) { animation-delay: 235ms; }
+.list-stagger > *:nth-child(8) { animation-delay: 265ms; }
+.list-stagger > *:nth-child(9) { animation-delay: 290ms; }
+.list-stagger > *:nth-child(10) { animation-delay: 310ms; }
+.list-stagger > *:nth-child(11) { animation-delay: 325ms; }
+.list-stagger > *:nth-child(12) { animation-delay: 335ms; }
+.list-stagger > *:nth-child(13) { animation-delay: 342ms; }
+.list-stagger > *:nth-child(n + 14) { animation-delay: 348ms; }
+
+/* Skeleton shimmer — a translating gradient band (transform, not
+   background-position, so it never repaints). */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.045);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.055),
+    transparent
+  );
+  animation: skeletonSweep 1.6s var(--ease-out-expo) infinite;
+}
+:root[data-theme="light"] .skeleton {
+  background: rgba(64, 45, 36, 0.07);
+}
+:root[data-theme="light"] .skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 252, 248, 0.65),
+    transparent
+  );
+}
+@keyframes skeletonSweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes heroWordUp {
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes auroraFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes auroraDriftA {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  to {
+    transform: translate3d(9rem, 2.5rem, 0) rotate(14deg) scale(1.12);
+  }
+}
+@keyframes auroraDriftB {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1.06);
+  }
+  to {
+    transform: translate3d(-8rem, -2rem, 0) rotate(-12deg) scale(0.96);
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .list-stagger > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .skeleton::after {
+    animation: none !important;
+  }
+}
+
+/* Final cascade locks for the shared Bot shell. */
+.topbar-frame {
+  padding: 0 !important;
+}
+
+.topbar-shell,
+.topbar-shell[data-scrolled="true"] {
+  width: 100% !important;
+  max-width: none !important;
+  border-width: 0 0 1px !important;
+  border-radius: 0 !important;
+  border-color: var(--gator-border) !important;
+  background: color-mix(in srgb, var(--gator-canvas) 92%, transparent) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(18px);
+  transform: none !important;
+}
+
+.glass-panel {
+  border-color: var(--gator-border) !important;
+  background: var(--gator-surface) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* ── Bot restoration ── */
+:root[data-theme="light"] {
+  --gator-canvas: #faf4ec;
+  --gator-chrome: #f1e8de;
+  --gator-surface: #fffaf5;
+  --gator-surface-raised: #f7eee6;
+  --manage-chrome: var(--gator-chrome);
+}
+
+.manage-content {
+  margin-inline: 0;
+  max-width: none;
+  padding-block: clamp(2rem, 3.4vw, 3.5rem) !important;
+  padding-inline: clamp(1.5rem, 4vw, 4.5rem) !important;
+}
+
+.server-switcher {
+  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  background: #08090a !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16) !important;
+}
+
+:root[data-theme="light"] .server-switcher:hover {
+  background: rgba(86, 58, 46, 0.05) !important;
+}
+
+.resource-workspace-hero,
+.department-workspace-hero {
+  position: sticky;
+  top: 4rem;
+  z-index: 24;
+  margin-inline: calc(clamp(1.5rem, 4vw, 4.5rem) * -1);
+  padding: 0.25rem clamp(1.5rem, 4vw, 4.5rem) 1rem;
+  border-bottom: 1px solid var(--gator-border);
+  background: color-mix(in srgb, var(--gator-canvas) 94%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.department-workspace-hero {
+  top: 0;
+  margin-inline: -0.5rem;
+  padding: 0.5rem 0.5rem 0.85rem;
+}

@@ -497,7 +497,7 @@ export function SchemaField({ field }: { field: FieldDef }) {
   switch (field.type) {
     case "toggle": {
       const checked = Boolean(current ?? field.defaultValue ?? false);
-      // Toggle leads on the left (Gator-style), label + description to the
+      // Toggle leads on the left (Bot-style), label + description to the
       // right — inside the same card chrome as the other schema fields.
       /* A toggle uses the same row as every other setting, with the switch at
          the end. */

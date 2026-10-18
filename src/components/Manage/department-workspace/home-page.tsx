@@ -312,17 +312,8 @@ export function HomePage({
       visibility,
       visibility_role_ids: visibilityRanks,
       visibility_user_ids: visibilityUsers,
-      // Union of the members explicitly picked (that are still referenced in
-      // the text) and any @name matches, so mentions are captured reliably.
-      mention_user_ids: Array.from(
-        new Set([
-          ...mentionIds.filter((id) => {
-            const member = rosterMembers.find((entry) => entry.id === id);
-            return member && text.toLowerCase().includes(`@${member.name.toLowerCase()}`);
-          }),
-          ...mentionedMemberIds(text, rosterMembers),
-        ]),
-      ).slice(0, 20),
+      // Match whole mentions; picked ids disambiguate identical display names.
+      mention_user_ids: mentionedMemberIds(text, rosterMembers, mentionIds),
       reply_to: replyTo?.id || null,
       scheduled_for: delayToIso(scheduleDelay),
     };
@@ -341,28 +332,27 @@ export function HomePage({
       pending: true,
     };
     setPendingPosts((current) => [optimistic, ...current]);
-    setText("");
-    setMentionIds([]);
-    setReplyTo(null);
-    setAttachment(undefined);
-    setResourceId("");
-    setScheduleDelay(EMPTY_DELAY);
-    setScheduleOpen(false);
     setMore(false);
     const posted = await mutate(body);
     setPendingPosts((current) =>
       current.filter((item) => item.id !== optimistic.id),
     );
     if (posted) {
+      // Keep the full draft while sending. Only clear fields that still hold
+      // the submitted value, so typing during the request is preserved too.
+      setText((current) => current.trim() === body.content ? "" : current);
+      setMentionIds((current) => current === mentionIds ? [] : current);
+      setReplyTo((current) => current === replyTo ? null : current);
+      setAttachment((current) => current === attachment ? undefined : current);
+      setResourceId((current) => current === resourceId ? "" : current);
+      setScheduleDelay((current) => current === scheduleDelay ? EMPTY_DELAY : current);
+      setScheduleOpen(false);
       setNotice({
         kind: "saved",
         text: scheduledSummary
           ? `Announcement scheduled to post in ${scheduledSummary}`
           : "Announcement posted",
       });
-    } else {
-      // Failed — put the draft back so nothing is lost.
-      setText(optimistic.content);
     }
   }
   const memberCount = roster?.members || 0;
@@ -380,9 +370,12 @@ export function HomePage({
   // the delete + refetch round-trip.
   const [deletedShoutIds, setDeletedShoutIds] = useState<string[]>([]);
   const [confirmShout, setConfirmShout] = useState<any | null>(null);
-  function performDeleteShout(item: any) {
+  async function performDeleteShout(item: any) {
     setDeletedShoutIds((current) => [...current, String(item.id)]);
-    void mutate({ action: "announcement_delete", id: item.id });
+    const deleted = await mutate({ action: "announcement_delete", id: item.id });
+    if (!deleted) {
+      setDeletedShoutIds((current) => current.filter((id) => id !== String(item.id)));
+    }
   }
   function requestDeleteShout(item: any) {
     const skip =
@@ -594,8 +587,8 @@ export function HomePage({
                     },
                     {
                       icon: <IconBook2 size={16} />,
-                      label: "Attach a Gator resource",
-                      hint: "Attach a Gator doc or form",
+                      label: "Attach a Bot resource",
+                      hint: "Attach a Bot doc or form",
                       action: () => {
                         setMore(false);
                         setResourcePickerOpen(true);
@@ -701,7 +694,7 @@ export function HomePage({
                   />
                   <div className="relative max-h-[80vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/[0.08] bg-[#0e0e0e] p-4 shadow-2xl">
                     <h3 className="px-1 text-sm font-extrabold text-white">
-                      Attach a Gator resource
+                      Attach a Bot resource
                     </h3>
                     <div className="mt-3 space-y-1">
                       {resources.map((item) => (
@@ -849,6 +842,7 @@ export function HomePage({
                   <MentionText
                     text={item.content || ""}
                     members={roster?.memberRows || []}
+                    mentionUserIds={item.mention_user_ids}
                     departmentName={profile.name}
                     accentColor={(profile as any).accent_color}
                   />
@@ -926,7 +920,7 @@ export function HomePage({
           roster={roster}
           profile={profile}
           activity={activity}
-          requiredHours={Number(feature?.required_hours) || 0}
+          requiredHours={Number(feature.activity?.required_hours ?? feature.required_hours) || 0}
           onRefresh={onRefresh}
           pinned={feature.pinned_buttons || []}
           onPinned={(button) =>

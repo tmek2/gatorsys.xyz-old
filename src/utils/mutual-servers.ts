@@ -5,7 +5,8 @@ import type {
 } from "@/types/discord";
 import { fetchWithRetry } from "@/utils/api-helpers";
 import { getDiscordAccessToken } from "@/utils/discord-session-token";
-import { getCached, setCached } from "@/utils/redis";
+import { deleteCached, getCached, setCached } from "@/utils/redis";
+import { getBotApiConfig } from "@/server/config";
 
 /** The signed-in user's Discord token is missing or expired — the fix is a
  *  fresh sign-in, not "try again later". */
@@ -16,10 +17,10 @@ export class DiscordAuthExpiredError extends Error {
   }
 }
 
-/** Discord answered but the Gator bot API did not. */
+/** Discord answered but the bot API did not. */
 export class BotUnreachableError extends Error {
   constructor(cause?: unknown) {
-    super("Gator bot API unreachable");
+    super("Bot API unreachable");
     this.name = "BotUnreachableError";
     this.cause = cause;
   }
@@ -28,22 +29,21 @@ export class BotUnreachableError extends Error {
 /** The website and bot disagree about the private dashboard credential. */
 export class BotAuthenticationError extends Error {
   constructor() {
-    super("Gator bot API authentication failed");
+    super("Bot API authentication failed");
     this.name = "BotAuthenticationError";
   }
 }
 
-function getApiConfig() {
-  const apiUrl = (
-    process.env.PROD_API_URL || "https://fdny-systems-production.up.railway.app"
-  ).replace(/\/$/, "");
-  const apiAuth = process.env.API_AUTH?.trim();
+function mutualServerCacheKeys(userId: string) {
+  // v5 includes the banner and splash used by server cards. Keep read and
+  // invalidation keys together so a cache version change cannot split them.
+  const fresh = `discord:servers_and_mutuals:v5:${userId}`;
+  return { fresh, stale: `${fresh}:stale` };
+}
 
-  if (!apiAuth || apiAuth.startsWith("#")) {
-    throw new Error("API_AUTH is not configured");
-  }
-
-  return { apiUrl, apiAuth };
+export async function invalidateMutualServers(userId: string): Promise<void> {
+  const { fresh, stale } = mutualServerCacheKeys(userId);
+  await deleteCached(fresh, stale);
 }
 
 export async function fetchMutualServersForSession(
@@ -82,13 +82,10 @@ async function fetchMutualServers(
     throw new DiscordAuthExpiredError();
   }
 
-  // v5 carries the guild banner and invite splash used by the picker's cards;
-  // bumping the version is the cache migration.
-  const cacheKey = `discord:servers_and_mutuals:v5:${session.user.id}`;
+  const { fresh: cacheKey, stale: staleKey } = mutualServerCacheKeys(session.user.id);
   // A longer-lived "last known good" copy: after the 20-minute fresh cache
   // expires, the stale copy is served instantly and refreshed in the
   // background, so navigation never blocks on the Discord and bot round trip.
-  const staleKey = `${cacheKey}:stale`;
 
   // Does the actual Discord + bot fetch and writes both cache tiers.
   const runFetch = async (): Promise<MutualGuildsResponse> => {
@@ -106,7 +103,7 @@ async function fetchMutualServers(
       throw error;
     }
 
-    const { apiUrl, apiAuth } = getApiConfig();
+    const { baseUrl: apiUrl, auth: apiAuth } = getBotApiConfig();
     let mutualGuilds: MutualGuildsResponse;
     try {
       mutualGuilds = await fetchWithRetry<MutualGuildsResponse>(

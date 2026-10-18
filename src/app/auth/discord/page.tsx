@@ -1,5 +1,6 @@
 import { signIn } from "~/auth";
 import { DiscordAuthRedirect } from "./discord-auth-redirect";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,9 @@ function safeCallbackUrl(value: string | undefined): string {
  * automatic submit does not happen.
  */
 export default async function DiscordAuthPage({ searchParams }: DiscordAuthPageProps) {
+  if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
+    redirect("/setup#discord");
+  }
   const params = await Promise.resolve(searchParams);
   const callbackUrl = safeCallbackUrl(params?.callbackUrl);
 

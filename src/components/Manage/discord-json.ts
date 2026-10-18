@@ -220,7 +220,7 @@ export function messageToDiscord(
   // so the embed path would export `{}`.
   if (isContainerPayload(source)) {
     const output: Record<string, unknown> = {
-      ...layoutToDiscord(source.v2_layout || [], source.v2_color),
+      ...layoutToDiscord(source.v2_layout || [], source.v2_color, Boolean(source.v2_explicit_layout)),
     };
     if (message.content) output.content = message.content;
     // The editor's own layout, alongside the Discord tree. `components` cannot
@@ -313,7 +313,7 @@ export const V2_COLOR_HEX_FOR_JSON: Record<string, string> = {
 
 function buttonToDiscord(button: Record<string, any>): Record<string, unknown> {
   const styles: Record<string, number> = {
-    blurple: 1, primary: 1,
+    blurple: 1, blue: 1, primary: 1,
     grey: 2, gray: 2, secondary: 2,
     green: 3, success: 3,
     red: 4, danger: 4,
@@ -324,11 +324,17 @@ function buttonToDiscord(button: Record<string, any>): Record<string, unknown> {
     label: String(button.label ?? "").slice(0, 80) || undefined,
     // A link button carries a url and no custom_id; every other kind is the
     // reverse, and Discord rejects a button carrying both.
-    style: isLink ? 5 : styles[String(button.style ?? "grey").toLowerCase()] ?? 2,
+    style: isLink ? 5 : styles[String(button.color ?? button.style ?? "grey").toLowerCase()] ?? 2,
   };
   if (isLink) output.url = String(button.url || button.link || "");
   else output.custom_id = String(button.custom_id || button.command || "");
-  if (button.emoji) output.emoji = { name: String(button.emoji) };
+  if (button.emoji) {
+    const emoji = String(button.emoji);
+    const custom = emoji.match(/^<(a?):([^:>]+):(\d+)>$/);
+    output.emoji = custom
+      ? { id: custom[3], name: custom[2], ...(custom[1] ? { animated: true } : {}) }
+      : { name: emoji };
+  }
   if (button.disabled) output.disabled = true;
   return output;
 }
@@ -406,7 +412,9 @@ function buttonFromDiscord(raw: Record<string, any>): Record<string, unknown> {
     label: String(raw.label ?? ""),
     ...(isLink ? { url: String(raw.url ?? "") } : { custom_id: String(raw.custom_id ?? "") }),
     ...(raw.style && !isLink ? { style: styles[raw.style] ?? "grey" } : {}),
-    ...(raw.emoji?.name ? { emoji: String(raw.emoji.name) } : {}),
+    ...(raw.emoji?.id
+      ? { emoji: `<${raw.emoji.animated ? "a" : ""}:${raw.emoji.name || "emoji"}:${raw.emoji.id}>` }
+      : raw.emoji?.name ? { emoji: String(raw.emoji.name) } : {}),
     ...(raw.disabled ? { disabled: true } : {}),
   };
 }
@@ -534,10 +542,11 @@ export function isContainerPayload(source: Record<string, any>): boolean {
 export function layoutToDiscord(
   layout: any[],
   color: string | undefined,
+  explicitLayout = false,
 ): Record<string, unknown> {
   const blocks = (layout || []).map(blockToDiscord).filter(Boolean);
   // Wrapped in a container unless the layout already places its own.
-  const wrapped = blocks.some((block: any) => block?.type === V2_TYPE.container)
+  const wrapped = explicitLayout || blocks.some((block: any) => block?.type === V2_TYPE.container)
     ? blocks
     : [
         {

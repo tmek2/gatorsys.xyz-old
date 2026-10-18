@@ -93,10 +93,10 @@ export function AccountOverview({
     <div className="account-stack">
       {/* The page in ERM's settings layout: a plain title, then two columns of
          sheets, each a hairline box with a header band and rows divided by
-         hairlines. Palette, type and accent are Gator's. */}
+         hairlines. Palette, type and accent are Bot's. */}
       <header className="account-head">
         <h1>Account</h1>
-        <p>Your connections and the servers Gator is in with you.</p>
+        <p>Your connections and the servers Bot is in with you.</p>
       </header>
 
       <div className="account-grid">
@@ -159,7 +159,7 @@ export function AccountOverview({
                   {checking
                     ? "Checking your Roblox connection."
                     : failed
-                      ? "Gator could not reach Roblox just now."
+                      ? "Bot could not reach Roblox just now."
                       : "No Roblox account linked. Applications and in-game checks use it."}
                 </span>
               </p>
@@ -206,7 +206,7 @@ export function AccountOverview({
             <div className="account-card-head">
               <div>
                 <h2>Servers you manage</h2>
-                <p>Gator is in these with you.</p>
+                <p>Bot is in these with you.</p>
               </div>
               <RippleButton
                 as={Link}
@@ -228,11 +228,11 @@ export function AccountOverview({
             <div className="account-card-head">
               <div>
                 <h2>Your data</h2>
-                <p>What Gator knows, and how to change it.</p>
+                <p>What Bot knows, and how to change it.</p>
               </div>
               <IconShieldCheck size={18} className="account-card-mark" />
             </div>
-            {/* The data rows answer in place (a list of what Gator holds)
+            {/* The data rows answer in place (a list of what Bot holds)
                instead of linking into the privacy policy, which stays available
                for the exact wording. The third row (a privacy request) is a
                conversation with a person, so it stays a link with an arrow. */}
@@ -241,7 +241,7 @@ export function AccountOverview({
                 <details className="account-fold">
                   <summary>
                     <span className="account-row-name">
-                      What Gator collects
+                      What Bot collects
                     </span>
                     <IconChevronRight size={16} className="account-fold-mark" />
                   </summary>
@@ -275,7 +275,7 @@ export function AccountOverview({
                       as={Link}
                       className="account-facts-more account-button"
                       href="/privacy#information-we-collect"
-                      aria-label="More on what Gator collects, in the privacy policy"
+                      aria-label="More on what Bot collects, in the privacy policy"
                       variant="outline"
                       size="sm"
                     >
@@ -301,12 +301,12 @@ export function AccountOverview({
                     </div>
                     <div>
                       <dt>Stop collecting in a server</dt>
-                      <dd>Remove Gator from it.</dd>
+                      <dd>Remove Bot from it.</dd>
                     </div>
                     <div>
                       <dt>Stop entirely</dt>
                       <dd>
-                        Disconnect Gator in Discord, or sign out of this site.
+                        Disconnect Bot in Discord, or sign out of this site.
                       </dd>
                     </div>
                     <RippleButton

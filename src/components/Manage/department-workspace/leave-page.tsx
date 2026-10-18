@@ -42,6 +42,8 @@ export function LeavePage({
   const { guildId, setNotice } = useWorkspaceHost();
   const [sub, setSub] = useState("Recent");
   const loaSettings = feature.loa || {};
+  const requireReason = Boolean(loaSettings.require_reason);
+  const requireEndDate = Boolean(loaSettings.require_end_date);
   const patch = (next: any) => onStage("loa", { ...loaSettings, ...next });
   const canManage = can("loa_manager");
   const canAdmin = can();
@@ -338,7 +340,7 @@ export function LeavePage({
                     : ""}
                 </p>
                 <div className="mt-4 space-y-4">
-                  <FieldRow label="Reason *">
+                  <FieldRow label={requireReason ? "Reason *" : "Reason (optional)"}>
                     <TextAreaField
                       value={reason}
                       onChange={setReason}
@@ -346,7 +348,10 @@ export function LeavePage({
                       placeholder="Why are you taking leave?"
                     />
                   </FieldRow>
-                  <FieldRow label="Leave period *">
+                  <FieldRow
+                    label="Leave period *"
+                    description={requireEndDate ? "Choose a start and end date." : "Choose a start date. The end date is optional."}
+                  >
                     <DateRangeField
                       startValue={startsAt}
                       endValue={endsAt}
@@ -368,7 +373,7 @@ export function LeavePage({
                   </button>
                   <button
                     type="button"
-                    disabled={busy || !reason.trim() || !startsAt || !endsAt}
+                    disabled={busy || (requireReason && !reason.trim()) || !startsAt || (requireEndDate && !endsAt)}
                     onClick={async () => {
                       const ok = await loaAction(
                         {

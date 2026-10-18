@@ -26,7 +26,7 @@ import {
   REST,
   type Folder,
 } from "../modules";
-import { GatorLogo } from "../gator-logo";
+import { AppLogo } from "../app-logo";
 import { useTabDrag } from "./tab-drag";
 import { ModuleWallGrid } from "./wall-grid";
 import { ModuleGlyph } from "./module-glyphs";
@@ -64,7 +64,7 @@ const SIDEBAR: {
   Icon: typeof IconFolder;
   href?: string;
 }[] = [
-  { key: "gator", label: "Gator", Icon: IconFolder },
+  { key: "gator", label: "Overview", Icon: IconFolder },
   { key: "modules", label: "Modules", Icon: IconFolder },
   { key: "docs", label: "Documentation", Icon: IconBook, href: DOCS_URL },
   { key: "support", label: "Support", Icon: IconLifebuoy, href: SUPPORT_URL },
@@ -119,7 +119,7 @@ function nameOf(place: Place): { label: string; moduleKey: string | null } {
     const folder = FOLDERS.find((f) => f.key === place.sheet);
     return { label: folder?.label ?? "Folder", moduleKey: place.sheet };
   }
-  if (place.pane === "gator") return { label: "Gator", moduleKey: null };
+  if (place.pane === "gator") return { label: "Overview", moduleKey: null };
   if (place.pane === "legal") return { label: "Legal", moduleKey: null };
   return { label: "Modules", moduleKey: null };
 }
@@ -385,7 +385,7 @@ export function Finder({
 
   const title = useMemo(() => {
     if (folder) return folder.label;
-    if (pane === "gator") return "Gator";
+    if (pane === "gator") return "Overview";
     if (pane === "legal") return "Legal";
     return "Modules";
   }, [folder, pane]);
@@ -428,15 +428,16 @@ export function Finder({
         data-open={open ? "true" : "false"}
         onClick={onRequestOpen}
         disabled={open || !onRequestOpen}
-        aria-label="Open Explore Gator"
+        aria-label="Open Explore Bot"
         tabIndex={-1}
       />
 
       <section
+        id="features"
         className="g-mac"
         data-open={open ? "true" : "false"}
         data-full={full ? "true" : "false"}
-        aria-label="Explore Gator"
+        aria-label="Explore Bot"
         /* Parked, the window is off the page in every sense: nothing in it
            takes focus and nothing in it is announced. */
         inert={!open}
@@ -452,7 +453,7 @@ export function Finder({
           <header className="g-win-bar g-mac-bar">
             {/* The mark over the sidebar, where the dashboard keeps it. */}
             <span className="g-mac-brand" aria-hidden="true">
-              <GatorLogo size={22} />
+              <AppLogo size={22} />
             </span>
             {/* Back and forward: two plain glyphs, each disabled when there is
                nothing on that side. */}
@@ -520,7 +521,7 @@ export function Finder({
                           weight={2}
                         />
                       ) : (
-                        <GatorLogo size={14} />
+                        <AppLogo size={14} />
                       )}
                       <span className="g-tab-label">{label}</span>
                     </button>
@@ -654,7 +655,7 @@ export function Finder({
           <div className="g-mac-body">
             <nav className="g-mac-side" aria-label="Sections" ref={sideRef}>
               <span className="g-side-blob" aria-hidden="true" />
-              <h2>Gator</h2>
+              <h2>Overview</h2>
               {SIDEBAR.map(({ key, label, Icon, href }) =>
                 href ? (
                   <a
@@ -723,7 +724,7 @@ export function Finder({
                 />
               ) : pane === "gator" ? (
                 <Desk
-                  lede="The story behind Gator."
+                  lede="How the dashboard works."
                   files={[GATOR_FILE]}
                   onOpen={(file) => go({ note: file })}
                 />
@@ -764,7 +765,7 @@ export function Finder({
             ) : (
               <>
                 <span className="g-mac-path">
-                  Gator › {hits ? "Search" : title}
+                  Bot › {hits ? "Search" : title}
                 </span>
                 <span className="g-mac-path">
                   {hits

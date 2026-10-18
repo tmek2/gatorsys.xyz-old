@@ -30,6 +30,7 @@ let undo: ((leaving: number) => void) | null = null;
 /* The deferred half, if it has not run yet. Held so that a lock released
    before it fires never applies it at all. */
 let pending: number | null = null;
+let pendingRelease: (() => void) | null = null;
 
 function clearPending() {
   if (pending !== null) {
@@ -39,6 +40,9 @@ function clearPending() {
 }
 
 function begin(arriving: number) {
+  // Finish an earlier unlock before taking a new snapshot of the styles.
+  // Otherwise a sheet opened during another's exit captures overflow:hidden.
+  pendingRelease?.();
   const root = document.documentElement;
   const overflow = root.style.overflow;
   const gutter = root.style.scrollbarGutter;
@@ -84,13 +88,17 @@ function begin(arriving: number) {
     /* Nothing to put back if the page never got as far as the real lock. */
     if (!heavy) return;
     const give = () => {
-      pending = null;
+      clearPending();
+      pendingRelease = null;
       root.style.overflow = overflow;
       root.style.scrollbarGutter = gutter;
     };
     /* Wheel and touch work again the moment the listeners come off, so waiting
        out the exit before restoring overflow costs nothing. */
-    if (leaving > 0) pending = window.setTimeout(give, leaving);
+    if (leaving > 0) {
+      pendingRelease = give;
+      pending = window.setTimeout(give, leaving);
+    }
     else give();
   };
 }

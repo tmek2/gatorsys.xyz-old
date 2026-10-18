@@ -19,6 +19,7 @@ import {
   IconTypography,
 } from "@tabler/icons-react";
 import { PortalMenu } from "./fields";
+import { useLineListDraft } from "./use-line-list-draft";
 
 export type ValidationRule = {
   type:
@@ -144,6 +145,17 @@ const inputClass =
   "w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-sm text-[#f5f2f2] outline-none placeholder:text-white/25 focus:border-[rgb(var(--accent-rgb)/0.45)]";
 const asNumber = (raw: string) => (raw === "" ? undefined : Number(raw));
 
+function AllowedAnswersField({ values, onChange }: { values: string[]; onChange: (values: string[]) => void }) {
+  const field = useLineListDraft(values, onChange);
+  return <textarea
+    className={inputClass}
+    rows={3}
+    value={field.value}
+    placeholder="One allowed answer per line"
+    onChange={(event) => field.onChange(event.target.value)}
+  />;
+}
+
 function RuleFields({
   rule,
   patch,
@@ -221,15 +233,7 @@ function RuleFields({
     );
   if (rule.type === "custom_list")
     return (
-      <textarea
-        className={inputClass}
-        rows={3}
-        value={(rule.values || []).join("\n")}
-        placeholder="One allowed answer per line"
-        onChange={(e) =>
-          patch({ values: e.target.value.split("\n").filter(Boolean) })
-        }
-      />
+      <AllowedAnswersField values={rule.values || []} onChange={(values) => patch({ values })} />
     );
   return (
     <div className="space-y-2">

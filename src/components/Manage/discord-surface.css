@@ -1,16 +1,5 @@
-/* The Discord surface: every message the dashboard draws.
-
-   Taken from the mockup builder (tmek2/gatorsys-builder, src/discord), whose
-   colours come from Discord's own theme definitions and whose sizes are
-   measured from the client: 40px avatars on a 56px gutter, 16px content at
-   1.375 line height, a 4px accent on an embed and 8px on a container.
-
-   The dark appearance is Onyx, Discord's near-black, which sits on the
-   dashboard's black without a seam; light mode uses Discord's Light. The face
-   is Inter, as in the builder (Discord's gg sans cannot be shipped).
-
-   Token names are Discord's own, defined at the root because previews can
-   appear anywhere, and nothing else on the site uses them. */
+/* Shared Discord message preview tokens. Keep these scoped to preview surfaces
+   so changing the dashboard theme cannot alter authored message colours. */
 
 :root {
   --chat-background-default: hsl(0 0% 6.863%);
@@ -1212,7 +1201,7 @@
   }
 }
 
-/* Discord sets text a size down inside a container. */
+/* Shared Discord message preview styles. */
 .dc-text-display[data-size="small"] {
   font-size: 0.875rem;
   line-height: 1.125rem;

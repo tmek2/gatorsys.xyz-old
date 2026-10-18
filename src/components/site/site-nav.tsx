@@ -9,8 +9,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { usePathname, useRouter } from "next/navigation";
 import { Link, useTransitionRouter } from "next-view-transitions";
 import { IconArrowLeft, IconBook2, IconLayoutDashboard, IconLifebuoy } from "@tabler/icons-react";
-import { DOCS_URL, SUPPORT_URL } from "@/config/site";
-import { GatorLogo } from "./gator-logo";
+import { DOCS_URL, SUPPORT_URL, SITE_NAME } from "@/config/site";
+import { AppLogo } from "./app-logo";
 import { ThemeToggle } from "./theme-toggle";
 import { CommandPalette } from "./command-palette";
 import { HoverTip } from "./hover-tip";
@@ -23,13 +23,11 @@ export interface LandingUser {
   image: string | null;
 }
 
-/* Two links leave the site (the docs at docs.gatorsys.xyz and the Discord
-   invite), so they are plain anchors: next/link would prefetch an RSC payload
-   for a route this app does not serve. Both URLs come from the site config. */
+/* Configured external destinations use ordinary anchors. */
 const LINKS = [
-  { href: DOCS_URL, label: "Documentation", Icon: IconBook2, external: true },
+  { href: DOCS_URL, label: "Documentation", Icon: IconBook2, external: DOCS_URL.startsWith("http") },
   { href: "/servers", label: "Dashboard", Icon: IconLayoutDashboard, external: false },
-  { href: SUPPORT_URL, label: "Support", Icon: IconLifebuoy, external: true },
+  { href: SUPPORT_URL, label: "Support", Icon: IconLifebuoy, external: SUPPORT_URL.startsWith("http") },
 ];
 
 /* `useLayoutEffect` warns on the server and `useEffect` runs after the first
@@ -148,8 +146,8 @@ export function SiteNav({
           </button>
         ) : (
           <Link className="g-brand" href="/">
-            <GatorLogo size={30} />
-            <span className="g-brand-word">Gator</span>
+            <AppLogo size={30} />
+            <span className="g-brand-word">{SITE_NAME}</span>
           </Link>
         )}
 

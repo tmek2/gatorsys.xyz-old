@@ -1,5 +1,7 @@
 "use client";
 
+
+import { DOCS_URL } from "@/config/site";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
@@ -261,7 +263,7 @@ export function UserMenu({ user, openOnHover = true }: UserMenuProps) {
                 {/* No Roblox row: whether Roblox is linked is shown on the
                    account page. */}
                 <Link
-                  href="https://docs.gatorsys.xyz"
+                  href={DOCS_URL}
                   target="_blank"
                   onClick={() => setOpen(false)}
                   className="gator-user-menu-item"

@@ -1,12 +1,13 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/utils/site-url";
 
 /**
  * Only the site's own marketing pages. Every other route is behind a session or
  * is customer content, which robots.ts keeps out of search.
  */
-const BASE = "https://www.gatorsys.xyz";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const BASE = getSiteUrl();
   const now = new Date();
   return [
     { url: BASE, lastModified: now, changeFrequency: "weekly", priority: 1 },

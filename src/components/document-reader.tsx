@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+
+import { DOCS_URL } from "@/config/site";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -19,6 +21,8 @@ import {
 } from "@tabler/icons-react";
 import { HeaderShell } from "@/components/legacy-header/header-shell";
 import { isLive } from "@/utils/viewer";
+import { sanitizeDocumentHtml } from "@/utils/document-html";
+import { copyToClipboard } from "@/utils/copy-to-clipboard";
 
 function parseServerDate(value: any): Date {
   if (
@@ -105,7 +109,10 @@ export function DocumentReader({
   const [pageId, setPageId] = useState("root");
   const [menu, setMenu] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [navOpen, setNavOpen] = useState(false);
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -160,10 +167,11 @@ export function DocumentReader({
     [resource, subdocuments],
   );
   const pageIndex = pages.findIndex((page) => page.id === pageId);
-  const html =
+  const rawHtml =
     pageId === "root"
       ? resource?.document_html || ""
       : subdocuments.find((page) => page.id === pageId)?.html || "";
+  const html = useMemo(() => sanitizeDocumentHtml(rawHtml), [rawHtml]);
   const grid: any[][] = Array.isArray(resource?.spreadsheet_data)
     ? resource.spreadsheet_data
     : [];
@@ -174,12 +182,18 @@ export function DocumentReader({
     router.push("/servers");
   }
 
-  function copyLink() {
+  async function copyLink() {
     if (typeof window === "undefined") return;
-    void navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
     setMenu(null);
-    window.setTimeout(() => setCopied(false), 1600);
+    setCopied(false);
+    setCopyError("");
+    clearTimeout(copyTimer.current);
+    if (await copyToClipboard(window.location.href)) {
+      setCopied(true);
+      copyTimer.current = setTimeout(() => setCopied(false), 1600);
+    } else {
+      setCopyError("Could not copy this link. Copy it from the address bar.");
+    }
   }
 
   const fileItems = isSpreadsheet
@@ -228,7 +242,7 @@ export function DocumentReader({
     {
       label: "Documentation",
       icon: <IconBook2 size={15} />,
-      action: () => window.open("https://docs.gatorsys.xyz", "_blank"),
+      action: () => window.open(DOCS_URL, "_blank"),
     },
     {
       label: "Give Feedback",
@@ -347,10 +361,11 @@ export function DocumentReader({
               </div>
             </div>
             {copied ? (
-              <span className="mt-1 inline-flex items-center gap-2 rounded-xl border border-[var(--tone-ok-line)] bg-[var(--tone-ok-soft)] px-3 py-1 text-[11px] font-bold text-[var(--tone-ok)]">
+              <span role="status" className="mt-1 inline-flex items-center gap-2 rounded-xl border border-[var(--tone-ok-line)] bg-[var(--tone-ok-soft)] px-3 py-1 text-[11px] font-bold text-[var(--tone-ok)]">
                 <IconCheck size={13} /> Link copied
               </span>
             ) : null}
+            {copyError ? <span role="status" className="mt-1 text-xs text-[var(--tone-warn)]">{copyError}</span> : null}
           </div>
         </header>
 

@@ -5,7 +5,7 @@ import { IconFolderDown, IconFolderUp, IconSearch } from "@tabler/icons-react";
 import { cleanEmbed } from "../embed-editor";
 import { useManage } from "../manage-context";
 import type { MessageEmbed } from "../types";
-import { ContainerBlock } from "./model";
+import { copyContainerTemplate, type ContainerBlock, type ContainerTemplateValue } from "./model";
 
 /* Saving a message as a template and loading one. */
 
@@ -35,7 +35,7 @@ export function TemplateBar({
   embed?: MessageEmbed;
   container?: { layout: ContainerBlock[]; color?: string; content?: string };
   onLoadEmbed?: (embed: MessageEmbed) => void;
-  onLoadContainer?: (template: { layout: ContainerBlock[]; color?: string }) => void;
+  onLoadContainer?: (template: ContainerTemplateValue) => void;
 }) {
   const { guildId, setNotice } = useManage();
   const [templates, setTemplates] = useState<{
@@ -111,10 +111,7 @@ export function TemplateBar({
   function loadTemplate(template: TemplateDoc) {
     setName(template.name);
     if (mode === "container") {
-      onLoadContainer?.({
-        layout: JSON.parse(JSON.stringify(template.layout || [])),
-        color: template.color || "none",
-      });
+      onLoadContainer?.(copyContainerTemplate(template));
     } else {
       onLoadEmbed?.(JSON.parse(JSON.stringify(template.embed || {})));
     }

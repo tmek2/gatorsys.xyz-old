@@ -1,4 +1,4 @@
-/* What Gator does: the module list, taken from MODULE_TOGGLES in the dashboard
+/* What Bot does: the module list, taken from MODULE_TOGGLES in the dashboard
    schema (the list the dashboard itself runs on). Each group has one accent;
    the folders on the wall pick their own hues. */
 
@@ -169,7 +169,7 @@ export const MODULE_GROUPS: ModuleGroup[] = [
       },
       {
         key: "gatorai",
-        name: "GatorAI",
+        name: "Assistant",
         purpose: "The assistant: ticket answers, replies, and the /ask command.",
       },
     ],
@@ -214,7 +214,7 @@ export const MODULE_BY_KEY = new Map(MODULES.map((m) => [m.key, m]));
 
 /* ── the folders ── */
 
-/* The ten modules on the wall: what Gator does that a typical server bot does
+/* The ten modules on the wall: what Bot does that a typical server bot does
    not. The other sixteen are listed in the drawer under it. Each folder has its
    own hue. */
 export interface Folder {
@@ -385,7 +385,7 @@ export const FOLDERS: Folder[] = [
   },
   {
     key: "gatorai",
-    label: "GatorAI",
+    label: "Assistant",
     hue: "#c07fbd",
     pitch: "Optional. It answers the easy half and hands you the rest.",
     without: "The same six questions, typed out by hand, every single day.",

@@ -22,7 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { PresenceList } from "@/components/motion";
 import { ButtonColorSwatches, ButtonTargets, useButtonTargets } from "./button-controls";
 import { InlineFormBuilder } from "./form-builder";
-import { CONTAINER_LIMITS, ContainerRowButton } from "./model";
+import { CONTAINER_LIMITS, ContainerRowButton, rowButtonColor } from "./model";
 import { PreviewButton } from "./preview";
 
 /* Editing one button (its type, label, colour and target) and the legacy rows of buttons. */
@@ -211,7 +211,7 @@ export function RowButtonEditor({
         {/* Discord draws link buttons grey only, so no colour choice for them. */}
         {button.type !== "link" ? (
           <ButtonColorSwatches
-            value={button.color || "Grey"}
+            value={rowButtonColor(button)}
             onChange={(next) => patchButton({ color: next })}
           />
         ) : null}

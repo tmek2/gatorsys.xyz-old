@@ -11,7 +11,7 @@ import { Check } from "./shared";
 
 /* Promote and punish dialogs, opened from the roster and the Infractions tab. */
 
-/** Gator "Create Promotion" flow. */
+/** Bot "Create Promotion" flow. */
 export function PromotionModal({
   targets,
   ranks,
@@ -279,7 +279,7 @@ export function PromotionModal({
   );
 }
 
-/** Gator "Punish Member" flow — proof uploads, 0 points = note. */
+/** Bot "Punish Member" flow — proof uploads, 0 points = note. */
 export function PunishModal({
   targets,
   profileId,

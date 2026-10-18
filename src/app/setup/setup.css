@@ -1,0 +1,8 @@
+.setup-page { min-height: 100dvh; }
+.setup-guide { width: min(72ch, calc(100% - 2.5rem)); margin: 4rem auto 6rem; line-height: 1.75; color: var(--g-ink, var(--gs-text)); }
+.setup-guide h1 { font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.15; letter-spacing: -.025em; margin-bottom: 1.5rem; }
+.setup-guide h2 { font-size: 1.4rem; line-height: 1.3; margin-bottom: 1rem; }
+.setup-guide section { margin-top: 3rem; scroll-margin-top: 6rem; }
+.setup-guide p { margin-block: 1rem; }
+.setup-guide pre { padding: 1.1rem 1.25rem; border: 1px solid var(--gs-line); border-radius: .65rem; overflow-x: auto; background: var(--gs-surface); font-size: .875rem; line-height: 1.7; }
+.setup-guide code { overflow-wrap: anywhere; }

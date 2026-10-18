@@ -10,7 +10,7 @@ export const metadata: Metadata = {
      the description is this page's own, for search results and link previews. */
   title: SITE_NAME,
   description:
-    "How Gator handles information used by the website and Discord application.",
+    "How Bot handles information used by the website and Discord application.",
 };
 
 const sections = [
@@ -19,13 +19,13 @@ const sections = [
     content: (
       <>
         <p>
-          When you sign in with Discord, Gator receives the account details
+          When you sign in with Discord, Bot receives the account details
           needed to identify you, such as your Discord user ID, username, and
           avatar. We also receive the list of servers Discord makes available to
           your account so we can show the communities you can manage.
         </p>
         <p>
-          When Gator is used in a server, it may process server IDs, roles,
+          When Bot is used in a server, it may process server IDs, roles,
           channels, permission settings, moderation records, infractions, ticket
           and transcript content, staff activity, and configuration choices
           required for enabled features.
@@ -50,7 +50,7 @@ const sections = [
           configuration features.
         </li>
         <li>
-          Protect Gator and connected communities from abuse or unauthorized
+          Protect Bot and connected communities from abuse or unauthorized
           access.
         </li>
         <li>
@@ -66,7 +66,7 @@ const sections = [
     content: (
       <>
         <p>
-          Gator does not sell Discord API data or use it for advertising.
+          Bot does not sell Discord API data or use it for advertising.
           Information is shared only when needed with Discord, hosting,
           database, caching, and infrastructure providers that operate the
           service; when a server administrator directs an action; or when
@@ -92,9 +92,9 @@ const sections = [
         </p>
         <p>
           A user or authorized server administrator may request access,
-          correction, or deletion through Gator support. We will verify the
+          correction, or deletion through Bot support. We will verify the
           request and remove eligible information unless retention is required
-          for security, dispute resolution, or legal compliance. Removing Gator
+          for security, dispute resolution, or legal compliance. Removing Bot
           from a server stops new server data from being collected through that
           installation.
         </p>
@@ -107,7 +107,7 @@ const sections = [
       <p>
         The website uses essential cookies and encrypted session information to
         keep you signed in, protect authenticated routes, and remember the
-        account associated with a request. Gator does not use advertising
+        account associated with a request. Bot does not use advertising
         cookies.
       </p>
     ),
@@ -128,7 +128,7 @@ const sections = [
     title: "Age Requirements",
     content: (
       <p>
-        Gator is not directed to children under 13. You must also meet the
+        Bot is not directed to children under 13. You must also meet the
         minimum age required to use Discord in your country. If we learn that
         information was collected from someone who does not meet those
         requirements, we will take reasonable steps to delete it.
@@ -151,7 +151,7 @@ const sections = [
     title: "Policy Updates",
     content: (
       <p>
-        We may update this policy when Gator changes or when legal requirements
+        We may update this policy when Bot changes or when legal requirements
         change. The effective date at the top of this page identifies the
         current version. Material changes will be communicated through the
         website or support community when appropriate.
@@ -188,7 +188,7 @@ export default async function PrivacyPage() {
         <>
           <details className="g-legal-data-details">
             <summary>Data overview</summary>
-            {/* Three kinds of information Gator holds, one block each, read down
+            {/* Three kinds of information Bot holds, one block each, read down
                with each label beside its line and the same three questions in
                the same order (the account page uses the same shape). */}
             <div className="g-legal-data">
@@ -197,13 +197,13 @@ export default async function PrivacyPage() {
                   what: "Your Discord identity and server list",
                   for: "Signing you in, and working out which servers you can manage.",
                   long: "Your sign-in lasts until you sign out. The server list is cached for 20 minutes, with a fallback copy kept for a day.",
-                  can: "Sign out, or disconnect Gator in Discord",
+                  can: "Sign out, or disconnect Bot in Discord",
                   href: "#your-choices-and-rights",
                 },
                 {
                   what: "Server settings, and what the switched-on modules record",
                   for: "Running those features: infractions, tickets and transcripts, shifts, staff activity.",
-                  long: "Until someone asks for it to be deleted. Nothing here expires on its own, and removing Gator from a server stops new records without clearing the old ones.",
+                  long: "Until someone asks for it to be deleted. Nothing here expires on its own, and removing Bot from a server stops new records without clearing the old ones.",
                   can: "Ask support to export, correct or delete it",
                   href: "#retention-and-deletion",
                 },
@@ -239,7 +239,7 @@ export default async function PrivacyPage() {
           </details>
         </>
       }
-      summary="How Gator handles account, server, and service data."
+      summary="How Bot handles account, server, and service data."
       sections={sections}
     />
   );

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useApplicationDraft } from "@/components/use-application-draft";
 import { questionUnanswered } from "../question-input";
 import { FormQuestionCard } from "@/components/form-question-field";
 import {
@@ -18,6 +20,7 @@ import { useWorkspaceHost } from "../workspace-host";
 import type { ApplicationQuestion } from "../types";
 import type { DepartmentProfile } from "../types";
 import { DOCUMENT_FRAME_STYLE, timeAgo } from "./shared";
+import { sanitizeDocumentHtml } from "@/utils/document-html";
 
 /* The department's documents, spreadsheets and forms, as the Resources tab lists them. */
 
@@ -91,7 +94,7 @@ export function createIntegrityTracker() {
   };
 }
 
-/** Gator read-only library: sidebar of resources, reader pane with
+/** Bot read-only library: sidebar of resources, reader pane with
  *  next-page navigation. Used for members without manage_resources. */
 export function ResourceLibrary({
   profile,
@@ -108,6 +111,7 @@ export function ResourceLibrary({
   onRefresh: () => Promise<void>;
 }) {
   const { guildId, setNotice, portalBase } = useWorkspaceHost();
+  const { data: session } = useSession();
   // Members without edit permission open documents/spreadsheets in the
   // full-page read-only reader (editor chrome, no editing).
   const readerBase = portalBase || `/departments/${guildId}/${profile.id}`;
@@ -134,10 +138,14 @@ export function ResourceLibrary({
   const [openId, setOpenId] = useState<string | null>(
     initialOpenId || ordered[0]?.id || null,
   );
-  const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState(false);
   const integrity = useRef(createIntegrityTracker());
   const current = ordered.find((item) => item.id === openId) || ordered[0];
+  const { key: draftKey, answers, setAnswers, clearDraft } = useApplicationDraft(
+    session?.user?.id || "",
+    guildId,
+    current?.kind === "application" ? String(current.id) : "",
+  );
   const currentIndex = current
     ? ordered.findIndex((item) => item.id === current.id)
     : -1;
@@ -151,7 +159,6 @@ export function ResourceLibrary({
     subId === "root"
       ? current?.document_html || ""
       : subdocuments.find((item: any) => item.id === subId)?.html || "";
-  const draftKey = current ? `gator-app-draft-${guildId}-${current.id}` : "";
   const missingRequired = Boolean(
     current?.kind === "application" &&
       (current.questions || []).some((question: ApplicationQuestion) =>
@@ -168,8 +175,6 @@ export function ResourceLibrary({
     }
     setOpenId(id);
     setSubId("root");
-    setAnswers({});
-    integrity.current = createIntegrityTracker();
   }
   useEffect(() => {
     if (
@@ -180,32 +185,10 @@ export function ResourceLibrary({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialOpenId, resources]);
-  // Restore any saved draft for this application so tabbing out / reloading
-  // never loses typed answers.
+  // Integrity belongs to this person's current application, just like answers.
   useEffect(() => {
-    if (!draftKey || current?.kind !== "application") return;
-    try {
-      const stored = localStorage.getItem(draftKey);
-      if (stored) setAnswers(JSON.parse(stored) || {});
-    } catch {
-      /* ignore corrupt drafts */
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    integrity.current = createIntegrityTracker();
   }, [draftKey]);
-  // Persist the draft on every change and count tab-outs as an integrity
-  // signal (people paste AI answers from another tab).
-  useEffect(() => {
-    if (!draftKey || current?.kind !== "application") return;
-    try {
-      if (Object.keys(answers).length) {
-        localStorage.setItem(draftKey, JSON.stringify(answers));
-      } else {
-        localStorage.removeItem(draftKey);
-      }
-    } catch {
-      /* storage may be unavailable */
-    }
-  }, [answers, draftKey, current?.kind]);
   useEffect(() => {
     const onBlur = () => integrity.current.onBlur?.();
     window.addEventListener("blur", onBlur);
@@ -228,12 +211,7 @@ export function ResourceLibrary({
       const data = await response.json().catch(() => ({}));
       if (!response.ok)
         throw new Error(data.detail || "Could not submit application");
-      setAnswers({});
-      try {
-        if (draftKey) localStorage.removeItem(draftKey);
-      } catch {
-        /* ignore */
-      }
+      clearDraft();
       integrity.current = createIntegrityTracker();
       setNotice({ kind: "saved", text: `${current.title} submitted` });
     } catch (error) {
@@ -317,7 +295,7 @@ export function ResourceLibrary({
                 <iframe
                   sandbox=""
                   title={current.title}
-                  srcDoc={`${DOCUMENT_FRAME_STYLE}${activeHtml}`}
+                  srcDoc={`${DOCUMENT_FRAME_STYLE}${sanitizeDocumentHtml(activeHtml)}`}
                   className="mt-5 h-[62vh] w-full rounded-xl border border-white/[0.08]"
                 />
               ) : current.kind === "spreadsheet" ? (

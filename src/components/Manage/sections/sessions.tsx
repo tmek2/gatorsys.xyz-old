@@ -234,6 +234,7 @@ function SessionMessageCard({ messageKey, label, hint }: { messageKey: string; l
                 container={{ layout: blocks, color: current.v2_color || "none", content: current.content }}
                 onLoadContainer={(template) =>
                   patch({
+                    content: template.content || "",
                     v2_layout: template.layout,
                     v2_color: template.color || "none",
                     v2_explicit_layout: true,

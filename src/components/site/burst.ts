@@ -7,7 +7,7 @@
 
 import type { CreateTypes } from "canvas-confetti";
 
-/** The site's own colours, the same as "Free" on the landing. */
+/** Use the same accent palette as the dashboard. */
 const COLOURS = ["#f7a8c4", "#ffffff", "#5fd08a", "#ffd7e6", "#c9f5db"];
 
 let gun: CreateTypes | null = null;

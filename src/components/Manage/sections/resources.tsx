@@ -179,12 +179,13 @@ function ResourceCardMenu({
 }
 
 export function ResourcesSection() {
-  const { guildId, value, stage, dirty, saving, save, setNotice } = useManage();
+  const { guildId, value, commit, setNotice } = useManage();
 
   const [serverResources, setServerResources] = useState<any[]>([]);
 
   const [duplicating, setDuplicating] = useState<string | null>(null);
   const [resourceLoading, setResourceLoading] = useState(true);
+  const [resourceError, setResourceError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [creatingResource, setCreatingResource] =
     useState<NewResourceKind | null>(null);
@@ -206,12 +207,6 @@ export function ResourcesSection() {
     [allApplications],
   );
 
-  useEffect(() => {
-    if (!dirty || saving) return;
-    const timer = window.setTimeout(() => void save("Resources"), 650);
-    return () => window.clearTimeout(timer);
-  }, [dirty, save, saving]);
-
   const documents = useMemo(
     () =>
       serverResources.filter(
@@ -224,10 +219,15 @@ export function ResourcesSection() {
 
   const loadServerResources = useCallback(async () => {
     setResourceLoading(true);
+    setResourceError(null);
     try {
       const response = await fetch(`/api/manage/${guildId}/deptresources`);
       const data = await response.json().catch(() => ({}));
-      setServerResources(response.ok ? data.resources || [] : []);
+      if (!response.ok || !Array.isArray(data.resources))
+        throw new Error(data.detail || "Could not load this server's resources.");
+      setServerResources(data.resources);
+    } catch (error) {
+      setResourceError(error instanceof Error ? error.message : "Could not load this server's resources.");
     } finally {
       setResourceLoading(false);
     }
@@ -271,7 +271,7 @@ export function ResourcesSection() {
         clone.name = copyName(source.name || source.id);
         // Responses stay with the original form; a copy starts empty.
         delete (clone as Record<string, unknown>).responses;
-        saveApps([...applications, clone]);
+        if (!await saveApps([...applications, clone])) return;
         setNotice({ kind: "saved", text: `Duplicated ${source.name || source.id}.` });
         return;
       }
@@ -335,7 +335,7 @@ export function ResourcesSection() {
     setDuplicating(id);
     try {
       if (kind === "application") {
-        saveApps(applications.filter((app) => app.id !== id));
+        if (!await saveApps(applications.filter((app) => app.id !== id))) return;
         setNotice({ kind: "saved", text: `Deleted ${label}.` });
         return;
       }
@@ -422,7 +422,7 @@ export function ResourcesSection() {
       text:
         kind === "folder"
           ? "Folders are coming. Resources are a flat list for now."
-          : "Gators are coming. This server is one gator for now.",
+          : "Create a department to organize this server.",
     });
   }
 
@@ -450,7 +450,7 @@ export function ResourcesSection() {
             <NewResourceMenu
               busyKind={creatingResource}
               onCreate={createResource}
-              disabled={resourceCount >= RESOURCE_LIMIT}
+              disabled={resourceCount >= RESOURCE_LIMIT || resourceLoading || Boolean(resourceError)}
             />
           </span>
         }
@@ -458,16 +458,18 @@ export function ResourcesSection() {
     </div>
   );
 
-  function saveApps(next: GuildApplication[]) {
+  function saveApps(next: GuildApplication[]): Promise<boolean> {
     const departmentApplications = allApplications.filter(
       (application) =>
         application.scope === "department" ||
         Boolean(application.department_id || application.department),
     );
-    stage("Applications.applications", [...next, ...departmentApplications]);
     // The bot's public form 404s unless the module flag is on; Discord-side
     // saves set it too, so mirror that here.
-    stage("Modules.Applications", true);
+    return commit({
+      "Applications.applications": [...next, ...departmentApplications],
+      "Modules.Applications": true,
+    }, "Resources");
   }
 
   /**
@@ -485,6 +487,11 @@ export function ResourcesSection() {
         // fetch; one skeleton covers both so the page does not appear
         // half-loaded.
         <SkeletonBlock height="10rem" label="Loading gator…" />
+      ) : resourceError ? (
+        <div role="alert" className="gw-set rounded-xl p-5">
+          <p>{resourceError}</p>
+          <button type="button" className="gw-btn mt-3" onClick={() => void loadServerResources()}>Retry loading resources</button>
+        </div>
       ) : workspaceEmpty ? (
         <EmptyState
           title="Nothing built yet"
@@ -706,14 +713,16 @@ export function ResourcesSection() {
               </button>
               <button
                 type="button"
-                disabled={!newApp.name.trim()}
-                onClick={() => {
+                disabled={!newApp.name.trim() || Boolean(creatingResource)}
+                onClick={async () => {
+                  if (creatingResource) return;
                   const base = cleanId(newApp.name) || "application";
                   let id = base;
                   let n = 2;
                   while (applications.some((app) => app.id === id))
                     id = `${base}-${n++}`;
-                  saveApps([
+                  setCreatingResource("application");
+                  const saved = await saveApps([
                     ...applications,
                     {
                       id,
@@ -723,10 +732,10 @@ export function ResourcesSection() {
                       questions: [],
                     },
                   ]);
+                  setCreatingResource(null);
+                  if (!saved) return;
                   setNewApp({ id: "", name: "", description: "" });
                   setCreating(false);
-                  // The staged draft persists via localStorage, so the
-                  // full-page editor picks the new application up.
                   window.location.href = `/manage/${guildId}/applications/${id}`;
                 }}
                 className="btn-pop btn-peach h-9 px-4 text-sm disabled:opacity-50"

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLineListDraft } from "../use-line-list-draft";
 import {
   IconArrowLeft,
   IconClock,
@@ -51,6 +52,7 @@ import { ConfirmModal, type ConfirmState } from "@/components/confirm-modal";
 import { EmptyState, SkeletonRows } from "../empty-state";
 import { DiscordJsonBox } from "../discord-json-box";
 import { applyMessageShape } from "../discord-json";
+import { messageTemplateValue } from "../message-design/model";
 import type {
   CustomCommandDoc,
   CustomCommandFlowStep,
@@ -58,6 +60,8 @@ import type {
   CustomMessage,
   MessageEmbed,
 } from "../types";
+
+type CommandDraft = CustomCommandDoc & { embeds?: MessageEmbed[] };
 
 /**
  * Custom Commands builder: the message editor, drag-and-drop slash options and
@@ -417,6 +421,7 @@ function OptionEditor({
   dragHandleProps: Record<string, unknown>;
   embedTemplates: string[];
 }) {
+  const choices = useLineListDraft(option.choices, (next) => onChange({ ...option, choices: next }), 25);
   return (
     <div
       className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4"
@@ -530,18 +535,9 @@ function OptionEditor({
             <FieldRow label="Choices" description="One per line, up to 25.">
               <TextAreaField
                 rows={3}
-                value={option.choices.join("\n")}
+                value={choices.value}
                 placeholder={"Yes\nNo\nMaybe"}
-                onChange={(next) =>
-                  onChange({
-                    ...option,
-                    choices: next
-                      .split("\n")
-                      .map((line) => line.trim())
-                      .filter(Boolean)
-                      .slice(0, 25),
-                  })
-                }
+                onChange={choices.onChange}
               />
             </FieldRow>
             <ChoiceFlowEditor
@@ -709,7 +705,7 @@ export function CustomCommandsSection() {
   const [commands, setCommands] = useState<CustomCommandDoc[] | null>(null);
   const [templates, setTemplates] = useState<any[]>([]);
   const [embedTemplates, setEmbedTemplates] = useState<string[]>([]);
-  const [editing, setEditing] = useState<CustomCommandDoc | null>(null);
+  const [editing, setEditing] = useState<CommandDraft | null>(null);
   const [originalName, setOriginalName] = useState<string | null>(null);
   const [baseline, setBaseline] = useState<string>("");
   const [busy, setBusy] = useState(false);
@@ -788,7 +784,7 @@ export function CustomCommandsSection() {
   );
 
   function openEditor(command: CustomCommandDoc | null) {
-    const draft: CustomCommandDoc = command
+    const draft: CommandDraft = command
       ? JSON.parse(JSON.stringify(command))
       : emptyCommand();
     draft.embed = draft.embed || {};
@@ -800,20 +796,13 @@ export function CustomCommandsSection() {
   }
 
   function openTemplate(template: any | null) {
-    const message = template?.message || {};
     const draft: any = {
       ...emptyCommand(),
       __template: true,
       name: template?.name || "",
       description: template?.description || "",
       emoji: template?.emoji || "",
-      content: message.content ?? template?.content ?? "",
-      embed: message.embed || {},
-      render_mode: message.render_mode === "v2" ? "v2" : "legacy",
-      v2_layout: message.v2_layout || [],
-      v2_explicit_layout: Boolean(message.v2_explicit_layout),
-      v2_color: message.v2_color || "none",
-      components: message.components || [],
+      ...messageTemplateValue(template || {}),
     };
     setEditing(draft);
     setOriginalName(template ? template.name : null);
@@ -825,15 +814,9 @@ export function CustomCommandsSection() {
     if (!editing || !name) return;
     const template = templates.find((item) => String(item?.name || "") === name);
     if (!template) return;
-    const message = template.message || {};
     setEditing({
       ...editing,
-      content: message.content ?? template.content ?? "",
-      embed: message.embed || {},
-      render_mode: message.render_mode === "v2" ? "v2" : "legacy",
-      v2_layout: message.v2_layout || [],
-      v2_color: message.v2_color || "none",
-      components: message.components || [],
+      ...messageTemplateValue(template),
     });
     setNotice({ kind: "saved", text: `Loaded message template “${name}”` });
   }
@@ -852,9 +835,13 @@ export function CustomCommandsSection() {
         return false;
       }
     }
+    const stored = messageTemplateValue({ message: editing });
+    const cleanedEmbeds = (stored.embeds || [stored.embed]).map(cleanEmbed).filter(Boolean);
     const message = {
+      ...stored,
       content: editing.content?.trim() || "",
-      embed: isV2 ? undefined : cleanEmbed(editing.embed || {}),
+      embed: isV2 ? undefined : cleanedEmbeds[0],
+      embeds: !isV2 && cleanedEmbeds.length > 1 ? cleanedEmbeds : undefined,
       render_mode: isV2 ? "v2" : "legacy",
       v2_layout: editing.v2_layout || [],
       v2_color: editing.v2_color || "none",
@@ -896,12 +883,23 @@ export function CustomCommandsSection() {
   }
 
   async function deleteTemplate(name: string) {
-    await fetch(`/api/manage/${guildId}/templates`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", type: "message", name }),
-    }).catch(() => undefined);
-    await load();
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/manage/${guildId}/templates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", type: "message", name }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.detail || data?.message || "Could not delete the template");
+      await load();
+      return true;
+    } catch (error) {
+      setNotice({ kind: "error", text: error instanceof Error ? error.message : "Could not delete the template" });
+      return false;
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function sendTemplate(name: string) {
@@ -979,11 +977,16 @@ export function CustomCommandsSection() {
         return false;
       }
     }
-    const payload: CustomCommandDoc = {
+    const cleanedEmbeds = (editing.embeds?.length
+      ? [editing.embed || editing.embeds[0], ...editing.embeds.slice(1)]
+      : [editing.embed || {}])
+      .map(cleanEmbed).filter((embed): embed is MessageEmbed => Boolean(embed));
+    const payload: CommandDraft = {
       ...editing,
       name: editing.name.trim(),
       content: editing.content?.trim() || null,
-      embed: editing.render_mode === "v2" ? undefined : cleanEmbed(editing.embed || {}),
+      embed: editing.render_mode === "v2" ? undefined : cleanedEmbeds[0],
+      embeds: editing.render_mode !== "v2" && cleanedEmbeds.length > 1 ? cleanedEmbeds : undefined,
       render_mode: editing.render_mode === "v2" ? "v2" : "legacy",
       v2_layout: editing.v2_layout || [],
       v2_color: editing.v2_color || "none",
@@ -1018,7 +1021,7 @@ export function CustomCommandsSection() {
   }
 
   return (
-    <div className="space-y-5 pb-24">
+    <div className="space-y-5 pb-24" inert={busy}>
       <SectionHeader
         title="Commands & Templates"
         actions={
@@ -1118,8 +1121,9 @@ export function CustomCommandsSection() {
                       confirmLabel: "Delete template",
                       danger: true,
                       onConfirm: () => {
-                        void deleteTemplate(originalName);
-                        closeEditor();
+                        void deleteTemplate(originalName).then((ok) => {
+                          if (ok) { setEditing(null); setOriginalName(null); }
+                        });
                       },
                     })
                   }
@@ -1493,6 +1497,7 @@ export function CustomCommandsSection() {
                   setEditing({
                     ...editing,
                     render_mode: "v2",
+                    content: template.content || "",
                     v2_layout: template.layout,
                     v2_color: template.color || "none",
                     v2_explicit_layout: true,

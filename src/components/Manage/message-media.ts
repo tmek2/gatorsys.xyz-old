@@ -13,6 +13,12 @@ const MAX_EDGE = 1600;
 const MAX_BYTES = 2_900_000;
 const TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
 
+/** Profile pictures are uploaded without resizing; reject unsafe or oversized files first. */
+export function validateProfileImage(file: { type: string; size: number }): void {
+  if (!TYPES.includes(file.type)) throw new Error("Use a PNG, JPEG, GIF or WebP picture.");
+  if (file.size > 8 * 1024 * 1024) throw new Error("That picture is over 8 MB. Try a smaller one.");
+}
+
 function readAsDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

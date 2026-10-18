@@ -1,0 +1,228 @@
+/* react-day-picker (date-range calendar), themed to a clean HeroUI-style look:
+   circular selected days, a soft range bar, month title left + nav right. */
+.gator-rdp .rdp-root {
+  --rdp-accent-color: var(--accent-peach);
+  --rdp-accent-background-color: color-mix(in srgb, var(--accent-peach) 18%, transparent);
+  --rdp-today-color: var(--accent-peach);
+  --rdp-day-height: 2.4rem;
+  --rdp-day-width: 2.4rem;
+  --rdp-day_button-height: 2.15rem;
+  --rdp-day_button-width: 2.15rem;
+  --rdp-day_button-border-radius: 999px;
+  --rdp-selected-border: none;
+  --rdp-range_start-color: #241318;
+  --rdp-range_end-color: #241318;
+  --rdp-range_middle-color: #fff;
+  margin: 0;
+  font-size: 0.82rem;
+}
+.gator-rdp .rdp-month_caption {
+  padding: 0 0.25rem 0.6rem;
+}
+.gator-rdp .rdp-caption_label {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+.gator-rdp .rdp-nav {
+  gap: 0.25rem;
+}
+.gator-rdp .rdp-button_previous,
+.gator-rdp .rdp-button_next {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.6rem;
+}
+.gator-rdp .rdp-button_previous:hover,
+.gator-rdp .rdp-button_next:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+.gator-rdp .rdp-weekday {
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 700;
+  font-size: 0.66rem;
+  text-transform: none;
+}
+.gator-rdp .rdp-chevron {
+  fill: rgba(255, 255, 255, 0.6);
+}
+.gator-rdp .rdp-button_previous:hover .rdp-chevron,
+.gator-rdp .rdp-button_next:hover .rdp-chevron {
+  fill: var(--accent-peach);
+}
+.gator-rdp .rdp-day_button {
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 600;
+  border: none;
+}
+.gator-rdp .rdp-day_button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.gator-rdp .rdp-outside .rdp-day_button {
+  color: rgba(255, 255, 255, 0.22);
+}
+.gator-rdp .rdp-today:not(.rdp-selected) .rdp-day_button {
+  color: var(--accent-peach);
+  font-weight: 800;
+}
+/* Range bar behind the middle days */
+.gator-rdp .rdp-range_middle {
+  background: color-mix(in srgb, var(--accent-peach) 16%, transparent);
+}
+.gator-rdp .rdp-range_start {
+  background: linear-gradient(to right, transparent 50%, color-mix(in srgb, var(--accent-peach) 16%, transparent) 50%);
+}
+.gator-rdp .rdp-range_end {
+  background: linear-gradient(to left, transparent 50%, color-mix(in srgb, var(--accent-peach) 16%, transparent) 50%);
+}
+.gator-rdp .rdp-range_start.rdp-range_end {
+  background: transparent;
+}
+.gator-rdp .rdp-range_middle .rdp-day_button {
+  color: #fff;
+  background: transparent;
+}
+/* Solid circular endpoints (and single selection) */
+.gator-rdp .rdp-range_start .rdp-day_button,
+.gator-rdp .rdp-range_end .rdp-day_button,
+.gator-rdp .rdp-selected:not(.rdp-range_middle) .rdp-day_button {
+  background: var(--accent-peach) !important;
+  color: #241318 !important;
+  font-weight: 800;
+}
+
+/* react-colorful spectrum picker, sized + rounded to sit inside our popover. */
+.gator-colorful .react-colorful {
+  width: 100%;
+  height: 168px;
+  gap: 10px;
+}
+.gator-colorful .react-colorful__saturation {
+  border-radius: 0.75rem;
+  border-bottom: none;
+}
+.gator-colorful .react-colorful__hue {
+  height: 14px;
+  border-radius: 999px;
+}
+.gator-colorful .react-colorful__pointer {
+  width: 16px;
+  height: 16px;
+  border-width: 3px;
+}
+
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.glow {
+  filter: drop-shadow(0 0 2px rgb(var(--accent-rgb) / 0.8));
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Compact themed scrollbar — visible everywhere something scrolls, instead
+   of hidden bars and "scroll for more" hints. */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--accent-rgb) / 0.4);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes loading {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 70%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes pageFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.page-enter {
+  min-height: 100vh;
+  /* dvh: on a phone 100vh includes the hidden URL bar. The vh line is the
+     fallback. */
+  min-height: 100dvh;
+  animation: pageFade 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes dashPaneIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

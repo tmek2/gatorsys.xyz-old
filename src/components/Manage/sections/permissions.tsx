@@ -31,7 +31,7 @@ interface CustomRole {
 
 /** Keep in sync with the bot's utils/custom_permissions.py. */
 const PERMISSIONS: { key: string; label: string; description: string }[] = [
-  { key: "administrator", label: "Administrator", description: "Grants all permissions across every Gator feature. Equivalent to full server access." },
+  { key: "administrator", label: "Administrator", description: "Grants all permissions across every Bot feature. Equivalent to full server access." },
   { key: "edit_dashboard", label: "Edit Dashboard", description: "Access to all aspects of the dashboard and the ability to edit all server settings." },
   { key: "manage_sessions", label: "Manage Sessions", description: "Manage and use all session commands, trigger startup votes, server shutdowns, and server startups." },
   { key: "manage_infractions", label: "Manage Infractions", description: "Log user infractions, view infraction history, and edit, void, and delete infractions." },
@@ -118,9 +118,9 @@ function RoleEditorModal({
               {initial ? "Edit Custom Role" : "Create Custom Role"}
             </h3>
             <p className="cool-text text-[13px]">
-              A Gator role is permissions data, not a Discord role. Nothing is
+              A Bot role is permissions data, not a Discord role. Nothing is
               created in your server. It names Discord roles you already have
-              and says what holding one lets a member do in Gator.
+              and says what holding one lets a member do in Bot.
             </p>
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="text-white/40 hover:text-white">
@@ -143,7 +143,7 @@ function RoleEditorModal({
             <div ref={rolesRef}>
             <FieldRow
               label="Discord roles"
-              description="Members holding any of these get this Gator role's permissions."
+              description="Members holding any of these get this Bot role's permissions."
             >
               <RolePicker
                 roles={meta?.roles || []}

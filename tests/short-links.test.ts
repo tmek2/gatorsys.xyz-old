@@ -17,7 +17,7 @@ import {
  */
 const asDelivered = (slug: string) => decodeURIComponent(slug);
 
-const GUILD = "1370798053899894926";
+const GUILD = "100000000000000101";
 
 test("round-trips a slug application id", () => {
   const slug = encodeShortId(GUILD, "staff");
@@ -81,8 +81,8 @@ test("round-trips ids carrying hyphens, spaces and unicode", () => {
 });
 
 test("a numeric application id stays numeric", () => {
-  const slug = encodeShortId(GUILD, "1370798053899894999");
-  assert.deepEqual(decodeShortId(asDelivered(slug), 2), [GUILD, "1370798053899894999"]);
+  const slug = encodeShortId(GUILD, "100000000000000201");
+  assert.deepEqual(decodeShortId(asDelivered(slug), 2), [GUILD, "100000000000000201"]);
 });
 
 test("links minted under the old %2D escape still resolve", () => {
@@ -120,7 +120,7 @@ test("a packed pair is never mistaken for a public id", () => {
     false,
   );
   // Two numeric parts pack to base36, which still carries the separator.
-  assert.equal(isPublicFormId(encodeShortId(GUILD, "1370798053899894999")), false);
+  assert.equal(isPublicFormId(encodeShortId(GUILD, "100000000000000201")), false);
 });
 
 test("resource and department links keep their prefixes", () => {

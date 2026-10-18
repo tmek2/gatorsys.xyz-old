@@ -49,6 +49,28 @@ test("a second read inside the TTL does not touch the network", async () => {
   }
 });
 
+test("viewer scopes isolate cached bodies and still invalidate by the request URL", async () => {
+  clearCache();
+  let actor = "account-a";
+  const stub = stubFetch(() => ok({ actor }));
+  const url = "/api/manage/1/config";
+  try {
+    assert.deepEqual(await cachedJson(url, { scope: actor }), { actor: "account-a" });
+    actor = "account-b";
+    assert.equal(isFresh(url, undefined, actor), false);
+    assert.deepEqual(await cachedJson(url, { scope: actor }), { actor: "account-b" });
+    assert.deepEqual(await cachedJson(url, { scope: "account-a" }), { actor: "account-a" });
+    assert.equal(stub.calls.length, 2);
+    assert.deepEqual(peekCached(url, "account-b"), { actor: "account-b" });
+    assert.equal(peekCached(url), undefined);
+    assert.equal(invalidateCache("/api/manage/1"), 2);
+    assert.equal(isFresh(url, undefined, "account-a"), false);
+    assert.equal(isFresh(url, undefined, "account-b"), false);
+  } finally {
+    stub.restore();
+  }
+});
+
 test("an expired entry is refetched", async () => {
   clearCache();
   const stub = stubFetch(() => ok({ n: 1 }));

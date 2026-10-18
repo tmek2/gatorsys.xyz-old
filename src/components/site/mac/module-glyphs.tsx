@@ -36,7 +36,7 @@ import {
 /* Sessions: a broadcast panel. Punishments: filed against a player.
    Infractions: the case on record. Promotions: moving up. Shifts: counted
    hours. Leave: days away. Departments: a server inside a server. Tickets: the
-   queue. GatorAI: it writes for you. ER:LC: the game it all connects to. */
+   queue. Assistant: it writes for you. ER:LC: the game it all connects to. */
 const BY_KEY: Record<string, Icon> = {
   sessions: IconBroadcast,
   punishments: IconGavel,

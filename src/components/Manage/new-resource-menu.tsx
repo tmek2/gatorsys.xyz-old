@@ -71,7 +71,7 @@ export const RESOURCE_OPTIONS: NewResourceOption[] = [
   },
   {
     kind: "workspace",
-    label: "Gator",
+    label: "Bot",
     description: "Not built yet. A server is one gator for now.",
     icon: IconLayoutGrid,
     disabled: true,

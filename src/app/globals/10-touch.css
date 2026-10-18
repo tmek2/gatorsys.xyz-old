@@ -1,0 +1,109 @@
+/* ═══ Touch ═══
+
+   Site-wide touch rules for pages outside `.manage-root` (application form,
+   department portal, /form, /panel, the join flow). The dashboard has its own. */
+
+/* ── iOS zoom ──
+
+   Mobile Safari zooms when a focused field is under 16px and does not zoom
+   back. !important to beat Tailwind font-size utilities on the elements.
+   `--field-font-size` allows larger. Width-limited too: touch laptops never
+   zoom. */
+@media (pointer: coarse) and (max-width: 900px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+  textarea,
+  select {
+    font-size: max(16px, var(--field-font-size, 0px)) !important;
+  }
+}
+
+/* ── tap targets ──
+
+   min-height only, never min-width (a forced width would stretch controls in a
+   text run); square icon buttons get their width from the aspect rule below.
+   Icon buttons are drawn at 36px rather than 44 and extend their target with a
+   margin where they can, as Apple's bar buttons do. */
+@media (pointer: coarse) and (max-width: 900px) {
+  button,
+  [role="button"],
+  [role="tab"],
+  summary,
+  a[data-tap="target"] {
+    min-height: 2.25rem;
+  }
+
+  /* Something opting out — a chip's own dismiss ×, a control inside a line of
+     prose — where growing the button would grow the thing around it. */
+  [data-tap="inline"] {
+    min-height: 0;
+  }
+
+  /* An icon-only button is as wide as its icon, so the height floor alone
+     leaves a 44×20 target. Square it up. */
+  button:has(> svg:only-child),
+  [role="button"]:has(> svg:only-child) {
+    min-width: 2.25rem;
+  }
+}
+
+/* ── safe areas ──
+
+   Anything pinned to an edge clears the notch and the home indicator. */
+.safe-bottom {
+  padding-bottom: max(var(--safe-bottom-gap, 1rem), env(safe-area-inset-bottom));
+}
+
+/* ── back home from the dashboard ──
+
+   Pressing the mark in /manage runs a view transition to the landing
+   (`leaveHome` in manage-shell.tsx). During it, the dashboard window and the
+   window parked at the foot of the landing hero share a name, as do the two
+   marks: the dashboard shrinks into its place on the landing while everything
+   else cross-fades. Here because both pages are on screen during the
+   transition. */
+:root[data-leaving="home"] .gw,
+:root[data-leaving="home"] .g-mac {
+  view-transition-name: gator-window;
+}
+:root[data-leaving="home"] .gw-mark > svg,
+:root[data-leaving="home"] .g-brand > svg {
+  view-transition-name: gator-mark;
+}
+::view-transition-group(gator-window) {
+  animation-duration: 640ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  border-radius: 12px;
+  overflow: clip;
+}
+::view-transition-old(gator-window),
+::view-transition-new(gator-window) {
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+::view-transition-old(gator-window) {
+  animation: gator-vt-out 320ms ease both;
+}
+::view-transition-new(gator-window) {
+  animation: gator-vt-in 460ms ease 120ms both;
+}
+::view-transition-group(gator-mark) {
+  animation-duration: 640ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+:root[data-leaving="home"]::view-transition-old(root) {
+  animation: gator-vt-out 260ms ease both;
+}
+:root[data-leaving="home"]::view-transition-new(root) {
+  animation: gator-vt-in 420ms ease 80ms both;
+}
+@keyframes gator-vt-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes gator-vt-in {
+  from {
+    opacity: 0;
+  }
+}

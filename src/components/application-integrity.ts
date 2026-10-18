@@ -28,6 +28,7 @@ export function blankIntegrity(): QuestionIntegrity {
 export function createIntegrityTracker() {
   const map: IntegrityMap = {};
   const focusedAt: Record<string, number> = {};
+  const pendingPastes: Record<string, number> = {};
 
   const entry = (id: string): QuestionIntegrity => {
     if (!map[id]) map[id] = blankIntegrity();
@@ -39,10 +40,17 @@ export function createIntegrityTracker() {
     typed(id: string, delta: number) {
       if (delta > 0) entry(id).typed += delta;
     },
+    /** A text input change also fires after paste; count those characters once. */
+    input(id: string, delta: number) {
+      const pasted = pendingPastes[id] || 0;
+      delete pendingPastes[id];
+      if (delta > pasted) entry(id).typed += delta - pasted;
+    },
     paste(id: string, length: number) {
       const row = entry(id);
       row.pasted += Math.max(0, length);
       row.pastes += 1;
+      pendingPastes[id] = Math.max(0, length);
     },
     focus(id: string) {
       focusedAt[id] = Date.now();

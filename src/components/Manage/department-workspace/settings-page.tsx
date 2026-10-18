@@ -201,6 +201,7 @@ export function SettingsPage({
         items={[
           "General Settings",
           "Discord Integration",
+          "Role Linking",
           "Roster Settings",
           "Actions",
         ]}
@@ -211,7 +212,7 @@ export function SettingsPage({
         <>
           <SettingsCard
             title="Department Name"
-            description="The name displayed throughout Gator."
+            description="The name displayed throughout Bot."
           >
             <TextField
               value={profile.name}
@@ -435,9 +436,9 @@ export function SettingsPage({
                     }
                     options={[
                       { value: "link", label: "Link" },
-                      { value: "form", label: "Gator Form" },
-                      { value: "document", label: "Gator Document" },
-                      { value: "action", label: "Gator Action" },
+                      { value: "form", label: "Bot Form" },
+                      { value: "document", label: "Bot Document" },
+                      { value: "action", label: "Bot Action" },
                     ]}
                   />
                   {button.type === "action" ? (
@@ -549,9 +550,9 @@ export function SettingsPage({
                           }
                           options={[
                             { value: "link", label: "Link" },
-                            { value: "form", label: "Gator Form" },
-                            { value: "document", label: "Gator Document" },
-                            { value: "action", label: "Gator Action" },
+                            { value: "form", label: "Bot Form" },
+                            { value: "document", label: "Bot Document" },
+                            { value: "action", label: "Bot Action" },
                           ]}
                         />
                       </FieldRow>

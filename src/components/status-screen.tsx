@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { GatorLogo } from "@/components/site/gator-logo";
+import { AppLogo } from "@/components/site/app-logo";
 import { RippleButton, RippleButtonRipples } from "@/components/site/ripple-button";
 import "@/components/site/tokens.css";
 import "./status-screen.css";
@@ -54,7 +54,7 @@ export function StatusScreen({
               if (lines?.length) setTurn((n) => n + 1);
             }}
           >
-            <GatorLogo size={40} />
+            <AppLogo size={40} />
           </button>
         )}
         {label ? <p className="gs-status-label">{label}</p> : null}

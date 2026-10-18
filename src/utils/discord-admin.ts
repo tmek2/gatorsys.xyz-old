@@ -1,7 +1,7 @@
 import type { DiscordGuild } from "@/types/discord";
 import { fetchWithRetry } from "@/utils/api-helpers";
 import { getDiscordAccessToken } from "@/utils/discord-session-token";
-import { fetchMutualServersForSession } from "@/utils/mutual-servers";
+import { botDashboardGet } from "@/utils/manage-api";
 
 const ADMINISTRATOR = BigInt(0x8);
 const MANAGE_GUILD = BigInt(0x20);
@@ -43,42 +43,22 @@ export async function hasDiscordGuildAdminAccess(
   }
 }
 
-export async function hasAdminPanelAccess(session: any, guildId: string) {
-  try {
-    const { mutual } = await fetchMutualServersForSession(session);
-    if (mutual.some((guild) => guild.id === guildId)) {
-      return true;
-    }
-  } catch (error) {
-    console.error("Error checking mutual server access:", error);
-  }
-
-  if (await hasDiscordGuildAdminAccess(session, guildId)) {
-    return true;
-  }
+export async function hasAdminPanelAccess(
+  session: { user?: { id?: string; authError?: unknown } } | null,
+  guildId: string,
+): Promise<boolean> {
+  if (!session?.user?.id || session.user.authError || !guildId) return false;
 
   try {
-    const response = await fetch(
-      `${process.env.PROD_API_URL || "https://fdny-systems-production.up.railway.app"}/permissions?auth=${encodeURIComponent(
-        process.env.API_AUTH || ""
-      )}&server=${encodeURIComponent(guildId)}&user=${encodeURIComponent(
-        session.user.id
-      )}`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-
-    if (!response.ok) {
-      return false;
-    }
+    // A server listing can outlive a removed role. Legacy case endpoints do
+    // not take an actor, so check the bot's current permissions before each call.
+    const response = await botDashboardGet("permissions", {
+      server: guildId,
+      user: session.user.id,
+    });
+    if (!response.ok) return false;
 
     const permissions = await response.json();
-    // Staff count, not only admins. Who may add the bot is Discord's call (its
-    // invite lists only guilds where you have Manage Server); who may open the
-    // dashboard of a server the bot is already in is ours, and the bot applies
-    // the same rule on every request behind this page.
     return permissions?.isAdmin === true || permissions?.isStaff === true;
   } catch (error) {
     console.error("Error checking backend permissions:", error);

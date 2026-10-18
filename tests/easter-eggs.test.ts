@@ -26,19 +26,7 @@ test("a pebble only lands on the background", async () => {
   assert.match(field, /window\.removeEventListener\("pointerdown", onDown\)/);
 });
 
-test("the gator swims when its name is typed, not while somebody writes", async () => {
-  const swim = await source("src/components/gator-swim.tsx");
-  const layout = await source("src/app/layout.tsx");
 
-  assert.match(swim, /const WORD = "gator";/);
-  // Typing the word into a field is writing, not asking.
-  assert.match(swim, /isContentEditable \|\| \/\^\(INPUT\|TEXTAREA\|SELECT\)\$\//);
-  assert.match(swim, /event\.metaKey \|\| event\.ctrlKey \|\| event\.altKey/);
-  assert.match(swim, /reduced\.matches/);
-  // One at a time.
-  assert.match(swim, /setSwim\(\(current\) => current \|\| Date\.now\(\)\)/);
-  assert.match(layout, /<GatorSwim \/>/);
-});
 
 test("confetti is for turning the last module on, not for loading", async () => {
   const shell = await source("src/components/Manage/manage-shell.tsx");
@@ -77,7 +65,7 @@ test("saving with nothing to save is answered", async () => {
   const shell = await source("src/components/Manage/manage-shell.tsx");
   assert.match(
     shell,
-    /else if \(!dirty && !saving\) setNotice\(\{ kind: "saved", text: "Already saved\. The gator checked twice\.", id: "already-saved" \}\);/,
+    /else if \(!dirty && !saving\) setNotice\(\{ kind: "saved", text: "Already saved\.", id: "already-saved" \}\);/,
   );
 });
 

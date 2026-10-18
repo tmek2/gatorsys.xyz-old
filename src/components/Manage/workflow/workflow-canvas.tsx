@@ -34,6 +34,7 @@ import { useOptionalManage } from "../manage-context";
 import type { GuildMeta } from "../types";
 import { isRunnable } from "./serialize";
 import { insertFlowStep, removeFlowStep } from "./graph-editing";
+import { inspectorSources } from "./inspector-sources";
 import { workflowIssues, connectionProblem, requiresErlc, type WorkflowCapabilities } from "./validation";
 import {
   MessageValueEditor,
@@ -287,6 +288,14 @@ export function WorkflowCanvas({
     () => new Set(problems.map((problem) => problem.node)),
     [problems],
   );
+  const topologyKey = graph.nodes.map((node) => `${node.id}:${node.type}`).join("|");
+  const sources = useMemo(() => inspectorSources(
+    graph,
+    paletteOpen ? null : selected,
+    (edge) => !connectionProblem(graph, edge),
+    // Coordinates and typed values do not change connection compatibility.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [topologyKey, graph.edges, selected, paletteOpen]);
 
   /** Screen point → canvas point. Zoom divides; pan subtracts. */
   const toCanvas = useCallback(
@@ -1020,12 +1029,7 @@ export function WorkflowCanvas({
             const declaredFieldIds = new Set(
               (block.fields || []).map((field) => field.id),
             );
-            const sources = Object.fromEntries(block.inputs.filter(p=>p.type!=="flow").map(input=>[input.id,
-              graph.nodes.flatMap((source,index)=>(BLOCKS_BY_TYPE[source.type]?.outputs||[])
-                .filter(output=>output.type!=="flow"&&portsCompatible(output.type,input.type)&&!connectionProblem(graph,{id:"candidate",from:{node:source.id,port:output.id},to:{node:node.id,port:input.id}}))
-                .map(output=>({value:`${source.id}:${output.id}`,label:`${index+1}. ${BLOCKS_BY_TYPE[source.type].label} → ${output.label}`})))
-            ]));
-            const nodeEditor = (
+            const nodeEditor = selected === node.id && !paletteOpen ? (
                 <div className="wf-node-body">
                   {block.inputs.map((port) => (
                     <React.Fragment key={port.id}>
@@ -1203,7 +1207,7 @@ export function WorkflowCanvas({
                     </div>
                   ))}
                 </div>
-            );
+            ) : null;
             return (
               <React.Fragment key={node.id}><div
                 key={node.id}

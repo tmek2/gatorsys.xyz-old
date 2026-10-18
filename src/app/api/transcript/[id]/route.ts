@@ -1,55 +1,55 @@
 import { withAuth } from "@/utils/api-middleware";
-import { makeApiRequest } from "@/utils/api-middleware";
+import { hasAdminPanelAccess } from "@/utils/discord-admin";
+import { botApiUrl } from "@/server/config";
 
-interface GuildParams {
+export const dynamic = "force-dynamic";
+
+interface TranscriptParams {
   id: string;
 }
 
-export const GET = (_request: Request, context: { params: GuildParams }) =>
-  withAuth<GuildParams>(async (session, { params }) => {
-    const { id } = context.params;
-
-
+export const GET = (
+  _request: Request,
+  context: { params: Promise<TranscriptParams> },
+) =>
+  withAuth(async (session) => {
+    const { id } = await context.params;
     if (!id || typeof id !== "string") {
-      return new Response(
-        JSON.stringify({ error: "Invalid or missing id parameter" }),
-        { status: 400 }
-      );
+      return Response.json({ error: "Invalid or missing id parameter" }, { status: 400 });
     }
 
     try {
-      const response = await fetch(
-        `${process.env.PROD_API_URL}/transcript?id=${id}&auth=${process.env.API_AUTH}`
-      );
+      const response = await fetch(botApiUrl("transcript", { id }), {
+        cache: "no-store",
+        signal: AbortSignal.timeout(25_000),
+      });
       if (!response.ok) {
-        throw new Error("Failed to fetch transcript");
+        return Response.json(
+          { error: "Failed to fetch transcript" },
+          { status: response.status === 404 ? 404 : 502 },
+        );
       }
 
       const data = await response.json();
-      const compact = data.transcript[0].compact;
+      if (!Array.isArray(data?.transcript)) {
+        return Response.json({ error: "Invalid transcript response" }, { status: 502 });
+      }
+      if (data.transcript.length === 0) {
+        return Response.json({ error: "Transcript not found" }, { status: 404 });
+      }
+
+      const compact = data.transcript[0]?.compact;
       const GuildID = data.GuildID;
-      const permissions = await makeApiRequest(
-        `${
-          process.env.PROD_API_URL || "https://fdny-systems-production.up.railway.app"
-        }/permissions?auth=${process.env.API_AUTH}&server=${GuildID}&user=${
-          session.user.id
-        }`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }
-      );    
-      if (permissions.isAdmin === false && permissions.isStaff === false) {
-        return new Response(JSON.stringify({ message: "Unauthorized" }), {
-          status: 403,
-        });
-      }        
-      return new Response(JSON.stringify({ data, compact, GuildID: GuildID }), {
-        status: 200,
-      });
-    } catch (error) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 500,
-      });
+      if (!Array.isArray(compact) || !GuildID) {
+        return Response.json({ error: "Invalid transcript response" }, { status: 502 });
+      }
+
+      if (!(await hasAdminPanelAccess(session, String(GuildID)))) {
+        return Response.json({ message: "Unauthorized" }, { status: 403 });
+      }
+
+      return Response.json({ data, compact, GuildID });
+    } catch {
+      return Response.json({ error: "Failed to fetch transcript" }, { status: 502 });
     }
   });

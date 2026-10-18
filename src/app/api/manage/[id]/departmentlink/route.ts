@@ -20,7 +20,7 @@ export const POST = (request: Request, context: { params: Promise<Params> }) =>
     const response = await botDashboardPost(
       "dashboard_departmentlink",
       { server: id },
-      { user: session.user.id, ...body }
+      { ...body, user: session.user.id }
     );
     return relayBotResponse(response);
   }, context as never);

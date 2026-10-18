@@ -185,6 +185,7 @@ export function MessageObjectEditor({
             onLoadContainer={(template) =>
               onChange({
                 ...value,
+                content: template.content || "",
                 v2_layout: template.layout,
                 v2_color: template.color || "none",
                 v2_explicit_layout: true,

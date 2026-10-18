@@ -180,11 +180,13 @@ export function DateField({
               </button>
               <button
                 type="button"
+                disabled={Boolean(min && today < min)}
                 onClick={() => {
+                  if (min && today < min) return;
                   onChange(today);
                   setOpen(false);
                 }}
-                className="text-xs font-semibold text-[var(--accent-peach)] hover:text-white"
+                className="text-xs font-semibold text-[var(--accent-peach)] hover:text-white disabled:opacity-35"
               >
                 Today
               </button>

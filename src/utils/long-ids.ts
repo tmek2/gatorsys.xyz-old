@@ -30,6 +30,17 @@ export function quoteLongIntegers(raw: string, digits = 16): string {
       while (end < raw.length && raw[end] >= "0" && raw[end] <= "9") end += 1;
       const whole = raw[end] !== "." && raw[end] !== "e" && raw[end] !== "E";
       const length = end - index - (char === "-" ? 1 : 0);
+      // Consume the complete JSON number. Treating the fraction or exponent as
+      // a second integer could insert quotes into an otherwise valid number.
+      if (raw[end] === ".") {
+        end += 1;
+        while (end < raw.length && raw[end] >= "0" && raw[end] <= "9") end += 1;
+      }
+      if (raw[end] === "e" || raw[end] === "E") {
+        end += 1;
+        if (raw[end] === "+" || raw[end] === "-") end += 1;
+        while (end < raw.length && raw[end] >= "0" && raw[end] <= "9") end += 1;
+      }
       const number = raw.slice(index, end);
       out += whole && length >= digits ? `"${number}"` : number;
       index = end - 1;

@@ -301,6 +301,13 @@ export function RosterPage({
       return true;
     });
   const selectedMembers = members.filter((member) => selected.includes(member.id));
+  const knownRankIds = new Set(ranks.map((rank) => String(rank.id)));
+  const unrankedMembers = members.filter(
+    (member) => !member.rankRoleId || !knownRankIds.has(String(member.rankRoleId)),
+  );
+  const rankGroups = unrankedMembers.length
+    ? [...ranks, { id: "__unranked", name: "Unranked", color: "#99aab5", permissions: [] }]
+    : ranks;
   const activeRowMember = members.find((member) => member.id === rowMenuId) || null;
   // Co-owners cannot manage the owner or fellow co-owners; only the owner
   // (or a server admin, who sees owner="server") can. Mirrors the API guard.
@@ -430,7 +437,7 @@ export function RosterPage({
           roleId,
           memberIds,
           message:
-            data.detail.message || "Gator cannot update the linked Discord role.",
+            data.detail.message || "Bot cannot update the linked Discord role.",
         });
         return;
       }
@@ -502,17 +509,18 @@ export function RosterPage({
     onProfile({ ...profile, join_role_id: joinRole, rank_roles: rankRoles });
   }
   function saveRank(rank: DepartmentRank) {
+    const existing = customRanks.length ? customRanks : ranks;
     let next =
       rankEditor === "new"
-        ? [...customRanks, rank]
-        : customRanks.map((item) => (item.id === rank.id ? rank : item));
+        ? [...existing, rank]
+        : existing.map((item) => (item.id === rank.id ? rank : item));
     if (rank.join_rank)
       next = next.map((item) => ({ ...item, join_rank: item.id === rank.id }));
     stageRanks(next);
     setRankEditor(null);
   }
   function deleteRank(rankId: string) {
-    stageRanks(customRanks.filter((item) => String(item.id) !== String(rankId)));
+    stageRanks(ranks.filter((item) => String(item.id) !== String(rankId)));
     setRankEditor(null);
     setNotice({
       kind: "saved",
@@ -989,17 +997,18 @@ export function RosterPage({
             </div>
           </div>
           <div className="space-y-4" ref={rosterRef}>
-            {ranks.map((rank, rankIndex) => {
-              const rankMembers = members.filter(
-                (member) => member.rankRoleId === String(rank.id),
-              );
+            {rankGroups.map((rank, rankIndex) => {
+              const unranked = rank.id === "__unranked";
+              const rankMembers = unranked
+                ? unrankedMembers
+                : members.filter((member) => String(member.rankRoleId) === String(rank.id));
               return (
                 <section
                   key={rank.id}
                   // Measured on drag start and hit-tested against the pointer;
                   // the drop is committed by the row that captured the pointer
                   // (see the drag effect above).
-                  data-rank-section={String(rank.id)}
+                  data-rank-section={unranked ? undefined : String(rank.id)}
                   // While a row from this section is dragged: `overflow-x-auto`
                   // (for the wide table on narrow screens) would clip the
                   // lifted row, and sections paint in document order regardless
@@ -1051,7 +1060,8 @@ export function RosterPage({
                     <span className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => canMembers && setRankEditor(rank)}
+                        onClick={() => canMembers && !unranked && setRankEditor(rank)}
+                        disabled={unranked || !canMembers}
                         className="flex items-center gap-2 text-left text-sm font-bold text-white/80"
                       >
                         <span
@@ -1063,7 +1073,7 @@ export function RosterPage({
                           {rankMembers.length}
                         </span>
                       </button>
-                      {canMembers && customRanks.length > 1 ? (
+                      {canMembers && !unranked && customRanks.length > 1 ? (
                         <span className="ml-1 inline-flex opacity-0 transition-opacity group-hover:opacity-100 [section:hover_&]:opacity-100">
                           <button
                             type="button"
@@ -1592,7 +1602,7 @@ export function RosterPage({
       {promotionTargets ? (
         <PromotionModal
           targets={promotionTargets}
-          ranks={customRanks.map((rank) => ({ id: String(rank.id), name: rank.name }))}
+          ranks={ranks.map((rank) => ({ id: String(rank.id), name: rank.name }))}
           profileId={profile.id}
           mode={promotionMode}
           onClose={() => setPromotionTargets(null)}

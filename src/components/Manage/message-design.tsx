@@ -93,6 +93,7 @@ export function MessageDesignCard({
   const [saved, setSaved] = useState<any>(undefined);
   const [draft, setDraft] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   /** The embed the template bar saves from and loads into: the one last
       opened on the canvas. */
@@ -100,9 +101,13 @@ export function MessageDesignCard({
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch(`/api/manage/${guildId}/messages?type=${encodeURIComponent(type)}`);
-      const json = res.ok ? await res.json() : { message: null };
+      if (!res.ok) throw new Error("Could not load the saved message.");
+      const json = await res.json();
+      if (!json || !Object.prototype.hasOwnProperty.call(json, "message"))
+        throw new Error("The saved message response was incomplete.");
       const doc = json.message;
       const base = doc
         ? {
@@ -124,11 +129,9 @@ export function MessageDesignCard({
       setDraft(JSON.parse(JSON.stringify(base)));
       setMode(base.render_mode === "v2" ? "container" : "embed");
     } catch {
-      setSaved(null);
-      // The same baseline the dirty check uses, so a failed read does not leave
-      // the editor dirty.
-      setDraft(defaultBaseline());
-      setMode("embed");
+      // A failed read is not an empty message. Keep any draft and saved copy
+      // until the server can answer, so defaults cannot overwrite real data.
+      setLoadError("Could not load the saved message. Retry before editing or saving.");
     } finally {
       setLoading(false);
     }
@@ -157,7 +160,7 @@ export function MessageDesignCard({
 
   const dirty = useMemo(() => {
     // Not dirty while loading (the draft is `{}` until the read returns).
-    if (loading) return false;
+    if (loading || saved === undefined) return false;
     const baseline = saved ?? defaultBaseline();
     // Compared by value with `sameMessage`, not by JSON text.
     return !sameMessage(
@@ -178,6 +181,7 @@ export function MessageDesignCard({
     setDraft({ ...draft, embed: next[0] || {}, embeds: next.length > 1 ? next : undefined });
 
   async function persist(): Promise<boolean> {
+    if (loading || loadError || saved === undefined || saving) return false;
     if (mode === "container") {
       const validationError = containerValidationError(draft.v2_layout || []);
       if (validationError) {
@@ -254,9 +258,20 @@ export function MessageDesignCard({
     );
   }
 
+  if (loadError) {
+    return (
+      <SettingsCard title={title} description={hint}>
+        <p role="alert" className="cool-text text-sm">{loadError}</p>
+        <button type="button" className="gw-btn mt-3" onClick={() => void load()}>
+          Retry loading message
+        </button>
+      </SettingsCard>
+    );
+  }
+
   return (
     <SettingsCard title={title} description={hint}>
-      <div className="gw-md">
+      <div className="gw-md" inert={saving}>
       <MessageEditorBar containerRef={cardRef} mode={mode} onMode={setMode} />
       <VariableAutocomplete containerRef={cardRef} variables={variables} module={module} />
       <div className="designer-shell gw-md-grid" ref={cardRef}>
@@ -318,6 +333,7 @@ export function MessageDesignCard({
               // template's blocks are where its author put them.
               setDraft({
                 ...draft,
+                content: template.content || "",
                 v2_layout: template.layout,
                 v2_color: template.color || "none",
                 v2_explicit_layout: true,

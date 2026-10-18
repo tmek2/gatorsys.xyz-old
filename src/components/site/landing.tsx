@@ -2,7 +2,7 @@
 
 /* The landing page: one screen and a window.
 
-   The screen is the hero (the header, one line saying what Gator is, and two
+   The screen is the hero (the header, one line saying what Bot is, and two
    actions). It is sticky, so scrolling does not leave it; scrolling raises a
    window over it. That window is the About page (there is no /about route).
    Nothing animates on a timer: the only motion is the window following the
@@ -16,7 +16,6 @@ import { SiteNav, type LandingUser } from "./site-nav";
 import { SmoothScroll } from "./smooth-scroll";
 import { glide } from "./glide";
 import { RippleButton, RippleButtonRipples } from "./ripple-button";
-import { ConfettiWord } from "./confetti-word";
 import { Finder } from "./mac/finder";
 import { DotField } from "./dot-field";
 import { FooterLine } from "./site-footer";
@@ -33,7 +32,7 @@ import "./mac/ios.css";
 
 export type { LandingUser };
 
-export function GatorLanding({ user }: { user: LandingUser | null }) {
+export function LandingPage({ user }: { user: LandingUser | null }) {
   const page = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -76,23 +75,18 @@ export function GatorLanding({ user }: { user: LandingUser | null }) {
 
           <main className="g-hero" inert={open}>
             <h1 className="g-hero-h1">
-              {"A better server starts "}
+              {"Your community. "}
               <br className="g-break-wide" />
-              {"with Gator. "}
-              {/* The whole claim phrase is coloured, and the confetti comes from
-                 its middle. */}
-              <ConfettiWord className="g-hero-free">For free.</ConfettiWord>
+              {"One dashboard."}
             </h1>
 
             {/* The explanation and the two actions share one row; the actions
                stack below the copy when they no longer fit. */}
             <div className="g-hero-foot">
               <div className="g-hero-say">
-                {/* Five modules named and the rest counted: `MODULE_COUNT` is
-                   26, so edit this sentence if the wall changes. */}
                 <p className="g-hero-lede">
-                  Sessions, shifts, tickets, infractions, leaves, and twenty-one
-                  more. Free, and run from one dashboard.
+                  Manage sessions, shifts, tickets, infractions, and leave from
+                  one dashboard.
                 </p>
               </div>
 
@@ -108,7 +102,7 @@ export function GatorLanding({ user }: { user: LandingUser | null }) {
                   }}
                 >
                   <DiscordLogo size={17} />
-                  Add Gator
+                  Add bot
                   <RippleButtonRipples />
                 </RippleButton>
 
@@ -136,7 +130,7 @@ export function GatorLanding({ user }: { user: LandingUser | null }) {
              lives inside the window). Both scroll the page, since the window's
              position is bound to the scroll. */}
           <button className="g-raise" type="button" onClick={raise}>
-            Explore Gator
+            Explore features
           </button>
           <FooterLine />
         </div>

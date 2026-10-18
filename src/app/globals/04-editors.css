@@ -1,0 +1,268 @@
+/* ── spreadsheet skin ──
+
+   Univer keeps its full feature set and its default light (Excel-style) theme
+   so colours render true. Only the font and rounded chrome change; the grid is
+   untouched. */
+.gator-spreadsheet,
+.gator-univer {
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+.gator-univer .univer-app {
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+/* Univer's light chrome needs dark text; the site's global white text made the
+   name box and formula bar white on white. Skipped when the editor uses
+   Univer's own dark theme. */
+.gator-univer:not(.gator-univer-dark) {
+  color: #2b211e;
+}
+.gator-univer:not(.gator-univer-dark) input {
+  color: #2b211e !important;
+  background: #ffffff;
+}
+.gator-univer [role="menu"],
+.gator-univer [role="dialog"],
+.gator-univer [data-u-comp="rect-popup"],
+.gator-univer [data-radix-popper-content-wrapper] > div {
+  border-radius: 0.9rem !important;
+}
+
+/* ── document editor typography ──
+
+   Tailwind's preflight strips heading sizes, list bullets and quote styles
+   inside contentEditable, so formatting looked like it did nothing. These rules
+   make every option visible, in both themes. */
+/* The page sheet itself: always tall enough to read as a full page (even when
+   empty) and clearly distinct from the surrounding editor surface. */
+.gator-doc {
+  min-height: 62vh;
+  caret-color: var(--accent-peach);
+}
+:root[data-theme="light"] .gator-doc {
+  background-color: #ffffff !important;
+  border-color: rgba(60, 45, 36, 0.14) !important;
+  color: #2a1f1a !important;
+}
+/* Empty line adopts the chosen font size so the caret matches it immediately,
+   before any text is typed. */
+.gator-doc p:has(> br.ProseMirror-trailingBreak:only-child) {
+  font-size: var(--caret-fs);
+}
+.gator-doc h1 {
+  margin: 1.1em 0 0.45em;
+  font-size: 2em;
+  font-weight: 800;
+  line-height: 1.25;
+}
+.gator-doc h2 {
+  margin: 1em 0 0.4em;
+  font-size: 1.5em;
+  font-weight: 750;
+  line-height: 1.3;
+}
+.gator-doc h3 {
+  margin: 0.9em 0 0.35em;
+  font-size: 1.2em;
+  font-weight: 700;
+}
+.gator-doc p {
+  margin: 0.35em 0;
+}
+.gator-doc ul {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+  list-style: disc;
+}
+.gator-doc ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+  list-style: decimal;
+}
+.gator-doc li {
+  margin: 0.2em 0;
+}
+.gator-doc blockquote {
+  margin: 0.8em 0;
+  border-left: 3px solid rgba(245, 242, 242, 0.55);
+  background: rgba(245, 242, 242, 0.05);
+  color: rgba(245, 242, 242, 0.92);
+  padding: 10px 16px;
+  border-radius: 0 10px 10px 0;
+}
+:root[data-theme="light"] .gator-doc blockquote {
+  border-left-color: rgba(64, 45, 36, 0.35);
+  background: rgba(64, 45, 36, 0.04);
+  color: rgba(48, 35, 30, 0.88);
+}
+.gator-doc pre {
+  margin: 0.8em 0;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(131, 131, 131, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 12px 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+.gator-doc code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+}
+.gator-doc hr {
+  margin: 1.2em 0;
+  border: none;
+  border-top: 1px solid rgba(131, 131, 131, 0.35);
+}
+.gator-doc em,
+.gator-doc i,
+.gator-doc em * {
+  font-style: italic !important;
+}
+
+/* Read-only spreadsheet grid — follows the site theme (dark by default). */
+.gator-sheetview {
+  background: #141414;
+  border-color: rgba(255, 255, 255, 0.09);
+}
+.gator-sheetview th,
+.gator-sheetview .gator-sheetview-head {
+  background: #1e1e1e;
+  color: #9c9c9c;
+  border: 1px solid #2a2a2a;
+}
+.gator-sheetview td {
+  border: 1px solid #262626;
+  color: #e6e6e6;
+}
+:root[data-theme="light"] .gator-sheetview {
+  background: #ffffff;
+  border-color: #eadfd2;
+}
+:root[data-theme="light"] .gator-sheetview th,
+:root[data-theme="light"] .gator-sheetview .gator-sheetview-head {
+  background: #f7f1e9;
+  color: #75695f;
+  border: 1px solid #eadfd2;
+}
+:root[data-theme="light"] .gator-sheetview td {
+  border: 1px solid #efe6da;
+  color: #2b211e;
+}
+.gator-doc strong,
+.gator-doc b {
+  font-weight: 700;
+}
+.gator-doc a {
+  /* Documents use default web colours, not the department/brand accent. */
+  color: #3b82f6;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+:root[data-theme="light"] .gator-doc a {
+  color: #1d4ed8;
+}
+.gator-doc img {
+  max-width: 100%;
+  border-radius: 10px;
+}
+.gator-doc table {
+  margin: 0.8em 0;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.gator-doc th,
+.gator-doc td {
+  border: 1px solid rgba(131, 131, 131, 0.4);
+  padding: 8px 10px;
+  vertical-align: top;
+  position: relative;
+}
+.gator-doc th {
+  background: rgba(131, 131, 131, 0.12);
+  font-weight: 700;
+  text-align: left;
+}
+.gator-doc .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgb(var(--accent-rgb) / 0.16);
+}
+.gator-doc .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: var(--accent-peach);
+  pointer-events: none;
+}
+.gator-doc p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: rgba(131, 131, 131, 0.5);
+}
+/* ── A4 pages ──
+
+   The document paper is a fixed A4 page (`--doc-page` is the A4 height at
+   96dpi), at least one page tall. Page breaks are painted as a soft seam the
+   colour of the canvas, so a long document reads as stacked sheets while the
+   text flows continuously. Synthetic italics are enabled here (off globally) so
+   fonts without a true italic still slant. */
+.gator-doc {
+  --doc-page: 1123px;
+  --doc-page-gap: 26px;
+  --doc-canvas: #161616; /* the scroll backdrop behind the paper (dark) */
+  min-height: var(--doc-page);
+  font-synthesis: style;
+  background-repeat: repeat-y;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--doc-page) - var(--doc-page-gap)),
+    rgba(0, 0, 0, 0.22) calc(var(--doc-page) - var(--doc-page-gap)),
+    var(--doc-canvas) calc(var(--doc-page) - var(--doc-page-gap) + 3px),
+    var(--doc-canvas) calc(var(--doc-page) - 3px),
+    rgba(0, 0, 0, 0.12) var(--doc-page)
+  );
+}
+/* The document "paper" turns light with the theme (background-color, not the
+   shorthand, so the page seams survive). */
+:root[data-theme="light"] .gator-doc {
+  --doc-canvas: #ece7dd; /* warm grey seam to match the beige light paper */
+  border-color: rgba(64, 45, 36, 0.12) !important;
+  background-color: #fffdf9 !important;
+  color: #2c231f !important;
+  box-shadow: 0 26px 80px rgba(48, 35, 30, 0.14) !important;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--doc-page) - var(--doc-page-gap)),
+    rgba(64, 45, 36, 0.14) calc(var(--doc-page) - var(--doc-page-gap)),
+    var(--doc-canvas) calc(var(--doc-page) - var(--doc-page-gap) + 3px),
+    var(--doc-canvas) calc(var(--doc-page) - 3px),
+    rgba(64, 45, 36, 0.07) var(--doc-page)
+  ) !important;
+}
+:root[data-theme="light"] .gator-doc pre {
+  background: rgba(64, 45, 36, 0.05);
+}
+
+.btn-quiet {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #090909;
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.btn-quiet:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background-color: #0d0d0d;
+  color: #ffffff;
+}

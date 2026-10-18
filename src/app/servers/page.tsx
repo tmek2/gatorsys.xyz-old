@@ -41,9 +41,9 @@ async function getMutualServers(session: any) {
       departments: [],
       error:
         error instanceof BotAuthenticationError
-          ? "Gator's dashboard connection is unavailable right now. Please contact support if this continues."
+          ? "Bot's dashboard connection is unavailable right now. Please contact support if this continues."
           : error instanceof BotUnreachableError
-          ? "Gator's bot is restarting or unreachable right now, so your servers can't be listed. It usually comes back within a minute. Refresh to try again."
+          ? "Bot's bot is restarting or unreachable right now, so your servers can't be listed. It usually comes back within a minute. Refresh to try again."
           : "We couldn't load your Discord servers right now. Please try again later or contact support if this keeps happening.",
     };
   }

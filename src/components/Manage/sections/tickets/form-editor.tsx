@@ -188,6 +188,12 @@ export function FormEditor({
                                 ? Math.min(question.max, 1000)
                                 : question.max,
                           });
+                        } else if (next === "select") {
+                          patch({
+                            kind: "select",
+                            max_values: 1,
+                            min_values: question.required === false ? 0 : 1,
+                          });
                         } else {
                           patch({ kind: (next || "text") as PanelQuestion["kind"] });
                         }

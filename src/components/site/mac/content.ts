@@ -13,31 +13,18 @@ export interface TextFile {
 }
 
 const GATOR_TEXT = [
-  "Gator",
+  "Community dashboard",
   "",
-  "Gator isn't new. It's a bot built on already made and",
-  "perfected foundations: ERM and Birb. A huge shoutout to the",
-  "developers at ERM and Birb for being the absolute best of",
-  "the ERLC community and keeping their bots open-source. Gator",
-  "would not have been possible without those amazing people.",
+  "Manage your Discord community's settings, messages, staff,",
+  "applications, departments, and workflows in one place.",
   "",
-  "Development",
+  "Sign in with your Discord account, choose a linked server,",
+  "and open the module you want to configure. Your permissions",
+  "are checked by the connected bot for every request.",
   "",
-  "As of 9/14/2026, I'm rebuilding Gator, restyling every corner",
-  "of the website, improving performance, and thinking of new",
-  "components to make the user experience better and better.",
+  "Edits stay as drafts until you save them. Use Discard to",
+  "return to the last saved version.",
   "",
-  "Don't judge it by the current look. The landing page is",
-  "already impressive, but commands and server management are",
-  "still catching up. I'm getting to those too. It takes a",
-  "surprising amount of time to come up with original UI ideas.",
-  "The images below will show how gatorsys.xyz has looked over",
-  "the few months since it was created.",
-  "",
-  "[Images coming soon]",
-  "",
-  "Send your suggestions to @.tmek on Discord. I'll be happy to",
-  "receive them.",
 ];
 
 const PRIVACY_TEXT = [
@@ -73,7 +60,7 @@ const TERMS_TEXT = [
 
 export const GATOR_FILE: TextFile = {
   key: "gator",
-  name: "Explore Gator.txt",
+  name: "Getting started.txt",
   lines: GATOR_TEXT,
 };
 

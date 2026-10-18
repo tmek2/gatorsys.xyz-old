@@ -22,7 +22,7 @@ export const POST = (request: Request, context: { params: Promise<Params> }) =>
     const response = await botDashboardPost(
       "dashboard_application_response_delete",
       { server: id },
-      { user: session.user.id, ...body }
+      { ...body, user: session.user.id }
     );
     return relayBotResponse(response);
   }, context as never);

@@ -189,11 +189,17 @@ function sameTicketField(field: string, staged: any, panel: TicketPanel): boolea
 export function usePanelDraft(panel: TicketPanel, onMutate: EditorProps["onMutate"]) {
   const { registerExternalDraft, setExternalDraftDirty } = useManage();
   const [draft, setDraft] = useState<Record<string, any>>({});
+  const draftRef = React.useRef(draft);
+  draftRef.current = draft;
+  const revisions = React.useRef<Record<string, number>>({});
+  const latestValues = React.useRef<Record<string, any>>({});
   const current = (field: string) =>
     field in draft ? draft[field] : (panel as Record<string, any>)[field];
   // Only fields that differ are ever in the draft, so this is its size.
   const dirty = Object.keys(draft).length > 0;
   function set(field: string, value: any) {
+    revisions.current[field] = (revisions.current[field] || 0) + 1;
+    latestValues.current[field] = value;
     setDraft((previous) => {
       const next = { ...previous };
       if (sameTicketField(field, value, panel)) delete next[field];
@@ -211,23 +217,37 @@ export function usePanelDraft(panel: TicketPanel, onMutate: EditorProps["onMutat
   const saveRef = React.useRef<() => Promise<boolean>>(async () => true);
   saveRef.current = async () => {
     if (!Object.keys(draft).length) return true;
+    const submitted = draft;
+    const submittedRevisions = { ...revisions.current };
     const ok = await onMutate(
       {
         action: "update",
         type: panel.type || "single",
         name: panel.name,
-        set: draft,
+        set: submitted,
       },
       { quiet: true },
     );
-    if (ok) setDraft({});
-    return ok;
+    if (!ok) return false;
+    const remaining = { ...draftRef.current };
+    for (const [field, value] of Object.entries(submitted)) {
+      const editedDuringSave = revisions.current[field] !== submittedRevisions[field];
+      const latest = latestValues.current[field];
+      if (editedDuringSave && !configValuesEqual(latest, value)) remaining[field] = latest;
+      else delete remaining[field];
+    }
+    // A later edit can even be a return to the old saved value. Keep that
+    // explicit once the earlier write changes what the server considers saved.
+    draftRef.current = remaining;
+    setDraft(remaining);
+    return true;
   };
   useEffect(
     () =>
       registerExternalDraft(key, {
         save: () => saveRef.current(),
         discard: () => setDraft({}),
+        hasChanges: () => Object.keys(draftRef.current).length > 0,
         label: "a ticket panel",
       }),
     [key, registerExternalDraft],

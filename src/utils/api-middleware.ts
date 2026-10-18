@@ -1,20 +1,22 @@
 import { NextResponse } from 'next/server';
 import { auth } from "~/auth"
+import type { Session } from "next-auth";
+import { getSiteUrl } from "@/utils/site-url";
 
 export type ApiContext<T = Record<string, string>> = {
   params: T;
 };
 
 export async function withAuth<T = Record<string, string>>(
-  handler: (session: any, context: ApiContext<T>) => Promise<Response>,
+  handler: (session: Session & { user: Session['user'] & { id: string } }, context: ApiContext<T>) => Promise<Response>,
   context: Partial<ApiContext<T>> = { params: {} as T }
 ) {
   try {
     const session = await auth();
-    if (!session) {
+    if (!session?.user?.id || session.user.authError) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
-    return await handler(session, context as ApiContext<T>);
+    return await handler(session as Session & { user: Session['user'] & { id: string } }, context as ApiContext<T>);
   } catch (error) {
     console.error("Error occurred:", error);
     return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
@@ -26,12 +28,13 @@ export async function makeApiRequest(url: string, options: RequestInit = {}) {
   try {
     new URL(url);
   } catch (e) {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.gatorsys.xyz';
+    const baseUrl = getSiteUrl();
     url = `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
   }
 
   const response = await fetch(url, {
     ...options,
+    signal: options.signal ?? AbortSignal.timeout(25_000),
     credentials: 'same-origin',
     headers: {
       "Content-Type": "application/json",

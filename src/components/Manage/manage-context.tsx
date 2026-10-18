@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { cachedJson, invalidateCache, isFresh } from "@/utils/client-cache";
 import { fieldAt } from "./schema";
 import { configValuesEqual, matchesSaved } from "./config-compare";
+import { parseDraft, serializeDraft } from "./draft-storage";
 
 // Imported from here by every editor that keeps its own draft.
 export { configValuesEqual };
@@ -139,6 +140,8 @@ interface ManageContextValue {
 interface ExternalDraft {
   save: () => Promise<boolean>;
   discard: () => void;
+  /** New edits made during a successful save still need the save prompt. */
+  hasChanges?: () => boolean;
   /** How the save prompt names it. Unnamed, it is a message design. */
   label?: string;
 }
@@ -173,24 +176,39 @@ export type ManageEndpoints = {
   patch?: string;
 };
 
-export function ManageProvider({
-  guildId,
-  children,
-  endpoints,
-}: {
+type ManageProviderProps = {
   guildId: string;
+  /** The authenticated account that owns these drafts and permissions. */
+  viewerId: string;
   children: React.ReactNode;
   endpoints?: ManageEndpoints;
-}) {
+};
+
+export function ManageProvider(props: ManageProviderProps) {
+  const { guildId, viewerId, endpoints } = props;
+  const scope = JSON.stringify([viewerId, guildId, endpoints?.meta, endpoints?.config, endpoints?.patch]);
+  // An account or endpoint change must reset editor-local state too. Legacy
+  // drafts had no owner, so they are deliberately never read by this version.
+  return <ScopedManageProvider key={scope} {...props} />;
+}
+
+function ScopedManageProvider({
+  guildId,
+  viewerId,
+  children,
+  endpoints,
+}: ManageProviderProps) {
   const metaUrl = endpoints?.meta || `/api/manage/${guildId}/meta`;
   const configUrl = endpoints?.config || `/api/manage/${guildId}/config`;
   const patchUrl = endpoints?.patch || configUrl;
-  // Scoped providers (portal editors) must never share cached config or
-  // drafts with the full manage dashboard for the same guild.
-  const cacheKey = endpoints ? `${guildId}:${configUrl}` : guildId;
+  // Permissions and unsaved work belong to an account and an editor scope.
+  const cacheKey = JSON.stringify([viewerId, guildId, metaUrl, configUrl, patchUrl]);
   const cached = manageCache.get(cacheKey);
   const [meta, setMeta] = useState<GuildMeta | null>(cached?.meta || null);
   const [config, setConfig] = useState<GuildConfig | null>(cached?.config || null);
+  const configRef = useRef(config);
+  configRef.current = config;
+  const writingPaths = useRef(new Map<string, number>());
   const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
   const [forbidden, setForbidden] = useState(false);
@@ -200,7 +218,7 @@ export function ManageProvider({
    */
   const [attempt, setAttempt] = useState(0);
   // Unsaved edits survive crashes and closed tabs via localStorage.
-  const draftKey = `gator-draft-${cacheKey}`;
+  const draftKey = `gator-draft-v2-${cacheKey}`;
   const [pending, setPendingState] = useState<Record<string, any>>({});
   /** The staged settings as of the last update, for the undo history to copy
       without waiting for a render. */
@@ -212,7 +230,7 @@ export function ManageProvider({
         pendingRef.current = next;
         try {
           if (Object.keys(next).length) {
-            localStorage.setItem(draftKey, JSON.stringify(next));
+            localStorage.setItem(draftKey, serializeDraft(next));
           } else {
             localStorage.removeItem(draftKey);
           }
@@ -224,6 +242,15 @@ export function ManageProvider({
     },
     [draftKey],
   );
+  const preserveWritingRemovals = useCallback((next: Record<string, any>) => {
+    // Returning to the old saved value while a write is pending still needs a
+    // corrective write after that earlier request lands.
+    const preserved = { ...next };
+    for (const path of writingPaths.current.keys()) {
+      if (!(path in preserved)) preserved[path] = getPath(configRef.current, path);
+    }
+    return preserved;
+  }, []);
   /* Undo history for staged settings (Cmd/Ctrl+Z, Shift+Cmd/Ctrl+Z). Each
      change copies the staged set onto the history first; repeated changes to
      the same path within a moment join one step, so typing is one step. Saving
@@ -254,15 +281,16 @@ export function ManageProvider({
       const here = pendingRef.current;
       steps[from === "past" ? "future" : "past"].push(here);
       steps.last = null;
-      setPending(target);
-      const paths = new Set([...Object.keys(here), ...Object.keys(target)]);
+      const next = preserveWritingRemovals(target);
+      setPending(next);
+      const paths = new Set([...Object.keys(here), ...Object.keys(next)]);
       // Staged or not is a difference too: a switch staged off compares equal
       // to nothing staged at all.
       return [...paths].filter(
-        (path) => path in here !== path in target || !configValuesEqual(here[path], target[path]),
+        (path) => path in here !== path in next || !configValuesEqual(here[path], next[path]),
       );
     },
-    [setPending],
+    [preserveWritingRemovals, setPending],
   );
   const undo = useCallback(() => stepTo("past"), [stepTo]);
   const redo = useCallback(() => stepTo("future"), [stepTo]);
@@ -315,11 +343,26 @@ export function ManageProvider({
 
   useEffect(() => {
     let cancelled = false;
+    function restoreDraft(savedConfig: GuildConfig) {
+      try {
+        const stored = localStorage.getItem(draftKey);
+        if (!stored) return;
+        const restored = removeSavedPending(parseDraft(stored), savedConfig);
+        pendingRef.current = restored;
+        setPendingState(restored);
+        if (Object.keys(restored).length) {
+          showNotice({ kind: "saved", text: "Restored your unsaved changes" });
+        }
+      } catch {
+        /* Ignore corrupt or unavailable browser storage. */
+      }
+    }
     async function load() {
       if (!manageCache.has(cacheKey)) setLoading(true);
       setError(null);
       // A fresh cached copy means this visit needs no network.
-      if (manageCache.has(cacheKey) && isFresh(metaUrl) && isFresh(configUrl)) {
+      if (manageCache.has(cacheKey) && isFresh(metaUrl, undefined, viewerId) && isFresh(configUrl, undefined, viewerId)) {
+        restoreDraft(manageCache.get(cacheKey)!.config);
         setLoading(false);
         return;
       }
@@ -341,7 +384,7 @@ export function ManageProvider({
         // share one round trip instead of racing the same request.
         const [metaJson, configJson] = await Promise.race([
           Promise.all([
-            cachedJson<GuildMeta>(metaUrl, { force: attempt > 0 }),
+            cachedJson<GuildMeta>(metaUrl, { force: attempt > 0, scope: viewerId }),
             // A guild with no saved config is a legitimate empty answer, but
             // only when the server actually answered. Any other failure must
             // propagate: treating it as `{}` would render defaults, cache them,
@@ -350,6 +393,7 @@ export function ManageProvider({
             // settings.
             cachedJson<{ config?: GuildConfig }>(configUrl, {
               force: attempt > 0,
+              scope: viewerId,
             }),
           ]),
           expired,
@@ -369,26 +413,7 @@ export function ManageProvider({
             config: configJson.config || {},
             savedAt: Date.now(),
           });
-          try {
-            const stored = localStorage.getItem(draftKey);
-            if (stored) {
-              const parsed = JSON.parse(stored);
-              const restored = removeSavedPending(
-                parsed || {},
-                configJson.config || {},
-              );
-              if (Object.keys(restored).length) {
-                pendingRef.current = restored;
-                setPendingState(restored);
-                showNotice({
-                  kind: "saved",
-                  text: "Restored your unsaved changes",
-                });
-              }
-            }
-          } catch {
-            /* corrupt draft — start clean */
-          }
+          restoreDraft(configJson.config || {});
         }
       } catch (caught) {
         if (!cancelled) {
@@ -414,7 +439,7 @@ export function ManageProvider({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cacheKey, metaUrl, configUrl, attempt]);
+  }, [cacheKey, metaUrl, configUrl, viewerId, attempt]);
 
   /** Retry the load in place. Clears the error first so the retry is visible
    *  as a loading state rather than as nothing happening. */
@@ -438,7 +463,11 @@ export function ManageProvider({
   // re-rendering once a second forever.
   useEffect(() => {
     if (metaReadyAt <= Date.now()) return;
-    const timer = window.setInterval(() => setNow(Date.now()), 500);
+    const timer = window.setInterval(() => {
+      const current = Date.now();
+      setNow(current);
+      if (current >= metaReadyAt) window.clearInterval(timer);
+    }, 500);
     return () => window.clearInterval(timer);
   }, [metaReadyAt]);
 
@@ -494,7 +523,7 @@ export function ManageProvider({
         const next = { ...current };
         const field = fieldAt(path);
         const spec = shown === undefined ? field : { ...(field || {}), defaultValue: shown };
-        if (matchesSaved(nextValue, saved, spec)) {
+        if (matchesSaved(nextValue, saved, spec) && !writingPaths.current.has(path)) {
           delete next[path];
         } else {
           next[path] = nextValue;
@@ -578,7 +607,8 @@ export function ManageProvider({
       setPending((current) => {
         if (!(path in current)) return current;
         const next = { ...current };
-        delete next[path];
+        if (writingPaths.current.has(path)) next[path] = getPath(configRef.current, path);
+        else delete next[path];
         return next;
       });
     },
@@ -592,7 +622,7 @@ export function ManageProvider({
     const thrown = pending;
     const count = Object.keys(thrown).length;
     if (count) remember(null);
-    setPending({});
+    setPending(preserveWritingRemovals({}));
     for (const key of Object.keys(externalDirty)) {
       externalHandlers.current.get(key)?.discard();
     }
@@ -604,7 +634,7 @@ export function ManageProvider({
         action: { label: "Undo", run: () => setPending((current) => ({ ...thrown, ...current })) },
       });
     }
-  }, [externalDirty, pending, remember, setPending, showNotice]);
+  }, [externalDirty, pending, preserveWritingRemovals, remember, setPending, showNotice]);
 
   const refreshConfig = useCallback(async () => {
     try {
@@ -612,6 +642,7 @@ export function ManageProvider({
       // entry must not be allowed to answer it.
       const json = await cachedJson<{ config?: GuildConfig }>(configUrl, {
         force: true,
+        scope: viewerId,
       }).catch(() => null);
       if (json) {
         const nextConfig = json.config || {};
@@ -623,7 +654,7 @@ export function ManageProvider({
     } catch {
       /* keep the stale copy; the next save will refresh it */
     }
-  }, [cacheKey, configUrl, meta, setPending]);
+  }, [cacheKey, configUrl, meta, setPending, viewerId]);
 
   const save = useCallback(
     async (module?: string) => {
@@ -641,6 +672,7 @@ export function ManageProvider({
         return false;
       }
       setSaving(true);
+      for (const [path] of entries) writingPaths.current.set(path, (writingPaths.current.get(path) || 0) + 1);
       try {
         const set: Record<string, any> = {};
         const unset: string[] = [];
@@ -677,9 +709,15 @@ export function ManageProvider({
         }
         // External drafts are cleared one at a time as each saves, so one
         // failure does not leave the successful ones marked unsaved.
+        let newerDrafts = false;
         for (const key of externalKeys) {
-          const ok = await externalHandlers.current.get(key)?.save();
+          const handler = externalHandlers.current.get(key);
+          const ok = await handler?.save();
           if (ok === false) throw new Error("One editor could not be saved");
+          if (handler?.hasChanges?.()) {
+            newerDrafts = true;
+            continue;
+          }
           setExternalDirty((current) => {
             if (!(key in current)) return current;
             const next = { ...current };
@@ -690,8 +728,13 @@ export function ManageProvider({
         // No toast: the save prompt says so itself, where you pressed Save,
         // and a second "Saved" in the corner was the same news twice.
         void module;
+        const submitted = new Map(entries);
+        newerDrafts ||= Object.entries(pendingRef.current).some(([path, staged]) =>
+          !submitted.has(path) || !configValuesEqual(staged, submitted.get(path)),
+        );
         history.current = { past: [], future: [], last: null };
-        return true;
+        if (newerDrafts) showNotice({ kind: "saved", text: "Earlier changes saved. Your newer edits are still unsaved." });
+        return !newerDrafts;
       } catch (err) {
         showNotice({
           kind: "error",
@@ -699,6 +742,11 @@ export function ManageProvider({
         });
         return false;
       } finally {
+        for (const [path] of entries) {
+          const remaining = (writingPaths.current.get(path) || 1) - 1;
+          if (remaining) writingPaths.current.set(path, remaining);
+          else writingPaths.current.delete(path);
+        }
         setSaving(false);
       }
     },

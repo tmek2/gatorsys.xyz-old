@@ -150,7 +150,7 @@ export function LegalPage({
             <a href={SUPPORT_URL} target="_blank" rel="noreferrer">
               {kind === "privacy"
                 ? "Make a privacy request"
-                : "Contact Gator support"}{" "}
+                : "Contact Bot support"}{" "}
               ↗
             </a>
             <button type="button" onClick={() => window.print()}>
