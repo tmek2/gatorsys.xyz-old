@@ -72,7 +72,7 @@ export const RESOURCE_OPTIONS: NewResourceOption[] = [
   {
     kind: "workspace",
     label: "Bot",
-    description: "Not built yet. A server is one gator for now.",
+    description: "Not built yet. Each server uses one bot.",
     icon: IconLayoutGrid,
     disabled: true,
   },
