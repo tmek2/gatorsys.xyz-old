@@ -42,6 +42,7 @@ export function QuestionList({
             className="swapy-list-slot"
           >
             <div
+              key={question.id}
               data-swapy-item={questionReorder.itemId(question)}
               className="swapy-list-item"
             >
@@ -88,7 +89,7 @@ export function QuestionList({
       </div>
       <div className="flex items-center gap-2">
         <AddQuestionMenu
-          onAdd={(type) =>
+          onAdd={(type, display) =>
             onChange([
               ...questions,
               type === "section"
@@ -97,7 +98,7 @@ export function QuestionList({
                     type: "section",
                     question: "Section title",
                   }
-                : { ...newQuestion(), type },
+                : { ...newQuestion(), type, ...(display ? { display } : {}) },
             ])
           }
         />

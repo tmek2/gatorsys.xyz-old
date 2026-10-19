@@ -65,13 +65,13 @@ const TAB_TITLE: Record<Tab, string> = {
 const ELSEWHERE = [
   {
     label: "Documentation",
-    detail: "Every module, written up",
+    detail: "Setup and reference guides",
     href: DOCS_URL,
     Icon: BookClosed,
   },
   {
     label: "Support",
-    detail: "The Discord server",
+    detail: "Help and contact information",
     href: SUPPORT_URL,
     Icon: Lifepreserver,
   },

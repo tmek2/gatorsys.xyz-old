@@ -13,11 +13,11 @@ import type { GuildConfig, GuildMeta } from "./types";
 import { toast } from "sonner";
 import { cachedJson, invalidateCache, isFresh } from "@/utils/client-cache";
 import { fieldAt } from "./schema";
-import { configValuesEqual, matchesSaved } from "./config-compare";
+import { configPathValuesEqual, matchesSaved } from "./config-compare";
 import { parseDraft, serializeDraft } from "./draft-storage";
 
 // Imported from here by every editor that keeps its own draft.
-export { configValuesEqual };
+export { configValuesEqual } from "./config-compare";
 
 function removeSavedPending(
   pending: Record<string, any>,
@@ -25,7 +25,7 @@ function removeSavedPending(
 ) {
   return Object.fromEntries(
     Object.entries(pending).filter(
-      ([path, staged]) => !matchesSaved(staged, getPath(config, path), fieldAt(path)),
+      ([path, staged]) => !matchesSaved(staged, getPath(config, path), fieldAt(path), path),
     ),
   );
 }
@@ -287,7 +287,7 @@ function ScopedManageProvider({
       // Staged or not is a difference too: a switch staged off compares equal
       // to nothing staged at all.
       return [...paths].filter(
-        (path) => path in here !== path in next || !configValuesEqual(here[path], next[path]),
+        (path) => path in here !== path in next || !configPathValuesEqual(path, here[path], next[path]),
       );
     },
     [preserveWritingRemovals, setPending],
@@ -517,13 +517,13 @@ function ScopedManageProvider({
        is not a change. */
     (path: string, nextValue: any, shown?: unknown) => {
       const staged = pendingRef.current;
-      if (!(path in staged && configValuesEqual(staged[path], nextValue))) remember(path);
+      if (!(path in staged && configPathValuesEqual(path, staged[path], nextValue))) remember(path);
       setPending((current) => {
         const saved = getPath(config, path);
         const next = { ...current };
         const field = fieldAt(path);
         const spec = shown === undefined ? field : { ...(field || {}), defaultValue: shown };
-        if (matchesSaved(nextValue, saved, spec) && !writingPaths.current.has(path)) {
+        if (matchesSaved(nextValue, saved, spec, path) && !writingPaths.current.has(path)) {
           delete next[path];
         } else {
           next[path] = nextValue;
@@ -702,7 +702,7 @@ function ScopedManageProvider({
           setPending((current) => {
             const next = { ...current };
             for (const [path, staged] of entries) {
-              if (configValuesEqual(next[path], staged)) delete next[path];
+              if (configPathValuesEqual(path, next[path], staged)) delete next[path];
             }
             return next;
           });
@@ -730,7 +730,7 @@ function ScopedManageProvider({
         void module;
         const submitted = new Map(entries);
         newerDrafts ||= Object.entries(pendingRef.current).some(([path, staged]) =>
-          !submitted.has(path) || !configValuesEqual(staged, submitted.get(path)),
+          !submitted.has(path) || !configPathValuesEqual(path, staged, submitted.get(path)),
         );
         history.current = { past: [], future: [], last: null };
         if (newerDrafts) showNotice({ kind: "saved", text: "Earlier changes saved. Your newer edits are still unsaved." });

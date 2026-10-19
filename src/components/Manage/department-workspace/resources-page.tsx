@@ -405,8 +405,8 @@ export function ResourcesPage({
               resource={editing}
               shareUrl={documentUrl(editing)}
               onChange={setEditing}
-              onSave={async () => {
-                const saved = await mutate({ action: "save", resource: editing }, { quiet: true });
+              onSave={async (snapshot) => {
+                const saved = await mutate({ action: "save", resource: snapshot }, { quiet: true });
                 if (!saved) throw new Error("Could not save this document. Try again.");
               }}
               onClose={() => {
@@ -435,8 +435,8 @@ export function ResourcesPage({
                 guildId={guildId}
                 viewer={viewer ? { id: viewer.id, name: viewer.name } : null}
                 onChange={setEditing}
-                onSave={async () => {
-                  const saved = await mutate({ action: "save", resource: editing }, { quiet: true });
+                onSave={async (snapshot) => {
+                  const saved = await mutate({ action: "save", resource: snapshot }, { quiet: true });
                   if (!saved) throw new Error("Could not save this spreadsheet. Try again.");
                 }}
                 onClose={() => {

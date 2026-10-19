@@ -36,6 +36,26 @@ export function configValuesEqual(a: any, b: any): boolean {
   return true;
 }
 
+/** Whole applications are staged together, including switches whose missing
+ * value means on. Keep those defaults explicit when comparing the list. */
+export function configPathValuesEqual(path: string, a: any, b: any): boolean {
+  if (path !== "Applications.applications") return configValuesEqual(a, b);
+  const defaults = (value: any) => Array.isArray(value) ? value.map((application: any) => {
+    if (!application || typeof application !== "object") return application;
+    return {
+      ...application,
+      responses_open: application.responses_open !== false,
+      auto_grade: application.auto_grade !== false,
+      questions: Array.isArray(application.questions) ? application.questions.map((question: any) =>
+        question && typeof question === "object" && question.type !== "section"
+          ? { ...question, required: question.required !== false }
+          : question,
+      ) : application.questions,
+    };
+  }) : value;
+  return configValuesEqual(defaults(a), defaults(b));
+}
+
 const SNOWFLAKE = /^\d{15,21}$/;
 
 function isIdList(value: unknown): value is (string | number)[] {
@@ -60,6 +80,7 @@ export function matchesSaved(
   saved: any,
   /** The schema's field at this path, when it has one. */
   field?: { type?: string; defaultValue?: unknown },
+  path = "",
 ): boolean {
   if ((saved === undefined || saved === null) && field?.defaultValue !== undefined) {
     const fallback = field.defaultValue;
@@ -71,7 +92,7 @@ export function matchesSaved(
     const b = saved.map(String).sort();
     return a.length === b.length && a.every((id, index) => id === b[index]);
   }
-  return configValuesEqual(staged, saved);
+  return configPathValuesEqual(path, staged, saved);
 }
 
 /**

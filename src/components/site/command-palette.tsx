@@ -142,7 +142,7 @@ function pages(signedIn: boolean): PaletteEntry[] {
     {
       id: "support",
       title: "Support",
-      note: "The Discord server, where somebody answers.",
+      note: "Setup guidance and support information.",
       href: SUPPORT_URL,
       external: true,
       Icon: IconLifebuoy,

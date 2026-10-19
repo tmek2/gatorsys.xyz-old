@@ -15,12 +15,44 @@
   color: var(--g-ink, #f4f2f0);
   font-family: var(--font-ui, system-ui);
   transform-origin: var(--radix-popover-content-transform-origin, top left);
-  animation: gw-pop-in 200ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+/* Different animation names let Radix retain a closing panel until it ends.
+   Keeping this on the shared popup avoids nested date-picker entrances. */
+.g-popup {
+  --popup-x: 0px;
+  --popup-y: -4px;
+  transform-origin: var(--radix-popover-content-transform-origin, var(--radix-dropdown-menu-content-transform-origin, top center));
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  animation-fill-mode: both;
+}
+.g-popup[data-side="top"] { --popup-y: 4px; }
+.g-popup[data-side="left"] { --popup-x: 4px; --popup-y: 0px; }
+.g-popup[data-side="right"] { --popup-x: -4px; --popup-y: 0px; }
+.g-popup[data-state="open"] { animation-name: gw-pop-in; }
+.g-popup[data-state="closed"] {
+  animation-name: gw-pop-out;
+  pointer-events: none;
 }
 @keyframes gw-pop-in {
   from {
     opacity: 0;
-    transform: translateY(-4px) scale(0.97);
+    transform: translate(var(--popup-x), var(--popup-y)) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+@keyframes gw-pop-out {
+  from {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--popup-x), var(--popup-y)) scale(0.97);
   }
 }
 :root[data-theme="light"] .gw-pop,
@@ -132,7 +164,8 @@
   text-transform: uppercase;
 }
 @media (prefers-reduced-motion: reduce) {
-  .gw-pop {
+  .gw-pop,
+  .g-popup[data-state] {
     animation: none;
   }
 }

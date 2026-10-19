@@ -597,9 +597,14 @@ test("closing a spreadsheet flushes cells before saving and shares a spreadsheet
   const Spreadsheet = loaded.exports.DepartmentSpreadsheetEditor;
   let saved: any;
   let closed = false;
+  let saveCalls = 0;
   function Sheet() {
     const [resource, setResource] = useState({ id: "sheet-save-test", title: "Tracker", spreadsheet_data: [] });
-    return <Spreadsheet resource={resource} guildId="100" onChange={setResource} onSave={async () => { saved = resource; }} onClose={() => { closed = true; }} onDelete={async () => undefined} />;
+    return <Spreadsheet resource={resource} guildId="100" onChange={setResource} onSave={async (submitted: any) => {
+      saved = submitted;
+      saveCalls++;
+      setResource((current) => ({ ...current, updated_at: `save-${saveCalls}` }));
+    }} onClose={() => { closed = true; }} onDelete={async () => undefined} />;
   }
   const m = await mount(<Sheet />);
   try {
@@ -614,6 +619,9 @@ test("closing a spreadsheet flushes cells before saving and shares a spreadsheet
     assert.equal(closed, true);
     assert.equal(saved.spreadsheet_data[0][0], "Latest cell");
     assert.equal(saved.spreadsheet_snapshot.sheets["sheet-1"].cellData[0][0].v, "Latest cell");
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 450)));
+    assert.equal(saveCalls, 1, "spreadsheet save metadata must not trigger another autosave");
+    assert.ok(m.container.querySelector('[aria-label="Saved"]'));
   } finally {
     await m.close();
   }

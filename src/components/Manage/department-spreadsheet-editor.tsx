@@ -17,6 +17,7 @@ import {
 } from "@tabler/icons-react";
 import { VersionHistory } from "@/components/Manage/version-history";
 import { ShareAccessPanel } from "./share-access-panel";
+import { useResourceAutosave } from "@/components/Manage/use-resource-autosave";
 import "@univerjs/preset-sheets-core/lib/index.css";
 import "@univerjs/preset-sheets-data-validation/lib/index.css";
 import "@univerjs/preset-sheets-filter/lib/index.css";
@@ -148,7 +149,7 @@ export function DepartmentSpreadsheetEditor({
 }: {
   resource: any;
   onChange: (next: any) => void;
-  onSave: () => Promise<void>;
+  onSave: (snapshot: any) => Promise<void>;
   onClose: () => void;
   onDelete: () => Promise<void>;
   /** Guild + viewer power the live-collaboration relay. */
@@ -160,14 +161,10 @@ export function DepartmentSpreadsheetEditor({
   const apiRef = useRef<any>(null);
   const workbookRef = useRef<any>(null);
   const resourceRef = useRef(resource);
-  const savedRef = useRef(JSON.stringify(resource));
   const snapshotRef = useRef(JSON.stringify(workbookFromResource(resource)));
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState("");
-  const [saveState, setSaveState] = useState<"saved" | "dirty" | "saving">("saved");
-  const [saveError, setSaveError] = useState("");
-  const onSaveRef = useRef(onSave);
-  onSaveRef.current = onSave;
+  const { saveState, saveError, saveNow } = useResourceAutosave(resource, onSave, 350);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [collaborators, setCollaborators] = useState<{ client_id: string; name: string }[]>([]);
   // Follows the site's theme and updates live when it changes.
@@ -434,25 +431,6 @@ export function DepartmentSpreadsheetEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collabReady, guildId, resource.id, clientId, viewerName]);
 
-  useEffect(() => {
-    if (JSON.stringify(resource) === savedRef.current) return;
-    setSaveState("dirty");
-    const timer = window.setTimeout(async () => {
-      setSaveState("saving");
-      setSaveError("");
-      const snapshot = JSON.stringify(resourceRef.current);
-      try {
-        await onSaveRef.current();
-        savedRef.current = snapshot;
-        setSaveState(JSON.stringify(resourceRef.current) === snapshot ? "saved" : "dirty");
-      } catch (error) {
-        setSaveState("dirty");
-        setSaveError(error instanceof Error ? error.message : "Could not save this spreadsheet. Try again.");
-      }
-    }, 350);
-    return () => window.clearTimeout(timer);
-  }, [onSave, resource]);
-
   async function importCsv(file: File) {
     const values = parseCsv(await file.text());
     const sheet = apiRef.current?.getActiveWorkbook()?.getActiveSheet();
@@ -464,19 +442,7 @@ export function DepartmentSpreadsheetEditor({
     // Commit the latest cells before the parent save callback reads its state.
     // Closing can happen before the normal 700ms snapshot timer fires.
     flushSync(captureSnapshot);
-    const snapshot = JSON.stringify(resourceRef.current);
-    try {
-      if (snapshot !== savedRef.current) {
-        setSaveState("saving");
-        setSaveError("");
-        await onSaveRef.current();
-        savedRef.current = snapshot;
-      }
-      if (JSON.stringify(resourceRef.current) === snapshot) onClose();
-    } catch (error) {
-      setSaveState("dirty");
-      setSaveError(error instanceof Error ? error.message : "Could not save this spreadsheet. Try again.");
-    }
+    if (await saveNow()) onClose();
   }
 
   return (

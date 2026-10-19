@@ -63,6 +63,7 @@ import { FieldRow, TextField } from "./fields";
 import { ShareAccessPanel } from "./share-access-panel";
 import { sanitizeDocumentHtml } from "@/utils/document-html";
 import { copyToClipboard } from "@/utils/copy-to-clipboard";
+import { useResourceAutosave } from "@/components/Manage/use-resource-autosave";
 
 type SubDocument = { id: string; title: string; html: string };
 
@@ -155,7 +156,7 @@ export function DepartmentDocumentEditor({
   /** Guild id — powers the share access role picker. */
   guildId?: string;
   onChange: (next: any) => void;
-  onSave: () => Promise<void>;
+  onSave: (snapshot: any) => Promise<void>;
   onClose: () => void;
   onDelete: () => Promise<void>;
   onPresence?: (typing: boolean) => Promise<any[]>;
@@ -178,10 +179,7 @@ export function DepartmentDocumentEditor({
   const [outline, setOutline] = useState(
     () => typeof window === "undefined" || window.innerWidth >= 768,
   );
-  const [saveState, setSaveState] = useState<"saved" | "dirty" | "saving">(
-    "saved",
-  );
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const { saveState, saveError, saveNow } = useResourceAutosave(resource, onSave, 1200);
   const [toast, setToast] = useState<string | null>(null);
   const [toastKind, setToastKind] = useState<"saved" | "error">("saved");
   const [collaborators, setCollaborators] = useState<any[]>([]);
@@ -331,50 +329,15 @@ export function DepartmentDocumentEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resource.id, active.id, restoredRevision, editor]);
 
-  // ── Autosave ──────────────────────────────────────────────────────────
-  const onSaveRef = useRef(onSave);
-  onSaveRef.current = onSave;
-  const lastSavedRef = useRef(JSON.stringify(resource));
-
-  async function saveNow(): Promise<boolean> {
-    const snapshot = JSON.stringify(resourceRef.current);
-    if (snapshot === lastSavedRef.current) return true;
-    setSaveState("saving");
-    setSaveError(null);
-    try {
-      await onSaveRef.current();
-      lastSavedRef.current = snapshot;
-      setSaveState(
-        JSON.stringify(resourceRef.current) === snapshot ? "saved" : "dirty",
-      );
-      return JSON.stringify(resourceRef.current) === snapshot;
-    } catch (error) {
-      setSaveState("dirty");
-      setSaveError(error instanceof Error ? error.message : "Could not save this document. Try again.");
-      return false;
-    }
-  }
-
-  useEffect(() => {
-    if (JSON.stringify(resource) === lastSavedRef.current) return;
-    setSaveState((state) => (state === "saving" ? state : "dirty"));
-    const timer = setTimeout(() => void saveNow(), 1200);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resource]);
-
   // Safety net: some edits (table cells, colour marks) can land without
   // triggering the debounced save above. A light periodic flush saves anything
   // outstanding (a no-op when the snapshot already matches).
   useEffect(() => {
     const interval = window.setInterval(() => {
-      if (JSON.stringify(resourceRef.current) !== lastSavedRef.current) {
-        void saveNow();
-      }
+      void saveNow();
     }, 4000);
     return () => window.clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [saveNow]);
 
   // Flush unsaved work when the tab is hidden or the page is left.
   useEffect(() => {
@@ -387,8 +350,7 @@ export function DepartmentDocumentEditor({
       document.removeEventListener("visibilitychange", flush);
       window.removeEventListener("pagehide", flush);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [saveNow]);
 
   async function handleClose() {
     if (await saveNow()) onClose();

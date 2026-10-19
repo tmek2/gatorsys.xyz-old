@@ -180,6 +180,9 @@ export function PortalMenu({
   useLayoutEffect(() => {
     return () => {
       const node = menuRef.current;
+      if (node?.contains(document.activeElement)) {
+        anchorRef.current?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus({ preventScroll: true });
+      }
       if (node?.dataset.sheet === "true") {
         // The scrim fades and the sheet carries on down from wherever the
         // finger left it.
@@ -204,14 +207,14 @@ export function PortalMenu({
       exitGhost(
         node,
         [
-          { opacity: 1, transform: "none" },
-          { opacity: 0, transform: `translateY(${up ? 4 : -4}px) scale(0.98)` },
+          { opacity: 1, transform: "none", clipPath: "inset(0 0 0 0 round 14px)" },
+          { opacity: 0, transform: `translateY(${up ? 6 : -6}px) scale(0.98)`, clipPath: up ? "inset(65% 0 0 0 round 14px)" : "inset(0 0 65% 0 round 14px)" },
         ],
-        { duration: 140 },
+        { duration: 200, easing: "cubic-bezier(0.32, 0.72, 0, 1)" },
         document.body,
       );
     };
-  }, [menuRef]);
+  }, [anchorRef, menuRef]);
   useEffect(() => {
     if (asSheet) return;
     function measure(event?: Event) {

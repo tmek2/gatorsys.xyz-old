@@ -51,7 +51,7 @@ const DropdownMenuSubContent = React.forwardRef<
   <DropdownMenuPrimitive.SubContent
     ref={ref}
     className={cn(
-      "z-50 min-w-[8rem] overflow-hidden rounded-[10px] border border-[var(--gator-border-strong)] bg-[var(--gator-surface-raised)] p-1 text-[var(--gator-text)] shadow-[0_18px_48px_rgba(0,0,0,0.5)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-left-2 data-[state=closed]:slide-out-to-left-1",
+      "g-popup z-50 min-w-[8rem] overflow-hidden rounded-[10px] border border-[var(--gator-border-strong)] bg-[var(--gator-surface-raised)] p-1 text-[var(--gator-text)] shadow-[0_18px_48px_rgba(0,0,0,0.5)]",
       className
     )}
     {...props}
@@ -60,9 +60,8 @@ const DropdownMenuSubContent = React.forwardRef<
 DropdownMenuSubContent.displayName =
   DropdownMenuPrimitive.SubContent.displayName
 
-/* Every menu in the app enters and leaves from here, without zoom (scaling
-   resamples the text and looks soft): it slides from the trigger's side.
-   `slide-out-to-*` matches `slide-in-from-*`, so leaving reverses arriving. */
+/* Shared popup styles animate in and out from the trigger's side. Radix keeps
+   the menu mounted until its closed-state animation finishes. */
 const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
@@ -72,10 +71,7 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "z-50 min-w-[8rem] overflow-hidden rounded-[10px] border border-[var(--gator-border-strong)] bg-[var(--gator-surface-raised)] p-1 text-[var(--gator-text)] shadow-[0_18px_48px_rgba(0,0,0,0.5)]",
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-        "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-        "data-[side=bottom]:data-[state=closed]:slide-out-to-top-1 data-[side=left]:data-[state=closed]:slide-out-to-right-1 data-[side=right]:data-[state=closed]:slide-out-to-left-1 data-[side=top]:data-[state=closed]:slide-out-to-bottom-1",
+        "g-popup z-50 min-w-[8rem] overflow-hidden rounded-[10px] border border-[var(--gator-border-strong)] bg-[var(--gator-surface-raised)] p-1 text-[var(--gator-text)] shadow-[0_18px_48px_rgba(0,0,0,0.5)]",
         className
       )}
       {...props}

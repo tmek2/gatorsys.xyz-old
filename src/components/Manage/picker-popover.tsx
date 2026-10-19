@@ -39,11 +39,12 @@ export function PickerPopover({
   const [query, setQuery] = React.useState("");
   const searchable = options.length >= searchThreshold;
 
-  // Cleared on close rather than on open: a menu that reopens showing the last
-  // search, with most of its options missing, reads as a menu that lost them.
-  React.useEffect(() => {
-    if (!open) setQuery("");
-  }, [open]);
+  // Keep the filtered list still while it closes. Reset before reopening so
+  // the next visit starts with all options without resizing the exit frame.
+  function changeOpen(next: boolean) {
+    if (next) setQuery("");
+    setOpen(next);
+  }
 
   const needle = query.trim().toLowerCase();
   const matches = needle
@@ -53,7 +54,7 @@ export function PickerPopover({
     : options;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={changeOpen}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent
         align="start"

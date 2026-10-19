@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { IconArrowLeft, IconFileText, IconLoader2 } from "@tabler/icons-react";
 import { DepartmentDocumentEditor } from "@/components/Manage/department-document-editor";
 import { DepartmentSpreadsheetEditor } from "@/components/Manage/department-spreadsheet-editor";
+import { mergeSavedResource } from "@/components/Manage/resource-save";
 
 type Viewer = {
   id?: string | null;
@@ -62,21 +63,21 @@ export function ServerResourceClient({
     void load();
   }, [load]);
 
-  async function save() {
-    if (!resource) return;
+  async function save(submitted: any) {
+    if (!submitted) return;
     const response = await fetch(`/api/manage/${guildId}/deptresources`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "save", resource }),
+      body: JSON.stringify({ action: "save", resource: submitted }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       throw new Error(data.detail || "Could not save this resource");
     }
-    const saved = (data.resources || []).find(
-      (item: any) => String(item.id) === String(resource.id),
+    const saved = data.resource || (data.resources || []).find(
+      (item: any) => String(item.id) === String(submitted.id),
     );
-    if (saved) setResource(saved);
+    if (saved) setResource((current: any) => mergeSavedResource(current, submitted, saved));
   }
 
   async function remove() {

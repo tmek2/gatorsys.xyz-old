@@ -134,7 +134,7 @@ const MENU_ICONS: Record<string, React.ReactNode> = {
  * menu renders in a portal positioned against the button and clamped to the
  * viewport.
  */
-export function AddQuestionMenu({ onAdd }: { onAdd: (type: string) => void }) {
+export function AddQuestionMenu({ onAdd }: { onAdd: (type: string, display?: string) => void }) {
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -236,7 +236,7 @@ export function AddQuestionMenu({ onAdd }: { onAdd: (type: string) => void }) {
                       key={ii}
                       type="button"
                       onClick={() => {
-                        onAdd(item.type);
+                        onAdd(item.type, item.display);
                         setOpen(false);
                       }}
                       className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-[13px] font-semibold text-white/75 transition-colors hover:bg-white/[0.04] hover:text-white"
@@ -705,6 +705,7 @@ function EditorInner({
                       className="swapy-list-slot"
                     >
                       <div
+                        key={question.id}
                         data-swapy-item={questionReorder.itemId(question)}
                         className="swapy-list-item"
                       >
@@ -762,7 +763,7 @@ function EditorInner({
                   menu; picking a type appends a question of that type. */}
               <div className="flex justify-center pt-1">
                 <AddQuestionMenu
-                  onAdd={(type) =>
+                  onAdd={(type, display) =>
                     patch({
                       questions: [
                         ...questions,
@@ -775,6 +776,7 @@ function EditorInner({
                           : {
                               id: uniqueQuestionId(questions),
                               type,
+                              ...(display ? { display } : {}),
                               question: "",
                               required: true,
                             },

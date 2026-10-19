@@ -2610,7 +2610,7 @@ test("button flows expose every action, button availability, and the shared colo
   // search field.
   const picker = await source("src/components/Manage/picker-popover.tsx");
   const pickerCss = await source("src/components/Manage/manage-restyle.css");
-  assert.match(picker, /<Popover open=\{open\} onOpenChange=\{setOpen\}>/);
+  assert.match(picker, /<Popover open=\{open\} onOpenChange=\{changeOpen\}>/);
   assert.match(picker, /collisionPadding=\{12\}/);
   assert.match(pickerCss, /\.gator-picker \{[^}]*max-height: min\(34rem, calc\(100vh - 1\.5rem\)\)/s);
   assert.match(pickerCss, /\.gator-picker \{[^}]*overflow-y: auto/s);
@@ -2619,9 +2619,9 @@ test("button flows expose every action, button availability, and the shared colo
   assert.match(flowBuilder, /options=\{availableSteps\.map\(/);
   assert.match(picker, /searchThreshold/);
   assert.match(picker, /autoFocus/);
-  // Cleared on close, not on open: a menu that reopens mid-search, with most
-  // of its options missing, reads as a menu that lost them.
-  assert.match(picker, /if \(!open\) setQuery\(""\);/);
+  // Preserve filtered contents during the exit; start fresh before reopening.
+  // The actual close/reopen sequence is exercised in dropdown-motion.
+  assert.match(picker, /function changeOpen\(next: boolean\) \{\s*if \(next\) setQuery\(""\);\s*setOpen\(next\);/);
   // Both menus use it, so they cannot drift apart again.
   assert.match(messageDesign, /<PickerPopover/);
   assert.match(flowBuilder, /<PickerPopover/);
@@ -6381,7 +6381,7 @@ test("⌘Z takes back a change to the settings, and ⇧⌘Z puts it back", async
   const shell = await source("src/components/Manage/manage-shell.tsx");
   // Every staged change is a step; typing into one field is one step.
   assert.match(context, /if \(path && steps\.last && steps\.last\.path === path && now - steps\.last\.at < 900\)/);
-  assert.match(context, /if \(!\(path in staged && configValuesEqual\(staged\[path\], nextValue\)\)\) remember\(path\);/);
+  assert.match(context, /if \(!\(path in staged && configPathValuesEqual\(path, staged\[path\], nextValue\)\)\) remember\(path\);/);
   assert.match(context, /const undo = useCallback\(\(\) => stepTo\("past"\), \[stepTo\]\);/);
   assert.match(context, /const redo = useCallback\(\(\) => stepTo\("future"\), \[stepTo\]\);/);
   // Saving ends the draft the history was stepping through.

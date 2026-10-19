@@ -58,7 +58,7 @@ test("editors with drafts of their own compare by value, not by JSON text", asyn
   }
   const context = await source("src/components/Manage/manage-context.tsx");
   assert.match(context, /const spec = shown === undefined \? field : \{ \.\.\.\(field \|\| \{\}\), defaultValue: shown \}/);
-  assert.match(context, /matchesSaved\(nextValue, saved, spec\)/);
+  assert.match(context, /matchesSaved\(nextValue, saved, spec, path\)/);
   // A message edited and put back is no change, whatever shape the editor
   // turned the saved one into.
   const message = await source("src/components/Manage/config-message.tsx");

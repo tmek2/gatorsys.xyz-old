@@ -37,7 +37,7 @@ const ROWS = [
   {
     href: DOCS_URL,
     label: "Documentation",
-    detail: "Every module, written up",
+    detail: "Setup and reference guides",
     Icon: BookClosed,
     external: DOCS_URL.startsWith("http"),
   },
@@ -51,7 +51,7 @@ const ROWS = [
   {
     href: SUPPORT_URL,
     label: "Support",
-    detail: "The Discord server",
+    detail: "Help and contact information",
     Icon: Lifepreserver,
     external: SUPPORT_URL.startsWith("http"),
   },
