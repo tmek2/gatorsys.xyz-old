@@ -15,7 +15,7 @@ This repository contains the website. The live dashboard also needs a separately
 | Branch | What it runs |
 | --- | --- |
 | `main` | The real website, with Discord sign-in and your own bot connection. |
-| `codex/test-preview` | A fictional signed-in user and three test servers. All actions are simulated; no OAuth, bot, database, or credentials are needed. |
+| `test-preview` | A fictional signed-in user and three test servers. All actions are simulated; no OAuth, bot, database, or credentials are needed. |
 
 ### Hosting settings
 
