@@ -231,6 +231,17 @@
   color: var(--manage-text, #f5f2f2);
 }
 
+/* Dashboard styles can remain loaded after navigating from Resources. A full
+   form editor scrolls as a page, rather than inside that dashboard window. */
+.manage-root:has(> .application-editor-shell) {
+  position: relative;
+  inset: auto;
+  display: block;
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+}
+
 .application-editor-header {
   border-bottom: 1px solid var(--manage-line, rgba(255, 255, 255, 0.06));
   background: color-mix(in srgb, var(--manage-tab, #0b0b0b) 90%, transparent);
