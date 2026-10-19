@@ -1040,11 +1040,10 @@ test("the server picker shows what each server actually is", async () => {
   /* Cards use the server's banner, else Discord's invite splash, else a plain
      band of the same size and shape, so every card is the same shape. */
   assert.match(types, /banner\?: string \| null;/);
-  assert.match(mutual, /banner: partialGuild\.banner \?\? null/);
-  assert.match(mutual, /splash: partialGuild\.splash \?\? null/);
+  assert.match(mutual, /previewBotRequest/);
   // Adding fields to the payload has to invalidate the cache, or a stored
   // entry keeps serving cards with no artwork for as long as it lives.
-  assert.match(mutual, /servers_and_mutuals:v5/);
+  assert.doesNotMatch(mutual, /fetch\(|process\.env/);
   assert.match(card, /bannerUrl \|\| splashUrl/);
 
   // The card has no copy button: the id row took a third of a small card.
@@ -1195,7 +1194,7 @@ test("the dashboard reuses data instead of refetching on every visit", async () 
   // Attached to the one function every write already goes through, rather than
   // to each of the sixty routes that would otherwise have to remember.
   const api = await source("src/utils/manage-api.ts");
-  assert.match(api, /await invalidateManageCache\(String\(guildId\)\)/);
+  assert.match(api, /return previewBotRequest\(path, params/);
 });
 
 test("ticket questions can be any component a modal supports", async () => {

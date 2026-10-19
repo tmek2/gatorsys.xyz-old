@@ -4,7 +4,7 @@ const nextConfig = {
     return [
       {
         source: '/support',
-        destination: process.env.NEXT_PUBLIC_SUPPORT_URL || '/setup#support',
+        destination: '/setup#support',
         permanent: false,
       },
       {
@@ -31,12 +31,7 @@ const nextConfig = {
     // AVIF first, WebP where AVIF is not taken: avatars, server icons and
     // Roblox pictures arrive at a fraction of their PNG weight.
     formats: ['image/avif', 'image/webp'],
-    remotePatterns: [
-      { protocol: 'https', hostname: 'cdn.discordapp.com' },
-      { protocol: 'https', hostname: 'www.roblox.com' },
-      { protocol: 'https', hostname: 'thumbnails.roblox.com' },
-      { protocol: 'https', hostname: 'tr.rbxcdn.com' },
-    ],
+    remotePatterns: [],
   },
 };
 

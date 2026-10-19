@@ -1,13 +1,12 @@
 import { auth } from "~/auth";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import { InfractionTable } from "@/components/Admin/infraction-table";
 import UnauthorizedScreen from "@/components/unauthorised";
 import { StatusScreen } from "@/components/status-screen";
 import { SiteNav } from "@/components/site/site-nav";
 import { viewerFromSession } from "@/utils/viewer";
-import { getSiteUrl } from "@/utils/site-url";
+import { previewBotRequest } from "@/preview/server";
 import { getDiscordSignInUrl } from "@/utils/discord-links";
 import { NO_INDEX } from "@/utils/no-index";
 import "@/components/site/tokens.css";
@@ -19,10 +18,7 @@ export const metadata: Metadata = { robots: NO_INDEX };
 
 async function getInfractions(id: string) {
   try {
-    const res = await fetch(`${getSiteUrl()}/api/infractions/${id}`, {
-      headers: { Cookie: (await cookies()).toString() },
-      cache: "no-store",
-    });
+    const res = await previewBotRequest("infractions", { server: id });
     if (res.status === 401 || res.status === 403) return 403;
     if (!res.ok) return null;
     return res.json();

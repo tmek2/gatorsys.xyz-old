@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from "~/auth"
 import type { Session } from "next-auth";
-import { getSiteUrl } from "@/utils/site-url";
+import { previewBotRequest } from "@/preview/server";
 
 export type ApiContext<T = Record<string, string>> = {
   params: T;
@@ -24,31 +24,13 @@ export async function withAuth<T = Record<string, string>>(
 }
 
 export async function makeApiRequest(url: string, options: RequestInit = {}) {
-  // Ensure URL is valid
-  try {
-    new URL(url);
-  } catch (e) {
-    const baseUrl = getSiteUrl();
-    url = `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
-  }
-
-  const response = await fetch(url, {
-    ...options,
-    signal: options.signal ?? AbortSignal.timeout(25_000),
-    credentials: 'same-origin',
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers
-    }
-  });
-
+  const target = new URL(url, "http://preview.local");
+  const endpoint = target.pathname.split("/").filter(Boolean).pop() || "";
+  const params = Object.fromEntries([...target.searchParams].filter(([key]) => key !== "auth"));
+  const body = typeof options.body === "string" ? JSON.parse(options.body) : undefined;
+  const response = await previewBotRequest(endpoint, params, body, options.method || "GET");
   if (!response.ok) {
-    console.error("API request failed", {
-      method: options.method || "GET",
-      status: response.status,
-    });
     throw new Error(`API request failed with status ${response.status}`);
   }
-
   return response.json();
 }

@@ -2,11 +2,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
+
 import {
   IconArrowRight,
   IconChevronRight,
-  IconLogout,
+
   IconRefresh,
   IconShieldCheck,
   IconAlertTriangle,
@@ -117,10 +117,10 @@ export function AccountOverview({
             <RippleButton
               className="account-button"
               variant="outline"
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={() => window.location.assign("/")}
             >
-              <IconLogout size={15} />
-              Sign out
+              <IconArrowRight size={15} />
+              Return home
               <RippleButtonRipples />
             </RippleButton>
           </section>

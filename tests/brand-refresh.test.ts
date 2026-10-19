@@ -21,11 +21,11 @@ async function collectSourceFiles(directory: string): Promise<string[]> {
   return files;
 }
 
-test("public configuration defaults to a neutral installation", async () => {
+test("preview configuration uses local links and a fictional name", async () => {
   const site = await import("../src/config/site.ts");
-  assert.equal(site.SITE_NAME, process.env.NEXT_PUBLIC_SITE_NAME || "Community Dashboard");
-  assert.equal(site.DOCS_URL, process.env.NEXT_PUBLIC_DOCS_URL || "/setup");
-  assert.equal(site.SUPPORT_URL, process.env.NEXT_PUBLIC_SUPPORT_URL || "/setup#support");
+  assert.equal(site.SITE_NAME, "Community Dashboard Preview");
+  assert.equal(site.DOCS_URL, "/setup");
+  assert.equal(site.SUPPORT_URL, "/setup#support");
   assert.ok(site.NAV_LINKS.some(link => link.href === "/servers"));
 });
 

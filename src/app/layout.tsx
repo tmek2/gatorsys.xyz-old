@@ -12,6 +12,7 @@ import { CommunityNavigation } from "@/components/servers/community-navigation";
 import { OverlayExit } from "@/components/overlay-exit";
 import { THEME_SCRIPT } from "@/components/site/theme";
 import { PerfProbe } from "@/components/perf-probe";
+import { PreviewBanner } from "@/preview/banner";
 
 // The site's one typeface for every title, label and line: Rethink Sans, a
 // clean grotesque that holds a 44px headline and stays even at 12px. The faces
@@ -120,6 +121,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="dark">
+        <PreviewBanner />
         <ViewTransitions>
           <SessionProviders>
             <CommunityNavigation>

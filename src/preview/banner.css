@@ -1,0 +1,25 @@
+:root { --preview-height: 52px; }
+body { padding-top: var(--preview-height); }
+.preview-banner { position: fixed; inset: 0 0 auto; z-index: 100000; display: flex; align-items: center; gap: 16px; padding: 6px 16px; min-height: 52px; background: #ffdf76; color: #251b00; border-bottom: 1px solid #ad8000; font: 500 13px/1.35 var(--font-rethink), sans-serif; }
+.preview-banner p { display: flex; flex: 1; flex-wrap: wrap; gap: 4px 12px; margin: 0; }
+.preview-banner strong { font-weight: 800; }
+.preview-banner button { font: inherit; color: inherit; min-height: 40px; cursor: pointer; border-radius: 7px; }
+.preview-reset { padding: 6px 12px; border: 1px solid #725300; white-space: nowrap; background: #fff1ba; }
+.preview-reset:disabled { cursor: wait; opacity: .65; }
+.preview-close { width: 40px; flex-shrink: 0; font-size: 25px !important; background: transparent; }
+.preview-banner button:focus-visible, .preview-reopen:focus-visible { outline: 3px solid #251b00; outline-offset: 2px; }
+.preview-reopen { position: fixed; z-index: 100000; right: 12px; bottom: 12px; padding: 10px 14px; min-height: 44px; border: 1px solid #ad8000; border-radius: 8px; background: #ffdf76; color: #251b00; font: 700 12px var(--font-rethink), sans-serif; box-shadow: 0 2px 12px #0004; }
+html body .manage-root:has(.gw) { top: var(--preview-height); height: calc(100dvh - var(--preview-height)); min-height: calc(100dvh - var(--preview-height)); }
+html body .g-nav[data-float="true"] { top: var(--preview-height); }
+html body .fixed.inset-0 { top: var(--preview-height); }
+html body .fixed.top-0, html body .sticky.top-0 { top: var(--preview-height); }
+@media (max-width: 760px) {
+  html body .manage-root:has(.gw) { top: auto; height: auto; }
+  html body .manage-root .gw-bar { top: var(--preview-height); }
+}
+@media (max-width: 600px) {
+  .preview-banner { gap: 6px; padding-inline: 10px; }
+  .preview-banner p { display: block; font-size: 11px; }
+  .preview-banner strong { display: block; font-size: 12px; }
+  .preview-reset { padding-inline: 8px; font-size: 11px !important; }
+}

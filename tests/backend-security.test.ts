@@ -24,6 +24,9 @@ function loadModule(
   }).outputText;
   const module = { exports: {} };
   const require = (name: string) => {
+    if (name === "@/preview/server" && !(name in dependencies)) return {
+      previewBotRequest: async () => { throw new Error("Unexpected preview request outside the tested service boundary"); },
+    };
     assert.ok(name in dependencies, `Unexpected dependency ${name} in ${relativePath}`);
     return dependencies[name];
   };
@@ -136,13 +139,9 @@ function jsonRequest(body: unknown) {
   });
 }
 
-test("joining a department expires both current server-list caches only after a successful join", async () => {
-  const removed: string[][] = [];
-  const mutual = loadModule("src/utils/mutual-servers.ts", {
-    "@/utils/api-helpers": {}, "@/utils/discord-session-token": {},
-    "@/utils/redis": { deleteCached: async (...keys: string[]) => { removed.push(keys); } },
-    "@/server/config": config,
-  });
+test("joining a department refreshes the signed-in member's server listing only after success", async () => {
+  const invalidated: string[] = [];
+  const mutual = { invalidateMutualServers: async (userId: string) => { invalidated.push(userId); } };
   const middleware = loadModule("src/utils/api-middleware.ts", {
     "next/server": { NextResponse: { json: Response.json } },
     "~/auth": { auth: async () => viewer },
@@ -164,10 +163,10 @@ test("joining a department expires both current server-list caches only after a 
   });
   assert.equal((await route.POST(jsonRequest({ code: "join-test", user: "forged" }))).status, 200);
   assert.deepEqual(posts[0], { path: "dashboard_departmentjoin", params: { server: "0" }, body: { code: "join-test", user: viewer.user.id } });
-  assert.deepEqual(removed, [[`discord:servers_and_mutuals:v5:${viewer.user.id}`, `discord:servers_and_mutuals:v5:${viewer.user.id}:stale`]]);
+  assert.deepEqual(invalidated, [viewer.user.id]);
   status = 403;
   assert.equal((await route.POST(jsonRequest({ code: "join-test" }))).status, 403);
-  assert.equal(removed.length, 1, "a rejected join cannot invalidate the saved listing");
+  assert.equal(invalidated.length, 1, "a rejected join cannot refresh the saved listing");
 });
 
 test("rejected application logs exclude private form text and upstream response details", async () => {

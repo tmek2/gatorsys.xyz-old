@@ -20,7 +20,7 @@ function load(file: string, mocks: Record<string, unknown>) {
 
 test("malformed successful bot responses become a recoverable error", async () => {
   const { relayBotResponse } = load("src/utils/manage-api.ts", {
-    "@/utils/manage-cache": {}, "./long-ids": {}, "@/server/config": {},
+    "@/preview/server": {}, "./long-ids": {},
   });
   const original = console.error;
   console.error = () => {};
@@ -36,50 +36,38 @@ test("malformed successful bot responses become a recoverable error", async () =
   } finally { console.error = original; }
 });
 
-test("a bot response that stalls after its headers still reaches the deadline", async () => {
+test("preview dashboard reads and writes use the local dispatcher without a network fallback", async () => {
   const originalFetch = globalThis.fetch;
-  const originalTimeout = globalThis.setTimeout;
-  const originalError = console.error;
-  globalThis.setTimeout = ((callback: (...args: any[]) => void, ms?: number, ...args: any[]) => originalTimeout(callback, ms === 25_000 ? 5 : ms, ...args)) as typeof setTimeout;
-  console.error = () => {};
-  globalThis.fetch = async (_url, init) => new Response(new ReadableStream({
-    start(controller) {
-      init!.signal!.addEventListener("abort", () => controller.error(init!.signal!.reason), { once: true });
-    },
-  }));
+  globalThis.fetch = async () => { throw new Error("Preview attempted an external request"); };
+  const calls: unknown[][] = [];
   try {
-    const { botDashboardGet } = load("src/utils/manage-api.ts", {
-      "@/utils/manage-cache": {}, "./long-ids": {},
-      "@/server/config": { botApiUrl: () => new URL("https://bot.example.test/dashboard_meta") },
+    const { botDashboardGet, botDashboardPost } = load("src/utils/manage-api.ts", {
+      "./long-ids": {},
+      "@/preview/server": { previewBotRequest: async (...args: unknown[]) => { calls.push(args); return Response.json({ preview: true }); } },
     });
-    const result = await botDashboardGet("dashboard_meta", {});
-    assert.equal(result.status, 504);
-    assert.match((await result.json()).message, /timed out/);
+    assert.equal((await botDashboardGet("dashboard_meta", { server: "test-server" })).status, 200);
+    assert.equal((await botDashboardPost("dashboard_config", { server: "test-server" }, { set: { enabled: false } })).status, 200);
+    assert.deepEqual(calls, [["dashboard_meta", { server: "test-server" }], ["dashboard_config", { server: "test-server" }, { set: { enabled: false } }, "POST"]]);
   } finally {
     globalThis.fetch = originalFetch;
-    globalThis.setTimeout = originalTimeout;
-    console.error = originalError;
   }
 });
 
-test("a stalled Redis connection cannot hold reads or writes open", async () => {
-  const originalTimeout = globalThis.setTimeout;
+test("preview cache reads and writes never open Redis even with a configured live URL", async () => {
   const originalUrl = process.env.REDIS_URL;
-  globalThis.setTimeout = ((callback: (...args: any[]) => void, ms?: number, ...args: any[]) => originalTimeout(callback, ms === 1500 ? 5 : ms, ...args)) as typeof setTimeout;
   process.env.REDIS_URL = "redis://cache.example.test";
   let connections = 0;
   try {
     const cache = load("src/utils/redis.ts", {
-      redis: { createClient: () => ({ on() {}, connect: () => { connections += 1; return new Promise(() => {}); } }) },
+      redis: { createClient: () => ({ on() {}, connect: () => { connections += 1; throw new Error("Preview must not connect to Redis"); } }) },
     });
     assert.equal(await cache.getCached("test"), null);
     assert.equal(await cache.setCached("test", {}), undefined);
     assert.equal(await cache.deleteCached("test"), undefined);
     assert.equal(await cache.readGeneration("test"), 0);
     assert.equal(await cache.bumpGeneration("test"), undefined);
-    assert.equal(connections, 1);
+    assert.equal(connections, 0);
   } finally {
-    globalThis.setTimeout = originalTimeout;
     if (originalUrl === undefined) delete process.env.REDIS_URL;
     else process.env.REDIS_URL = originalUrl;
   }

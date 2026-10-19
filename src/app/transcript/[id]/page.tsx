@@ -1,6 +1,5 @@
 import { auth } from "~/auth";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import DiscordTranscript from "./transcript";
 import { SiteNav } from "@/components/site/site-nav";
 import { viewerFromSession } from "@/utils/viewer";
@@ -8,7 +7,7 @@ import "@/components/site/tokens.css";
 import "@/components/site/landing.css";
 import "../../panel/panel.css";
 import UnauthorizedScreen from "@/components/unauthorised";
-import { getSiteUrl } from "@/utils/site-url";
+import { previewBotRequest } from "@/preview/server";
 import type { Metadata } from "next";
 import { NO_INDEX } from "@/utils/no-index";
 
@@ -16,11 +15,7 @@ import { NO_INDEX } from "@/utils/no-index";
 export const metadata: Metadata = { robots: NO_INDEX };
 
 async function GetTranscript(id: string) {
-  const res = await fetch(`${getSiteUrl()}/api/transcript/${id}`, {
-    headers: {
-      Cookie: (await cookies()).toString(),
-    },
-  });
+  const res = await previewBotRequest("transcript", { id });
   if (!res.ok) {
     return 403;
   }

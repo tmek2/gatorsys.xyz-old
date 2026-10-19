@@ -1,12 +1,11 @@
 import { auth } from "~/auth";
-import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { InfractionDetail } from "./infraction-detail";
 import UnauthorizedScreen from "@/components/unauthorised";
 import { SiteNav } from "@/components/site/site-nav";
 import { viewerFromSession } from "@/utils/viewer";
-import { getSiteUrl } from "@/utils/site-url";
+import { previewBotRequest } from "@/preview/server";
 import { getDiscordSignInUrl } from "@/utils/discord-links";
 import { NO_INDEX } from "@/utils/no-index";
 import "@/components/site/tokens.css";
@@ -17,10 +16,7 @@ import "../../panel.css";
 export const metadata: Metadata = { robots: NO_INDEX };
 
 async function getInfraction(guildId: string, infractionId: string) {
-  const res = await fetch(`${getSiteUrl()}/api/infractions/${guildId}/${infractionId}`, {
-    headers: { Cookie: (await cookies()).toString() },
-    cache: "no-store",
-  });
+  const res = await previewBotRequest("infraction", { server: guildId, id: infractionId });
   if (!res.ok) {
     if (res.status === 403) return 403;
     if (res.status === 404) return notFound();

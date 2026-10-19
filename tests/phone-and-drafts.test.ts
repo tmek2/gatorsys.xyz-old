@@ -609,10 +609,11 @@ test("a module that is off has corners on a phone too, and thaws when turned on"
   assert.match(gate, /<div className="gw-gate-thaw">\{children\}<\/div>/);
 });
 
-test("the session is refreshed where it can be written back", async () => {
+test("preview requests receive a visitor cookie and never load OAuth middleware", async () => {
   const middleware = await source("src/middleware.ts");
-  assert.match(middleware, /const withSession = auth\(\(request\) => hostGuard\(request\)\);/);
-  assert.match(middleware, /if \(request\.nextUrl\.pathname\.startsWith\("\/api\/auth"\)\) return hostGuard\(request\);/);
+  assert.match(middleware, /response\.cookies\.set\(PREVIEW_COOKIE/);
+  assert.match(middleware, /headers\.set\("cookie"/);
+  assert.doesNotMatch(middleware, /from "~\/auth"|NextAuth|process\.env/);
 });
 
 test("messages are signed by the bot as it is in this server", async () => {
